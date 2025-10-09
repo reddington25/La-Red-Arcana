@@ -1,0 +1,98 @@
+═══════════════════════════════════════════════════════════
+  RED ARCANA - DESPLIEGUE DEMO URGENTE
+═══════════════════════════════════════════════════════════
+
+✅ TU CÓDIGO YA COMPILA CORRECTAMENTE
+
+═══════════════════════════════════════════════════════════
+
+🚀 3 PASOS PARA DESPLEGAR:
+
+1️⃣ GITHUB (2 min)
+   - Crear repo en: https://github.com/new
+   - Nombre: red-arcana-demo
+   - Ejecutar comandos en PowerShell (ver abajo)
+
+2️⃣ VERCEL (2 min)
+   - Ir a: https://vercel.com/signup
+   - Registrarse con GitHub
+   - Importar repositorio
+   - Click "Deploy"
+
+3️⃣ VARIABLES (1 min)
+   - Settings → Environment Variables
+   - Agregar 4 variables (ver abajo)
+   - Redesplegar
+
+═══════════════════════════════════════════════════════════
+
+📋 COMANDOS PARA POWERSHELL:
+
+git init
+git add .
+git commit -m "Demo version for investors"
+git remote add origin https://github.com/TU_USUARIO/red-arcana-demo.git
+git branch -M main
+git push -u origin main
+
+(Reemplaza TU_USUARIO con tu usuario de GitHub)
+
+═══════════════════════════════════════════════════════════
+
+🔑 VARIABLES DE ENTORNO EN VERCEL:
+
+NEXT_PUBLIC_DEMO_MODE = true
+NEXT_PUBLIC_SUPABASE_URL = https://demo.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY = demo_key
+SUPABASE_SERVICE_ROLE_KEY = demo_service_key
+
+(Marcar: Production, Preview, Development - todas)
+
+═══════════════════════════════════════════════════════════
+
+🌐 TU DEMO ESTARÁ EN:
+
+https://red-arcana-demo.vercel.app/demo
+
+O la URL que Vercel te asigne
+
+═══════════════════════════════════════════════════════════
+
+📱 COMPARTIR CON INVERSIONISTAS:
+
+Selección de roles:
+https://tu-url.vercel.app/demo
+
+Paneles directos:
+https://tu-url.vercel.app/student/dashboard
+https://tu-url.vercel.app/specialist/dashboard
+https://tu-url.vercel.app/admin/dashboard
+https://tu-url.vercel.app/admin/super-admin
+
+═══════════════════════════════════════════════════════════
+
+📚 DOCUMENTACIÓN COMPLETA:
+
+DESPLEGAR_AHORA.md          ← Guía paso a paso detallada
+DESPLEGAR_DEMO_VERCEL.md    ← Guía completa con troubleshooting
+COMANDOS_GITHUB_VERCEL.txt  ← Comandos rápidos
+
+═══════════════════════════════════════════════════════════
+
+✅ CHECKLIST:
+
+[ ] Repo creado en GitHub
+[ ] Código subido (git push)
+[ ] Proyecto en Vercel
+[ ] 4 variables configuradas
+[ ] Redesplegar ejecutado
+[ ] URL funciona
+[ ] Compartida con inversionistas
+
+═══════════════════════════════════════════════════════════
+
+🎯 TIEMPO TOTAL: 5 MINUTOS
+
+🎉 ¡LISTO PARA IMPRESIONAR!
+
+═══════════════════════════════════════════════════════════

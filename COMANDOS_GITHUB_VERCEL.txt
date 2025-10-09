@@ -1,0 +1,65 @@
+═══════════════════════════════════════════════════════════
+  COMANDOS PARA SUBIR DEMO A VERCEL
+═══════════════════════════════════════════════════════════
+
+📋 PASO 1: SUBIR A GITHUB
+
+git init
+git add .
+git commit -m "Demo version for investors"
+
+# Crear repo en: https://github.com/new
+# Nombre: red-arcana-demo
+
+git remote add origin https://github.com/TU_USUARIO/red-arcana-demo.git
+git branch -M main
+git push -u origin main
+
+═══════════════════════════════════════════════════════════
+
+📋 PASO 2: IMPORTAR EN VERCEL
+
+1. Ve a: https://vercel.com/signup
+2. Regístrate con GitHub
+3. Click "Add New..." → "Project"
+4. Import tu repositorio
+5. Click "Deploy"
+
+═══════════════════════════════════════════════════════════
+
+📋 PASO 3: VARIABLES DE ENTORNO EN VERCEL
+
+En Settings → Environment Variables, agregar:
+
+NEXT_PUBLIC_DEMO_MODE = true
+NEXT_PUBLIC_SUPABASE_URL = https://demo.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY = demo_key
+SUPABASE_SERVICE_ROLE_KEY = demo_service_key
+
+Marcar: Production, Preview, Development (todos)
+
+═══════════════════════════════════════════════════════════
+
+📋 PASO 4: REDESPLEGAR
+
+Deployments → ... → Redeploy
+
+═══════════════════════════════════════════════════════════
+
+✅ TU DEMO ESTARÁ EN:
+
+https://tu-proyecto.vercel.app/demo
+
+═══════════════════════════════════════════════════════════
+
+🔧 SI HAY ERRORES:
+
+Verificar que compile:
+npm run build
+
+Si hay errores, corregir y:
+git add .
+git commit -m "Fix errors"
+git push
+
+═══════════════════════════════════════════════════════════

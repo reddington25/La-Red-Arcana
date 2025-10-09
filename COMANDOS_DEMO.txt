@@ -1,0 +1,37 @@
+═══════════════════════════════════════════════════════════
+  RED ARCANA - MODO DEMO - COMANDOS RÁPIDOS
+═══════════════════════════════════════════════════════════
+
+📋 COPIAR Y PEGAR ESTOS COMANDOS EN POWERSHELL:
+
+1️⃣ ACTIVAR MODO DEMO:
+   Copy-Item .env.demo .env.local
+
+2️⃣ INICIAR SERVIDOR:
+   npm run dev
+
+3️⃣ ABRIR EN NAVEGADOR:
+   http://localhost:3000/demo
+
+═══════════════════════════════════════════════════════════
+
+🎯 ACCESO DIRECTO A PANELES:
+
+Estudiante:     http://localhost:3000/student/dashboard
+Especialista:   http://localhost:3000/specialist/dashboard
+Admin:          http://localhost:3000/admin/dashboard
+Super Admin:    http://localhost:3000/admin/super-admin
+
+═══════════════════════════════════════════════════════════
+
+🔧 SI HAY PROBLEMAS:
+
+Reinstalar:     npm install
+Limpiar:        Remove-Item -Recurse -Force .next
+Reiniciar:      npm run dev
+
+═══════════════════════════════════════════════════════════
+
+✅ LISTO PARA PRESENTAR!
+
+═══════════════════════════════════════════════════════════
