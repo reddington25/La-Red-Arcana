@@ -5,6 +5,7 @@ import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 import { OfflineIndicator } from "@/components/pwa/OfflineIndicator";
 import { Toaster } from "@/components/ui/toaster";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { MatrixRain } from "@/components/matrix-rain/MatrixRain";
 
 const orbitron = Orbitron({
   subsets: ["latin"],
@@ -58,8 +59,9 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
-      <body className={`${orbitron.variable} antialiased`}>
+      <body className={`${orbitron.variable} antialiased bg-black`}>
         <ErrorBoundary>
+          <MatrixRain />
           <OfflineIndicator />
           {children}
           <PWAInstallPrompt />

@@ -3,6 +3,22 @@ import { updateSession } from './lib/supabase/middleware'
 import { createServerClient } from '@supabase/ssr'
 
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+
+  // Public routes that don't require authentication
+  const publicRoutes = ['/', '/auth/login', '/auth/callback', '/demo']
+  const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith('/auth/register'))
+  
+  // DEMO MODE: Allow access to all routes without authentication
+  const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
+  const isSupabaseConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && 
+                                process.env.NEXT_PUBLIC_SUPABASE_URL !== 'https://demo.supabase.co'
+  
+  // If demo mode OR Supabase not configured, allow all access
+  if (isDemoMode || !isSupabaseConfigured) {
+    return NextResponse.next()
+  }
+
   // Update session first
   const response = await updateSession(request)
   
@@ -23,17 +39,6 @@ export async function middleware(request: NextRequest) {
   )
 
   const { data: { user } } = await supabase.auth.getUser()
-  const pathname = request.nextUrl.pathname
-
-  // Public routes that don't require authentication
-  const publicRoutes = ['/', '/auth/login', '/auth/callback', '/demo']
-  const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith('/auth/register'))
-  
-  // DEMO MODE: Allow access to all routes without authentication
-  const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
-  if (isDemoMode) {
-    return response
-  }
 
   // If user is not authenticated and trying to access protected route
   if (!user && !isPublicRoute) {

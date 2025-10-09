@@ -1,0 +1,74 @@
+═══════════════════════════════════════════════════════════
+  COMANDOS PARA ACTUALIZAR DEMO EN VERCEL
+═══════════════════════════════════════════════════════════
+
+🔧 CAMBIOS REALIZADOS:
+
+✅ Middleware arreglado (permite acceso sin login)
+✅ Matrix Rain agregado (fondo animado)
+
+═══════════════════════════════════════════════════════════
+
+📋 EJECUTAR EN POWERSHELL:
+
+git add .
+git commit -m "Fix demo mode and add matrix rain background"
+git push
+
+═══════════════════════════════════════════════════════════
+
+⏱️ ESPERAR 1-2 MINUTOS
+
+Vercel desplegará automáticamente.
+
+Ver progreso en:
+https://vercel.com/tu-usuario/red-arcana-demo/deployments
+
+═══════════════════════════════════════════════════════════
+
+🔑 VERIFICAR VARIABLES EN VERCEL:
+
+Settings → Environment Variables
+
+Debe tener estas 4 variables:
+
+NEXT_PUBLIC_DEMO_MODE = true
+NEXT_PUBLIC_SUPABASE_URL = https://demo.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY = demo_key
+SUPABASE_SERVICE_ROLE_KEY = demo_service_key
+
+Si NO están, agregarlas y REDESPLEGAR.
+
+═══════════════════════════════════════════════════════════
+
+✅ VERIFICAR QUE FUNCIONA:
+
+1. Abrir: https://tu-proyecto.vercel.app
+2. Ver fondo Matrix Rain animado ✓
+3. Click "Modo Demo" ✓
+4. Click en cualquier rol ✓
+5. Entrar SIN login ✓
+
+═══════════════════════════════════════════════════════════
+
+🐛 SI SIGUE PIDIENDO LOGIN:
+
+1. Verificar variables en Vercel
+2. Redesplegar: Deployments → ... → Redeploy
+3. Limpiar caché: Ctrl + Shift + R
+
+═══════════════════════════════════════════════════════════
+
+🎨 SI NO SE VE MATRIX RAIN:
+
+1. Esperar que termine el despliegue
+2. Limpiar caché: Ctrl + Shift + R
+3. Probar en modo incógnito
+
+═══════════════════════════════════════════════════════════
+
+✨ LISTO PARA COMPARTIR:
+
+https://tu-proyecto.vercel.app/demo
+
+═══════════════════════════════════════════════════════════
