@@ -1,0 +1,36 @@
+{
+  "name": "red-arcana",
+  "version": "0.1.0",
+  "private": true,
+  "description": "**Red Arcana** es un marketplace académico diseñado para conectar a estudiantes universitarios que necesitan ayuda con sus trabajos (\"Contratos\") con una red de especialistas verificados (egresados y estudiantes destacados). La plataforma opera bajo un modelo de contraoferta similar a inDrive, donde los estudiantes publican su necesidad y precio inicial, y los especialistas proponen sus propias tarifas. El estudiante elige al especialista basándose en el precio, la reputación y las insignias de confianza. La plataforma garantiza la seguridad y la calidad a través de un sistema de escrow manual (para el MVP), perfiles anónimos para estudiantes, y un riguroso proceso de verificación para especialistas.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@radix-ui/react-toast": "^1.2.15",
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.74.0",
+    "@types/node": "^24.7.0",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.1",
+    "class-variance-authority": "^0.7.1",
+    "date-fns": "^4.1.0",
+    "lucide-react": "^0.545.0",
+    "next": "^15.5.4",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.14",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.14"
+  }
+}
