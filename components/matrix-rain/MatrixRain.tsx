@@ -21,25 +21,20 @@ export function MatrixRain() {
     
     setIsLowPower(isMobile || prefersReducedMotion)
 
-    // Set canvas size with device pixel ratio for sharp rendering
+    // Set canvas size - use window dimensions directly
     const resizeCanvas = () => {
-      const dpr = window.devicePixelRatio || 1
-      const rect = canvas.getBoundingClientRect()
-      
-      canvas.width = rect.width * dpr
-      canvas.height = rect.height * dpr
-      
-      ctx.scale(dpr, dpr)
-      
-      canvas.style.width = `${rect.width}px`
-      canvas.style.height = `${rect.height}px`
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
     }
     resizeCanvas()
     
     let resizeTimeout: NodeJS.Timeout
     const handleResize = () => {
       clearTimeout(resizeTimeout)
-      resizeTimeout = setTimeout(resizeCanvas, 250)
+      resizeTimeout = setTimeout(() => {
+        resizeCanvas()
+        updateDrops()
+      }, 250)
     }
     window.addEventListener('resize', handleResize)
 
@@ -52,8 +47,14 @@ export function MatrixRain() {
     const frameRate = isMobile ? 80 : 50 // Slower on mobile
     const fadeAmount = isMobile ? 0.08 : 0.05 // Faster fade on mobile
     
-    const columns = Math.floor(canvas.width / fontSize)
-    const drops: number[] = Array(columns).fill(1)
+    let columns = Math.floor(canvas.width / fontSize)
+    let drops: number[] = Array(columns).fill(1)
+    
+    // Update columns and drops on resize
+    const updateDrops = () => {
+      columns = Math.floor(canvas.width / fontSize)
+      drops = Array(columns).fill(1)
+    }
 
     let animationId: number
     let lastFrameTime = 0
@@ -116,11 +117,16 @@ export function MatrixRain() {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed top-0 left-0 w-full h-full pointer-events-none"
+      className="pointer-events-none"
       aria-hidden="true"
       style={{ 
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
         zIndex: 0,
-        willChange: isLowPower ? 'auto' : 'transform'
+        display: 'block'
       }}
     />
   )
