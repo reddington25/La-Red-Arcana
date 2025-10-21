@@ -25,6 +25,30 @@ export function Testimonials() {
       text: 'Excelente experiencia. El especialista fue muy profesional y me ayudó a entender mejor el tema. Definitivamente volveré a usar el servicio.',
       project: 'Plan de Negocios',
       verified: true
+    },
+    {
+      alias: 'TechStudent',
+      career: 'Ingeniería de Sistemas',
+      rating: 5,
+      text: 'El especialista no solo completó mi proyecto de programación, sino que me explicó cada parte del código. Aprendí mucho y saqué la mejor nota.',
+      project: 'Sistema Web con React',
+      verified: true
+    },
+    {
+      alias: 'ElectroUser',
+      career: 'Ingeniería Eléctrica',
+      rating: 5,
+      text: 'Necesitaba ayuda urgente con el diseño de circuitos y encontré un especialista increíble. Entrega rápida, trabajo impecable y excelente comunicación.',
+      project: 'Diseño de Circuitos Digitales',
+      verified: true
+    },
+    {
+      alias: 'MechaStudent',
+      career: 'Ingeniería Mecánica',
+      rating: 4,
+      text: 'La simulación de procesos que me entregaron fue exactamente lo que necesitaba. El especialista demostró mucho conocimiento y profesionalismo.',
+      project: 'Simulación en SolidWorks',
+      verified: true
     }
   ]
   

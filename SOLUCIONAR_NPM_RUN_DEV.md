@@ -3,6 +3,7 @@
 ## 🎯 El Problema
 
 Cuando ejecutas `npm run dev`, el servidor inicia correctamente en `http://localhost:3000`, pero al abrir el navegador:
+
 - La página no carga
 - Te redirige a `/auth/login`
 - Ves errores 404 en iconos y manifest
@@ -14,21 +15,25 @@ El problema es que el **middleware** está bloqueando el acceso porque no detect
 ### Opción 1: Verificar Variables de Entorno (Recomendado)
 
 1. **Verifica que existe `.env.local`**:
+
 ```powershell
 Test-Path .env.local
 ```
 
 Si dice `False`, copia el archivo de ejemplo:
+
 ```powershell
 Copy-Item .env.local.example .env.local
 ```
 
 2. **Verifica el contenido de `.env.local`**:
+
 ```powershell
 Get-Content .env.local
 ```
 
 Debe contener:
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://uohpkoywggsqxgaymtwg.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGc...
@@ -37,6 +42,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
 3. **Si las variables están correctas, reinicia el servidor**:
+
 ```powershell
 # Detener el servidor (Ctrl+C)
 # Luego iniciar de nuevo
@@ -48,11 +54,13 @@ npm run dev
 Si quieres trabajar sin Supabase temporalmente:
 
 1. **Agrega esta variable a `.env.local`**:
+
 ```env
 NEXT_PUBLIC_DEMO_MODE=true
 ```
 
 2. **Reinicia el servidor**:
+
 ```powershell
 npm run dev
 ```
@@ -64,16 +72,19 @@ Ahora podrás acceder a todas las páginas sin autenticación.
 Si ninguna de las anteriores funciona:
 
 1. **Renombra el middleware temporalmente**:
+
 ```powershell
 Rename-Item middleware.ts middleware.ts.backup
 ```
 
 2. **Inicia el servidor**:
+
 ```powershell
 npm run dev
 ```
 
 3. **Cuando termines, restaura el middleware**:
+
 ```powershell
 Rename-Item middleware.ts.backup middleware.ts
 ```
@@ -89,6 +100,7 @@ npm run dev
 ```
 
 Deberías ver:
+
 ```
 ✓ Ready in 3.2s
 - Local:        http://localhost:3000
@@ -103,12 +115,14 @@ Deberías ver:
 Abre el navegador en `http://localhost:3000` y abre la consola (F12).
 
 **Si ves errores como:**
+
 - `supabaseUrl is required`
 - `Cannot read properties of undefined`
 
 ❌ Las variables de entorno no están cargando.
 
 **Solución:**
+
 ```powershell
 # Detener servidor (Ctrl+C)
 # Verificar .env.local
@@ -125,6 +139,7 @@ Si la página te redirige a `/auth/login` inmediatamente:
 
 **Solución temporal:**
 Agrega a `.env.local`:
+
 ```env
 NEXT_PUBLIC_DEMO_MODE=true
 ```
@@ -162,21 +177,25 @@ taskkill /PID [número] /F
 ### Para Desarrollo Local
 
 1. **Inicia el servidor**:
+
 ```powershell
 npm run dev
 ```
 
 2. **Abre el navegador**:
+
 ```
 http://localhost:3000
 ```
 
 3. **Si no carga, verifica variables**:
+
 ```powershell
 Get-Content .env.local
 ```
 
 4. **Si sigue sin funcionar, usa modo demo**:
+
 ```env
 # Agregar a .env.local
 NEXT_PUBLIC_DEMO_MODE=true
@@ -185,6 +204,7 @@ NEXT_PUBLIC_DEMO_MODE=true
 ### Para Probar con Autenticación Real
 
 1. **Asegúrate de tener las variables correctas**:
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://uohpkoywggsqxgaymtwg.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGc...
@@ -193,12 +213,14 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
 2. **NO uses modo demo**:
+
 ```env
 # Comentar o eliminar esta línea
 # NEXT_PUBLIC_DEMO_MODE=true
 ```
 
 3. **Reinicia el servidor**:
+
 ```powershell
 npm run dev
 ```
@@ -212,6 +234,7 @@ npm run dev
 **Causa**: Ya hay un proceso usando el puerto 3000.
 
 **Solución**:
+
 ```powershell
 # Encontrar el proceso
 netstat -ano | findstr :3000
@@ -228,6 +251,7 @@ npm run dev -- -p 3001
 **Causa**: Variables de entorno no están cargando.
 
 **Solución**:
+
 ```powershell
 # Verificar que .env.local existe
 Test-Path .env.local
@@ -247,6 +271,7 @@ npm run dev
 **Causa**: Middleware bloqueando acceso.
 
 **Solución temporal**:
+
 ```env
 # Agregar a .env.local
 NEXT_PUBLIC_DEMO_MODE=true
@@ -257,6 +282,7 @@ NEXT_PUBLIC_DEMO_MODE=true
 **Causa**: Archivos estáticos no se encuentran.
 
 **Solución**: Ya está solucionado en el middleware actualizado. Solo reinicia:
+
 ```powershell
 npm run dev
 ```
@@ -296,6 +322,7 @@ npm run dev
 Si nada de lo anterior funciona:
 
 1. **Limpia todo**:
+
 ```powershell
 # Detener servidor (Ctrl+C)
 Remove-Item -Recurse -Force .next
@@ -303,21 +330,25 @@ Remove-Item -Recurse -Force node_modules
 ```
 
 2. **Reinstala**:
+
 ```powershell
 npm install
 ```
 
 3. **Verifica variables**:
+
 ```powershell
 Get-Content .env.local
 ```
 
 4. **Inicia de nuevo**:
+
 ```powershell
 npm run dev
 ```
 
 5. **Abre el navegador**:
+
 ```
 http://localhost:3000
 ```
@@ -329,11 +360,13 @@ http://localhost:3000
 **El problema más común**: Variables de entorno no están cargando.
 
 **Solución rápida**:
+
 1. Verifica que `.env.local` existe y tiene las variables correctas
 2. Reinicia el servidor
 3. Si no funciona, usa `NEXT_PUBLIC_DEMO_MODE=true` temporalmente
 
 **Para trabajar normalmente**:
+
 - Asegúrate de tener las variables de Supabase correctas
 - NO uses modo demo
 - El servidor debe iniciar en `http://localhost:3000`
