@@ -62,45 +62,68 @@ export function HeroSection() {
 
   return (
     <section className="min-h-screen flex flex-col items-center justify-center px-4 py-20">
-      {/* Glitch Title - Efecto distorsionado mejorado */}
-      <h1 className="text-7xl md:text-9xl font-black font-orbitron relative mb-8 glitch-container">
+      {/* Glitch Title - Efecto NOTORIO y AGRESIVO */}
+      <h1 className="text-7xl md:text-9xl font-black font-orbitron relative mb-8 overflow-hidden">
+        {/* Capa Roja - Glitch superior */}
         <span 
           className="absolute inset-0 text-red-500"
           style={{
-            animation: 'glitch-1 0.3s infinite',
-            textShadow: '3px 3px 0 rgba(220, 38, 38, 0.9), -3px -3px 0 rgba(220, 38, 38, 0.5)',
-            clipPath: 'polygon(0 0, 100% 0, 100% 45%, 0 45%)'
+            animation: 'glitch-aggressive-1 0.4s cubic-bezier(.25, .46, .45, .94) infinite',
+            textShadow: '5px 0 10px rgba(220, 38, 38, 1), -5px 0 10px rgba(220, 38, 38, 0.5)',
+            clipPath: 'polygon(0 0, 100% 0, 100% 45%, 0 45%)',
+            transform: 'translateZ(0)' // GPU acceleration
           }}
           aria-hidden="true"
         >
           Red Arcana
         </span>
+        
+        {/* Capa Cyan - Glitch inferior */}
         <span 
           className="absolute inset-0 text-cyan-400"
           style={{
-            animation: 'glitch-2 0.3s infinite reverse',
-            textShadow: '-3px -3px 0 rgba(34, 211, 238, 0.9), 3px 3px 0 rgba(34, 211, 238, 0.5)',
-            clipPath: 'polygon(0 55%, 100% 55%, 100% 100%, 0 100%)'
+            animation: 'glitch-aggressive-2 0.4s cubic-bezier(.25, .46, .45, .94) infinite reverse',
+            textShadow: '-5px 0 10px rgba(34, 211, 238, 1), 5px 0 10px rgba(34, 211, 238, 0.5)',
+            clipPath: 'polygon(0 55%, 100% 55%, 100% 100%, 0 100%)',
+            transform: 'translateZ(0)'
           }}
           aria-hidden="true"
         >
           Red Arcana
         </span>
+        
+        {/* Capa Amarilla - Efecto fantasma */}
         <span 
-          className="absolute inset-0 text-yellow-400 opacity-30"
+          className="absolute inset-0 text-yellow-300 opacity-40"
           style={{
-            animation: 'glitch-3 0.4s infinite',
-            filter: 'blur(2px)'
+            animation: 'glitch-ghost 0.6s ease-in-out infinite',
+            filter: 'blur(3px)',
+            transform: 'translateZ(0)'
           }}
           aria-hidden="true"
         >
           Red Arcana
         </span>
+        
+        {/* Capa Verde - Distorsión adicional */}
+        <span 
+          className="absolute inset-0 text-green-400 opacity-30"
+          style={{
+            animation: 'glitch-distort 0.5s steps(2, end) infinite',
+            transform: 'translateZ(0)'
+          }}
+          aria-hidden="true"
+        >
+          Red Arcana
+        </span>
+        
+        {/* Texto Principal con brillo */}
         <span 
           className="relative text-white"
           style={{
-            textShadow: '0 0 15px rgba(255, 255, 255, 0.8), 0 0 30px rgba(220, 38, 38, 0.5), 0 0 45px rgba(220, 38, 38, 0.3)',
-            animation: 'text-flicker 3s infinite'
+            textShadow: '0 0 30px rgba(255, 255, 255, 1), 0 0 60px rgba(220, 38, 38, 0.8), 0 0 90px rgba(220, 38, 38, 0.5)',
+            animation: 'text-glitch-main 0.8s ease-in-out infinite',
+            transform: 'translateZ(0)'
           }}
         >
           Red Arcana
