@@ -1,93 +1,85 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 
 export function MatrixRain() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [isLowPower, setIsLowPower] = useState(false)
 
   useEffect(() => {
     const canvas = canvasRef.current
-    if (!canvas) return
+    if (!canvas) {
+      console.log('Canvas not found')
+      return
+    }
 
-    const ctx = canvas.getContext('2d', { alpha: false })
-    if (!ctx) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) {
+      console.log('Context not found')
+      return
+    }
 
-    // Detect if device is low-power (mobile)
+    console.log('Matrix Rain initialized')
+
+    // Detect mobile
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
       navigator.userAgent
     )
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     
-    setIsLowPower(isMobile || prefersReducedMotion)
+    console.log('Is mobile:', isMobile)
 
-    // Set canvas size - use window dimensions directly
-    const resizeCanvas = () => {
+    // Set canvas size
+    const setCanvasSize = () => {
       canvas.width = window.innerWidth
       canvas.height = window.innerHeight
+      console.log('Canvas size:', canvas.width, 'x', canvas.height)
     }
-    resizeCanvas()
-    
-    let resizeTimeout: NodeJS.Timeout
-    const handleResize = () => {
-      clearTimeout(resizeTimeout)
-      resizeTimeout = setTimeout(() => {
-        resizeCanvas()
-        updateDrops()
-      }, 250)
-    }
-    window.addEventListener('resize', handleResize)
+    setCanvasSize()
 
-    // Chinese characters for matrix effect
+    // Chinese characters
     const chars = '田由甲申甴电甶男甸甹町画甼甽甾甿畀畁畂畃畄畅畆畇畈畉畊畋界畍畎畏畐畑'
     const charArray = chars.split('')
 
-    // Adjust performance based on device
-    const fontSize = isMobile ? 14 : 16
-    const frameRate = isMobile ? 80 : 50 // Slower on mobile
-    const fadeAmount = isMobile ? 0.08 : 0.05 // Faster fade on mobile
+    // Settings
+    const fontSize = isMobile ? 12 : 16
+    const columns = Math.floor(canvas.width / fontSize)
+    const drops: number[] = []
     
-    let columns = Math.floor(canvas.width / fontSize)
-    let drops: number[] = Array(columns).fill(1)
-    
-    // Update columns and drops on resize
-    const updateDrops = () => {
-      columns = Math.floor(canvas.width / fontSize)
-      drops = Array(columns).fill(1)
+    // Initialize drops
+    for (let i = 0; i < columns; i++) {
+      drops[i] = Math.floor(Math.random() * canvas.height / fontSize)
     }
 
-    let animationId: number
-    let lastFrameTime = 0
+    console.log('Columns:', columns, 'Drops:', drops.length)
 
-    // Draw function with requestAnimationFrame for better performance
-    const draw = (currentTime: number) => {
+    // Animation
+    let frameCount = 0
+    const frameSkip = isMobile ? 2 : 1
+
+    function draw() {
       if (!ctx || !canvas) return
 
-      // Throttle frame rate
-      if (currentTime - lastFrameTime < frameRate) {
-        animationId = requestAnimationFrame(draw)
+      frameCount++
+      if (frameCount % frameSkip !== 0) {
+        requestAnimationFrame(draw)
         return
       }
-      lastFrameTime = currentTime
 
-      // Black background with fade effect
-      ctx.fillStyle = `rgba(0, 0, 0, ${fadeAmount})`
+      // Fade effect
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-      // Red text with slight transparency
-      ctx.fillStyle = 'rgba(220, 38, 38, 0.9)'
+      // Draw characters
+      ctx.fillStyle = '#dc2626' // Red color
       ctx.font = `${fontSize}px monospace`
 
-      // Draw characters (reduce columns on mobile for performance)
-      const step = isMobile ? 2 : 1
-      for (let i = 0; i < drops.length; i += step) {
+      for (let i = 0; i < drops.length; i++) {
         const char = charArray[Math.floor(Math.random() * charArray.length)]
         const x = i * fontSize
         const y = drops[i] * fontSize
 
         ctx.fillText(char, x, y)
 
-        // Reset drop to top randomly
+        // Reset drop
         if (y > canvas.height && Math.random() > 0.975) {
           drops[i] = 0
         }
@@ -95,39 +87,36 @@ export function MatrixRain() {
         drops[i]++
       }
 
-      animationId = requestAnimationFrame(draw)
+      requestAnimationFrame(draw)
     }
 
-    // Start animation only if not reduced motion
-    if (!prefersReducedMotion) {
-      animationId = requestAnimationFrame(draw)
-    } else {
-      // Static background for reduced motion
-      ctx.fillStyle = '#000000'
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
+    // Start animation
+    draw()
+
+    // Handle resize
+    const handleResize = () => {
+      setCanvasSize()
     }
+    window.addEventListener('resize', handleResize)
 
     return () => {
-      cancelAnimationFrame(animationId)
       window.removeEventListener('resize', handleResize)
-      clearTimeout(resizeTimeout)
     }
   }, [])
 
   return (
     <canvas
       ref={canvasRef}
-      className="pointer-events-none"
-      aria-hidden="true"
-      style={{ 
+      style={{
         position: 'fixed',
         top: 0,
         left: 0,
-        width: '100vw',
-        height: '100vh',
+        width: '100%',
+        height: '100%',
         zIndex: 0,
-        display: 'block'
+        pointerEvents: 'none'
       }}
+      aria-hidden="true"
     />
   )
 }
