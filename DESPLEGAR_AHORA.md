@@ -57,24 +57,28 @@ git push -u origin main
 4. Agrega estas 4 variables (una por una):
 
 #### Variable 1:
+
 - **Name**: `NEXT_PUBLIC_DEMO_MODE`
 - **Value**: `true`
 - **Environments**: Marca las 3 (Production, Preview, Development)
 - Click **"Save"**
 
 #### Variable 2:
+
 - **Name**: `NEXT_PUBLIC_SUPABASE_URL`
 - **Value**: `https://demo.supabase.co`
 - **Environments**: Marca las 3
 - Click **"Save"**
 
 #### Variable 3:
+
 - **Name**: `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - **Value**: `demo_key`
 - **Environments**: Marca las 3
 - Click **"Save"**
 
 #### Variable 4:
+
 - **Name**: `SUPABASE_SERVICE_ROLE_KEY`
 - **Value**: `demo_service_key`
 - **Environments**: Marca las 3
@@ -108,11 +112,13 @@ https://red-arcana-demo-tu-usuario.vercel.app/demo
 ### Compartir con inversionistas:
 
 **Página de selección de roles:**
+
 ```
 https://tu-url.vercel.app/demo
 ```
 
 **Acceso directo a paneles:**
+
 ```
 Estudiante:     https://tu-url.vercel.app/student/dashboard
 Especialista:   https://tu-url.vercel.app/specialist/dashboard
@@ -207,6 +213,7 @@ MI DEMO: https://red-arcana-demo.vercel.app/demo
 ```
 
 Y compártela por:
+
 - Email
 - WhatsApp
 - LinkedIn

@@ -1,0 +1,207 @@
+═══════════════════════════════════════════════════════════
+  DÓNDE CONFIGURAR LAS VARIABLES EN VERCEL
+═══════════════════════════════════════════════════════════
+
+🎯 EL PROBLEMA:
+
+Las variables de entorno NO están configuradas en Vercel.
+Por eso:
+❌ Sigue pidiendo login
+❌ No se ve el Matrix Rain
+
+🎯 LA SOLUCIÓN:
+
+Configurar 4 variables en Vercel Dashboard.
+
+═══════════════════════════════════════════════════════════
+
+📍 UBICACIÓN EXACTA EN VERCEL:
+
+1. Abre: https://vercel.com/dashboard
+
+2. Verás una lista de tus proyectos
+
+3. Click en: "red-arcana-demo" (o como lo hayas llamado)
+
+4. Arriba verás un menú:
+   Overview | Deployments | Analytics | Settings
+   
+5. Click en: "Settings"
+
+6. En el menú IZQUIERDO verás:
+   - General
+   - Domains
+   - Environment Variables  ← AQUÍ
+   - Git
+   - Functions
+   - etc.
+
+7. Click en: "Environment Variables"
+
+8. Verás una página que dice:
+   "Environment Variables"
+   "Manage your project's environment variables"
+   
+9. Hay un formulario con:
+   - Campo "Key" (nombre de la variable)
+   - Campo "Value" (valor de la variable)
+   - Checkboxes "Environment" (Production, Preview, Development)
+   - Botón "Save"
+
+═══════════════════════════════════════════════════════════
+
+✍️ QUÉ ESCRIBIR:
+
+VARIABLE 1:
+-----------
+Key:   NEXT_PUBLIC_DEMO_MODE
+Value: true
+☑ Production ☑ Preview ☑ Development
+[Save]
+
+VARIABLE 2:
+-----------
+Key:   NEXT_PUBLIC_SUPABASE_URL
+Value: https://demo.supabase.co
+☑ Production ☑ Preview ☑ Development
+[Save]
+
+VARIABLE 3:
+-----------
+Key:   NEXT_PUBLIC_SUPABASE_ANON_KEY
+Value: demo_key
+☑ Production ☑ Preview ☑ Development
+[Save]
+
+VARIABLE 4:
+-----------
+Key:   SUPABASE_SERVICE_ROLE_KEY
+Value: demo_service_key
+☑ Production ☑ Preview ☑ Development
+[Save]
+
+═══════════════════════════════════════════════════════════
+
+🔄 DESPUÉS DE AGREGAR LAS 4 VARIABLES:
+
+1. Click en "Deployments" (arriba)
+
+2. Verás una lista de deployments
+
+3. El primero (más reciente) tiene 3 puntos "..." a la derecha
+
+4. Click en los 3 puntos "..."
+
+5. Aparece un menú:
+   - Visit
+   - Redeploy  ← CLICK AQUÍ
+   - Promote to Production
+   - etc.
+
+6. Click en "Redeploy"
+
+7. Aparece un popup de confirmación
+
+8. Click en "Redeploy" de nuevo
+
+9. Espera 1-2 minutos
+
+10. ¡Listo!
+
+═══════════════════════════════════════════════════════════
+
+✅ CÓMO SABER SI ESTÁN CONFIGURADAS:
+
+En Settings → Environment Variables, deberías ver una lista:
+
+┌─────────────────────────────────────────────────────────┐
+│ Environment Variables                                    │
+│                                                           │
+│ ┌─────────────────────────────────────────────────────┐│
+│ │ NEXT_PUBLIC_DEMO_MODE                               ││
+│ │ Production, Preview, Development                    ││
+│ │ [Edit] [Delete]                                     ││
+│ └─────────────────────────────────────────────────────┘│
+│                                                           │
+│ ┌─────────────────────────────────────────────────────┐│
+│ │ NEXT_PUBLIC_SUPABASE_URL                            ││
+│ │ Production, Preview, Development                    ││
+│ │ [Edit] [Delete]                                     ││
+│ └─────────────────────────────────────────────────────┘│
+│                                                           │
+│ ┌─────────────────────────────────────────────────────┐│
+│ │ NEXT_PUBLIC_SUPABASE_ANON_KEY                       ││
+│ │ Production, Preview, Development                    ││
+│ │ [Edit] [Delete]                                     ││
+│ └─────────────────────────────────────────────────────┘│
+│                                                           │
+│ ┌─────────────────────────────────────────────────────┐│
+│ │ SUPABASE_SERVICE_ROLE_KEY                           ││
+│ │ Production, Preview, Development                    ││
+│ │ [Edit] [Delete]                                     ││
+│ └─────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────┘
+
+Si ves las 4 variables, ¡están configuradas! ✅
+
+═══════════════════════════════════════════════════════════
+
+🎯 DESPUÉS DE REDESPLEGAR:
+
+1. Abre: https://tu-proyecto.vercel.app
+
+2. Presiona: Ctrl + Shift + R (limpiar caché)
+
+3. Deberías ver:
+   ✅ Fondo Matrix Rain animado
+   ✅ Botón "Modo Demo" amarillo
+
+4. Click en "Modo Demo"
+
+5. Click en cualquier rol
+
+6. ¡Entras SIN login! ✅
+
+═══════════════════════════════════════════════════════════
+
+📱 URLS PARA PROBAR:
+
+Homepage:
+https://tu-proyecto.vercel.app
+
+Modo Demo:
+https://tu-proyecto.vercel.app/demo
+
+Directo a Estudiante:
+https://tu-proyecto.vercel.app/student/dashboard
+
+Directo a Especialista:
+https://tu-proyecto.vercel.app/specialist/dashboard
+
+Directo a Admin:
+https://tu-proyecto.vercel.app/admin/dashboard
+
+Directo a Super Admin:
+https://tu-proyecto.vercel.app/admin/super-admin
+
+═══════════════════════════════════════════════════════════
+
+🆘 AYUDA RÁPIDA:
+
+¿No encuentras Environment Variables?
+→ Settings (arriba) → Environment Variables (menú izquierdo)
+
+¿No sabes qué escribir?
+→ Copia exactamente los valores de arriba
+
+¿Ya agregaste las variables pero no funciona?
+→ Redesplegar: Deployments → ... → Redeploy
+
+¿Sigue sin funcionar?
+→ Espera 2 minutos y limpia caché (Ctrl+Shift+R)
+
+═══════════════════════════════════════════════════════════
+
+✨ ¡CONFIGURA LAS 4 VARIABLES Y FUNCIONARÁ!
+
+═══════════════════════════════════════════════════════════

@@ -116,11 +116,10 @@ export function MatrixRain() {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 -z-10 pointer-events-none"
+      className="fixed top-0 left-0 w-full h-full pointer-events-none"
       aria-hidden="true"
       style={{ 
-        width: '100vw', 
-        height: '100vh',
+        zIndex: 0,
         willChange: isLowPower ? 'auto' : 'transform'
       }}
     />

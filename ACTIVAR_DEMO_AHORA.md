@@ -27,8 +27,9 @@ Click en el botón amarillo: **"🎭 Modo Demo"**
 ## ✅ ¡LISTO!
 
 Ahora puedes:
+
 - Explorar como Estudiante
-- Explorar como Especialista  
+- Explorar como Especialista
 - Explorar como Admin
 - Explorar como Super Admin
 

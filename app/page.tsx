@@ -11,12 +11,14 @@ export default function Home() {
       {/* Matrix Rain Background */}
       <MatrixRain />
       
-      {/* Homepage Sections */}
-      <HeroSection />
-      <HowItWorks />
-      <SocialProof />
-      <FAQ />
-      <FinalCTA />
+      {/* Homepage Sections - with relative positioning and z-index */}
+      <div className="relative z-10">
+        <HeroSection />
+        <HowItWorks />
+        <SocialProof />
+        <FAQ />
+        <FinalCTA />
+      </div>
     </main>
   );
 }

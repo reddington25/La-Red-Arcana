@@ -39,17 +39,6 @@ export function HeroSection() {
           Aplicar como Especialista
         </Link>
       </div>
-
-      {/* Demo Mode Button */}
-      <div className="mt-8">
-        <Link
-          href="/demo"
-          className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold bg-yellow-600 hover:bg-yellow-500 text-black transition-colors rounded-lg shadow-lg hover:shadow-yellow-500/50"
-        >
-          <span>🎭</span>
-          <span>Modo Demo (Sin Autenticación)</span>
-        </Link>
-      </div>
     </section>
   )
 }

@@ -14,6 +14,8 @@ interface LoginFormProps {
 export default function LoginForm({ redirectTo, error }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState(error)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
 
   async function handleGoogleSignIn() {
     try {
@@ -41,6 +43,43 @@ export default function LoginForm({ redirectTo, error }: LoginFormProps) {
         setIsLoading(false)
       }
       // If successful, user will be redirected by OAuth flow
+    } catch (err) {
+      const errorMsg = 'Error inesperado. Por favor intenta de nuevo.'
+      setErrorMessage(errorMsg)
+      showErrorToast(errorMsg)
+      setIsLoading(false)
+    }
+  }
+
+  async function handleEmailSignIn(e: React.FormEvent) {
+    e.preventDefault()
+    
+    if (!email || !password) {
+      setErrorMessage('Por favor ingresa tu email y contraseña')
+      return
+    }
+
+    try {
+      setIsLoading(true)
+      setErrorMessage(undefined)
+      
+      const supabase = createClient()
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        const errorMsg = error.message === 'Invalid login credentials'
+          ? 'Email o contraseña incorrectos'
+          : 'Error al iniciar sesión. Por favor intenta de nuevo.'
+        setErrorMessage(errorMsg)
+        showErrorToast(errorMsg)
+        setIsLoading(false)
+      } else {
+        // Redirect will happen automatically via middleware
+        window.location.href = redirectTo || '/auth/callback'
+      }
     } catch (err) {
       const errorMsg = 'Error inesperado. Por favor intenta de nuevo.'
       setErrorMessage(errorMsg)
@@ -78,6 +117,7 @@ export default function LoginForm({ redirectTo, error }: LoginFormProps) {
         <button
           onClick={handleGoogleSignIn}
           disabled={isLoading}
+          type="button"
           className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-900 font-semibold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? (
@@ -114,6 +154,70 @@ export default function LoginForm({ redirectTo, error }: LoginFormProps) {
         <div className="my-6 flex items-center">
           <div className="flex-1 border-t border-gray-700"></div>
           <span className="px-4 text-sm text-gray-500">o</span>
+          <div className="flex-1 border-t border-gray-700"></div>
+        </div>
+
+        {/* Email/Password Form */}
+        <form onSubmit={handleEmailSignIn} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="tu@email.com"
+              disabled={isLoading}
+              className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-500 disabled:opacity-50"
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+              Contraseña
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              disabled={isLoading}
+              className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-500 disabled:opacity-50"
+              required
+            />
+          </div>
+
+          <div className="flex items-center justify-end">
+            <Link
+              href="/auth/forgot-password"
+              className="text-sm text-red-400 hover:text-red-300 transition-colors"
+            >
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </div>
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <div className="flex items-center justify-center gap-2">
+                <LoadingSpinner size="sm" />
+                <span>Iniciando sesión...</span>
+              </div>
+            ) : (
+              'Iniciar Sesión'
+            )}
+          </button>
+        </form>
+
+        {/* Divider */}
+        <div className="my-6 flex items-center">
           <div className="flex-1 border-t border-gray-700"></div>
         </div>
 
