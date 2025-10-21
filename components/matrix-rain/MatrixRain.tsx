@@ -35,11 +35,11 @@ export function MatrixRain() {
     }
     setCanvasSize()
 
-    // Chinese characters
-    const chars = '田由甲申甴电甶男甸甹町画甼甽甾甿畀畁畂畃畄畅畆畇畈畉畊畋界畍畎畏畐畑'
+    // Japanese characters (Katakana and Hiragana mix)
+    const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンあいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん'
     const charArray = chars.split('')
 
-    // Settings
+    // Settings - Velocidad más lenta
     const fontSize = isMobile ? 12 : 16
     const columns = Math.floor(canvas.width / fontSize)
     const drops: number[] = []
@@ -51,9 +51,9 @@ export function MatrixRain() {
 
     console.log('Columns:', columns, 'Drops:', drops.length)
 
-    // Animation
+    // Animation - Más lento (más frames skip = más lento)
     let frameCount = 0
-    const frameSkip = isMobile ? 2 : 1
+    const frameSkip = isMobile ? 4 : 3 // Aumentado para hacer más lento
 
     function draw() {
       if (!ctx || !canvas) return
@@ -64,12 +64,12 @@ export function MatrixRain() {
         return
       }
 
-      // Fade effect
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)'
+      // Fade effect - Más suave
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-      // Draw characters
-      ctx.fillStyle = '#dc2626' // Red color
+      // Draw characters - Color rojo con más transparencia
+      ctx.fillStyle = 'rgba(220, 38, 38, 0.6)' // Reducido de 1.0 a 0.6 para más transparencia
       ctx.font = `${fontSize}px monospace`
 
       for (let i = 0; i < drops.length; i++) {
@@ -79,8 +79,8 @@ export function MatrixRain() {
 
         ctx.fillText(char, x, y)
 
-        // Reset drop
-        if (y > canvas.height && Math.random() > 0.975) {
+        // Reset drop - Más lento en resetear
+        if (y > canvas.height && Math.random() > 0.98) { // Cambiado de 0.975 a 0.98
           drops[i] = 0
         }
 
