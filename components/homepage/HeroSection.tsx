@@ -49,11 +49,11 @@ export function HeroSection() {
                 clearInterval(timer3)
                 setShowCursor3(false)
               }
-            }, 30)
+            }, 50) // Más lento: 50ms por carácter
           }
-        }, 30)
+        }, 50)
       }
-    }, 30)
+    }, 50)
 
     return () => {
       clearInterval(timer1)
@@ -62,23 +62,35 @@ export function HeroSection() {
 
   return (
     <section className="min-h-screen flex flex-col items-center justify-center px-4 py-20">
-      {/* Glitch Title - Más grande y grueso */}
-      <h1 className="text-7xl md:text-9xl font-black font-orbitron relative mb-8">
+      {/* Glitch Title - Efecto distorsionado mejorado */}
+      <h1 className="text-7xl md:text-9xl font-black font-orbitron relative mb-8 glitch-container">
         <span 
-          className="absolute inset-0 text-red-500 opacity-70"
+          className="absolute inset-0 text-red-500"
           style={{
-            animation: 'glitch-1 0.5s infinite',
-            textShadow: '2px 2px 0 rgba(220, 38, 38, 0.8)'
+            animation: 'glitch-1 0.3s infinite',
+            textShadow: '3px 3px 0 rgba(220, 38, 38, 0.9), -3px -3px 0 rgba(220, 38, 38, 0.5)',
+            clipPath: 'polygon(0 0, 100% 0, 100% 45%, 0 45%)'
           }}
           aria-hidden="true"
         >
           Red Arcana
         </span>
         <span 
-          className="absolute inset-0 text-blue-500 opacity-70"
+          className="absolute inset-0 text-cyan-400"
           style={{
-            animation: 'glitch-2 0.5s infinite reverse',
-            textShadow: '-2px -2px 0 rgba(59, 130, 246, 0.8)'
+            animation: 'glitch-2 0.3s infinite reverse',
+            textShadow: '-3px -3px 0 rgba(34, 211, 238, 0.9), 3px 3px 0 rgba(34, 211, 238, 0.5)',
+            clipPath: 'polygon(0 55%, 100% 55%, 100% 100%, 0 100%)'
+          }}
+          aria-hidden="true"
+        >
+          Red Arcana
+        </span>
+        <span 
+          className="absolute inset-0 text-yellow-400 opacity-30"
+          style={{
+            animation: 'glitch-3 0.4s infinite',
+            filter: 'blur(2px)'
           }}
           aria-hidden="true"
         >
@@ -87,7 +99,8 @@ export function HeroSection() {
         <span 
           className="relative text-white"
           style={{
-            textShadow: '0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(220, 38, 38, 0.3)'
+            textShadow: '0 0 15px rgba(255, 255, 255, 0.8), 0 0 30px rgba(220, 38, 38, 0.5), 0 0 45px rgba(220, 38, 38, 0.3)',
+            animation: 'text-flicker 3s infinite'
           }}
         >
           Red Arcana

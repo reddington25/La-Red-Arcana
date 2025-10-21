@@ -13,33 +13,58 @@ export function ActivityFeed() {
   const [activities, setActivities] = useState<Activity[]>([])
   const [nextId, setNextId] = useState(0)
 
-  // Pool de contratos posibles
+  // Pool de contratos posibles - Enfocado en tareas de ingeniería (50-200 Bs)
   const contractTypes = [
-    { type: 'Ensayo de Filosofía', priceRange: [100, 150] },
-    { type: 'Proyecto de Programación', priceRange: [200, 350] },
-    { type: 'Revisión de Tesis', priceRange: [150, 250] },
-    { type: 'Análisis Estadístico', priceRange: [180, 280] },
-    { type: 'Diseño Arquitectónico', priceRange: [250, 400] },
-    { type: 'Informe de Laboratorio', priceRange: [80, 150] },
-    { type: 'Cálculo de Estructuras', priceRange: [200, 350] },
-    { type: 'Diseño de Circuitos', priceRange: [180, 300] },
-    { type: 'Análisis de Algoritmos', priceRange: [150, 250] },
-    { type: 'Modelado 3D', priceRange: [200, 350] },
-    { type: 'Simulación de Procesos', priceRange: [180, 280] },
-    { type: 'Estudio de Mercado', priceRange: [150, 250] },
-    { type: 'Plan de Negocios', priceRange: [200, 350] },
-    { type: 'Análisis Financiero', priceRange: [180, 300] },
-    { type: 'Diseño de Base de Datos', priceRange: [150, 250] },
-    { type: 'Desarrollo Web', priceRange: [250, 450] },
-    { type: 'App Móvil', priceRange: [300, 500] },
-    { type: 'Informe Técnico', priceRange: [120, 200] },
-    { type: 'Presentación PowerPoint', priceRange: [80, 150] },
-    { type: 'Traducción de Documentos', priceRange: [100, 180] },
-    { type: 'Corrección de Estilo', priceRange: [80, 150] },
-    { type: 'Investigación Bibliográfica', priceRange: [100, 180] },
-    { type: 'Análisis de Datos', priceRange: [180, 300] },
-    { type: 'Diseño de Experimentos', priceRange: [200, 350] },
-    { type: 'Memoria de Cálculo', priceRange: [150, 250] }
+    // Ingeniería Civil
+    { type: 'Ejercicios de Resistencia', priceRange: [60, 120] },
+    { type: 'Cálculo de Vigas', priceRange: [80, 150] },
+    { type: 'Diseño de Zapatas', priceRange: [90, 160] },
+    { type: 'Análisis Estructural', priceRange: [100, 180] },
+    
+    // Ingeniería Eléctrica
+    { type: 'Circuitos en Serie/Paralelo', priceRange: [50, 100] },
+    { type: 'Análisis de Circuitos AC', priceRange: [70, 130] },
+    { type: 'Diseño de Circuitos Digitales', priceRange: [90, 160] },
+    { type: 'Problemas de Electromagnetismo', priceRange: [80, 140] },
+    
+    // Ingeniería de Sistemas
+    { type: 'Algoritmos en Python', priceRange: [70, 140] },
+    { type: 'Estructura de Datos', priceRange: [80, 150] },
+    { type: 'Base de Datos SQL', priceRange: [90, 160] },
+    { type: 'Página Web Simple', priceRange: [120, 200] },
+    
+    // Ingeniería Mecánica
+    { type: 'Problemas de Termodinámica', priceRange: [60, 120] },
+    { type: 'Análisis de Fuerzas', priceRange: [70, 130] },
+    { type: 'Diseño de Piezas CAD', priceRange: [100, 180] },
+    { type: 'Cálculo de Engranajes', priceRange: [80, 150] },
+    
+    // Ingeniería Industrial
+    { type: 'Estudio de Tiempos', priceRange: [70, 130] },
+    { type: 'Diagrama de Procesos', priceRange: [60, 110] },
+    { type: 'Análisis de Productividad', priceRange: [80, 150] },
+    { type: 'Layout de Planta', priceRange: [90, 160] },
+    
+    // Ingeniería Química
+    { type: 'Balance de Materia', priceRange: [70, 130] },
+    { type: 'Cálculos Estequiométricos', priceRange: [60, 110] },
+    { type: 'Informe de Laboratorio', priceRange: [50, 100] },
+    { type: 'Diagramas de Flujo', priceRange: [80, 140] },
+    
+    // Derecho
+    { type: 'Resumen de Sentencias', priceRange: [60, 120] },
+    { type: 'Análisis de Casos', priceRange: [80, 150] },
+    { type: 'Ensayo Jurídico', priceRange: [90, 160] },
+    
+    // Economía
+    { type: 'Ejercicios de Microeconomía', priceRange: [60, 120] },
+    { type: 'Análisis de Mercado', priceRange: [80, 150] },
+    { type: 'Gráficos Económicos', priceRange: [50, 100] },
+    
+    // Trabajos más pesados (ocasionales)
+    { type: 'Revisión de Tesis', priceRange: [200, 350] },
+    { type: 'Proyecto Final de Grado', priceRange: [250, 400] },
+    { type: 'Monografía Completa', priceRange: [200, 300] }
   ]
 
   // Función para generar una actividad aleatoria
