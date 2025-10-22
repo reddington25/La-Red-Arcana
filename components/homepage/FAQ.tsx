@@ -13,28 +13,28 @@ export function FAQ() {
 
   const faqs: FAQItem[] = [
     {
-      question: '¿Cómo funciona el pago? ¿Es seguro?',
-      answer: 'Utilizamos un sistema de escrow (depósito en garantía) manual. Cuando aceptas una oferta, depositas los fondos con nuestro equipo administrativo. El dinero permanece seguro hasta que apruebes el trabajo final. Solo entonces se libera el pago al especialista. Esto garantiza que ambas partes cumplan con el contrato.'
+      question: '¿Cómo funciona el pago y qué tan seguro es?',
+      answer: 'Usamos un sistema de "Escrow" (Depósito en Garantía), que es 100% seguro para ti. Cuando aceptas la oferta de un especialista, tú le pagas a Red Arcana, no directamente al especialista. Nosotros guardamos tu dinero de forma segura. El especialista solo recibe el pago después de que haya entregado el trabajo y tú hayas confirmado tu total satisfacción. Tu dinero está protegido en cada paso del proceso.'
     },
     {
-      question: '¿Mi identidad como estudiante es anónima?',
-      answer: 'Sí, completamente. Tu nombre real nunca se muestra públicamente. Solo usas un alias de tu elección. Los especialistas solo conocen tu alias y los detalles del trabajo que necesitas. Tu privacidad es nuestra prioridad.'
+      question: '¿Mi identidad como estudiante se mantiene anónima?',
+      answer: 'Absolutamente. Tu privacidad es nuestra máxima prioridad. En la plataforma, solo te identificarás con un alias (un apodo) que tú elijas. Tu nombre real y tu correo solo los conocemos nosotros para verificar tu cuenta. El especialista con el que trabajes nunca verá tu información personal.'
+    },
+    {
+      question: '¿Quiénes son los especialistas y cómo garantizan la calidad?',
+      answer: 'Nuestra red es exclusiva. Cada especialista pasa por un riguroso proceso de verificación manual donde un administrador revisa su identidad, sus credenciales académicas (como su CV, historial académico o título) y su área de especialización. Solo los perfiles más calificados y confiables son aprobados para unirse.'
     },
     {
       question: '¿Qué pasa si no estoy satisfecho con el trabajo entregado?',
-      answer: 'Tenemos un sistema de disputas. Si el trabajo no cumple con lo acordado, puedes iniciar una disputa dentro de la semana siguiente a la entrega. Nuestro equipo de administración revisará el caso, el historial de mensajes y tomará una decisión justa que puede incluir reembolso total, parcial o solicitar correcciones al especialista.'
+      answer: 'Tienes una garantía. Si el trabajo entregado no cumple con lo que acordaste en el "Contrato", puedes iniciar una disputa (tienes hasta 7 días después de la entrega). Un administrador de Red Arcana intervendrá, revisará toda la evidencia (incluyendo el chat y los archivos) y mediará para darte una solución justa, que puede incluir correcciones gratuitas, un reembolso parcial o un reembolso total.'
     },
     {
-      question: '¿Quiénes son los especialistas y cómo son verificados?',
-      answer: 'Nuestros especialistas son estudiantes destacados y egresados universitarios. Cada uno pasa por un riguroso proceso de verificación manual que incluye: validación de identidad, revisión de documentos académicos (CI, CV, certificados), y una entrevista por WhatsApp. Solo los mejores son aceptados en la red.'
+      question: '¿Qué tipo de servicios puedo solicitar?',
+      answer: 'Ofrecemos dos tipos de servicios principales. Puedes solicitar la "Realización del Trabajo Completo" si no tienes tiempo, o puedes pedir una "Revisión y Corrección". Este segundo servicio es perfecto si ya hiciste tu trabajo pero quieres que un experto lo revise, corrija errores, mejore la redacción y te dé sugerencias para asegurar la mejor nota posible.'
     },
     {
-      question: '¿Cómo puedo postular para ser un especialista?',
-      answer: 'Haz clic en "Aplicar como Especialista" en la página principal. Deberás completar un formulario con tus datos académicos, subir tu CI y CV, y esperar la verificación de nuestro equipo. El proceso puede tomar de 24 a 48 horas. Una vez aprobado, podrás empezar a recibir oportunidades de trabajo.'
-    },
-    {
-      question: '¿Qué comisiones cobra la plataforma?',
-      answer: 'Red Arcana cobra una comisión del 15% sobre el precio final del contrato, que se descuenta del pago al especialista. Los estudiantes pagan exactamente el precio acordado sin cargos adicionales. Esta comisión nos permite mantener la plataforma segura, verificar especialistas y mediar disputas.'
+      question: 'Soy muy bueno en mi área, ¿cómo puedo unirme como especialista?',
+      answer: '¡Nos encanta esa iniciativa! Creemos en el ciclo del conocimiento. Si eres un estudiante destacado o un egresado con un dominio comprobable de tus materias, puedes postular. Simplemente haz clic en el botón "Aplicar como Especialista" en la página principal, completa el formulario y nuestro equipo revisará tu perfil. ¡Es la mejor forma de rentabilizar tu capital intelectual!'
     }
   ]
 

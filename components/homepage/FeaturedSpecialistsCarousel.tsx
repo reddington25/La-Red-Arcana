@@ -142,7 +142,7 @@ export function FeaturedSpecialistsCarousel() {
     }
   ]
 
-  // Auto-scroll cada 7 segundos
+  // Auto-scroll cada 5 segundos
   useEffect(() => {
     if (isPaused) return
 
@@ -151,7 +151,7 @@ export function FeaturedSpecialistsCarousel() {
         const next = (prev + 1) % specialists.length
         return next
       })
-    }, 7000) // 7 segundos
+    }, 5000) // 5 segundos
 
     return () => clearInterval(interval)
   }, [isPaused, specialists.length])
@@ -226,15 +226,15 @@ export function FeaturedSpecialistsCarousel() {
         ))}
       </div>
 
-      {/* Indicadores de posición */}
-      <div className="flex justify-center gap-2 mt-6">
+      {/* Indicadores de posición - Mejorados para móvil */}
+      <div className="flex justify-center gap-3 mt-6 flex-wrap px-4">
         {specialists.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentIndex(index)}
-            className={`h-2 rounded-full transition-all duration-300 ${index === currentIndex
-                ? 'w-8 bg-red-500'
-                : 'w-2 bg-gray-600 hover:bg-gray-500'
+            className={`h-3 rounded-full transition-all duration-300 touch-manipulation ${index === currentIndex
+                ? 'w-10 bg-red-500 shadow-lg shadow-red-500/50'
+                : 'w-3 bg-gray-600 hover:bg-gray-500 active:bg-gray-400'
               }`}
             aria-label={`Ir al especialista ${index + 1}`}
           />
