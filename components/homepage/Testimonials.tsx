@@ -51,7 +51,7 @@ export function Testimonials() {
       verified: true
     }
   ]
-  
+
   return (
     <div className="max-w-6xl mx-auto">
       <h3 className="text-2xl font-semibold mb-8 text-center text-white">
