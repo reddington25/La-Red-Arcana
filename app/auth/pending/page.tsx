@@ -30,10 +30,9 @@ export default async function PendingVerificationPage() {
 
   // If user doesn't exist in database, they need to complete registration
   if (!userData) {
-    console.log('[PENDING PAGE] User not in DB - signing out and redirecting to login')
-    // Sign out the user to prevent loop
-    await supabase.auth.signOut()
-    redirect('/auth/login?error=incomplete_registration')
+    console.log('[PENDING PAGE] User not in DB - redirecting to role selection')
+    // Don't sign out - let them complete registration
+    redirect('/auth/register')
   }
 
   // If user is already verified, redirect to dashboard
