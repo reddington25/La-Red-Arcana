@@ -30,8 +30,11 @@ export async function GET(request: Request) {
         .single()
 
       if (!existingUser) {
-        // New user - redirect to role selection
-        return NextResponse.redirect(`${origin}/auth/register/select-role`)
+        // New user - redirect to role selection or custom redirect
+        if (redirectTo && (redirectTo.includes('/auth/register/student') || redirectTo.includes('/auth/register/specialist'))) {
+          return NextResponse.redirect(`${origin}${redirectTo}`)
+        }
+        return NextResponse.redirect(`${origin}/auth/register`)
       }
 
       if (!existingUser.is_verified) {
@@ -39,16 +42,18 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${origin}/auth/pending`)
       }
 
-      // User is verified - redirect to appropriate dashboard or custom redirect
-      if (redirectTo) {
-        return NextResponse.redirect(`${origin}${redirectTo}`)
-      }
-
+      // User is verified and already has an account
+      // Redirect to their dashboard (ignore redirectTo if it's a registration page)
       const dashboardRoutes: Record<string, string> = {
         student: '/student/dashboard',
         specialist: '/specialist/dashboard',
         admin: '/admin/dashboard',
         super_admin: '/admin/dashboard'
+      }
+
+      // If redirectTo is a registration page, ignore it and go to dashboard
+      if (redirectTo && !redirectTo.includes('/auth/register')) {
+        return NextResponse.redirect(`${origin}${redirectTo}`)
       }
 
       const redirectPath = dashboardRoutes[existingUser.role] || '/'
