@@ -161,17 +161,23 @@ export default function SpecialistRegistrationForm({ user }: SpecialistRegistrat
             <label htmlFor="phone" className="block text-sm font-medium text-gray-300 mb-2">
               Número de WhatsApp <span className="text-red-400">*</span>
             </label>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              required
-              pattern="^[0-9]{8,15}$"
-              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-red-500 focus:outline-none"
-              placeholder="ej: 59176543210"
-            />
+            <div className="flex gap-2">
+              <div className="flex items-center px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-400">
+                +591
+              </div>
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                required
+                pattern="^[67][0-9]{7}$"
+                maxLength={8}
+                className="flex-1 px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-red-500 focus:outline-none"
+                placeholder="76543210"
+              />
+            </div>
             <p className="mt-1 text-xs text-gray-500">
-              Incluye código de país sin el símbolo +
+              Ingresa tu número de celular (8 dígitos). Usado para verificación.
             </p>
           </div>
 

@@ -16,16 +16,19 @@ export async function completeStudentProfile(formData: FormData) {
   // Extract form data
   const realName = formData.get('real_name') as string
   const alias = formData.get('alias') as string
-  const phone = formData.get('phone') as string
+  const phoneInput = formData.get('phone') as string
+  
+  // Add Bolivia country code (+591) automatically
+  const phone = `+591${phoneInput}`
 
   // Validate required fields
-  if (!realName || !alias || !phone) {
+  if (!realName || !alias || !phoneInput) {
     return { error: 'Todos los campos son requeridos' }
   }
 
-  // Validate alias format
-  if (!/^[a-zA-Z0-9_]+$/.test(alias)) {
-    return { error: 'El alias solo puede contener letras, números y guiones bajos' }
+  // Validate alias (more permissive - just check length)
+  if (alias.length < 3 || alias.length > 30) {
+    return { error: 'El alias debe tener entre 3 y 30 caracteres' }
   }
 
   // Check if alias is already taken

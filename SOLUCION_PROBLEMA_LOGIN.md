@@ -98,8 +98,6 @@ localStorage.clear();
 
 4. **Verifica que el Client ID y Client Secret sean correctos:**
 
-   
-
 5. **En "Site URL", debe estar:**
 
    ```

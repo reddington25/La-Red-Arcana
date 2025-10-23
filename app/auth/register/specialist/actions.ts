@@ -16,16 +16,19 @@ export async function completeSpecialistProfile(formData: FormData) {
 
   // Extract form data
   const realName = formData.get('real_name') as string
-  const phone = formData.get('phone') as string
+  const phoneInput = formData.get('phone') as string
   const university = formData.get('university') as string
   const career = formData.get('career') as string
   const academicStatus = formData.get('academic_status') as string
   const subjectTagsJson = formData.get('subject_tags') as string
   const ciFile = formData.get('ci_file') as File
   const cvFile = formData.get('cv_file') as File | null
+  
+  // Add Bolivia country code (+591) automatically
+  const phone = `+591${phoneInput}`
 
   // Validate required fields
-  if (!realName || !phone || !university || !career || !academicStatus || !subjectTagsJson) {
+  if (!realName || !phoneInput || !university || !career || !academicStatus || !subjectTagsJson) {
     return { error: 'Todos los campos obligatorios son requeridos' }
   }
 
