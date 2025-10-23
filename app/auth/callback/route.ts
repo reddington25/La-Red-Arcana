@@ -7,6 +7,8 @@ export async function GET(request: Request) {
   const redirectTo = requestUrl.searchParams.get('redirectTo')
   const origin = requestUrl.origin
 
+  console.log('[AUTH CALLBACK] Starting callback with redirectTo:', redirectTo)
+
   if (code) {
     const supabase = await createClient()
     
@@ -14,7 +16,7 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     
     if (error) {
-      console.error('Error exchanging code for session:', error)
+      console.error('[AUTH CALLBACK] Error exchanging code for session:', error)
       return NextResponse.redirect(`${origin}/auth/login?error=auth_failed`)
     }
 
@@ -22,23 +24,35 @@ export async function GET(request: Request) {
     const { data: { user } } = await supabase.auth.getUser()
     
     if (user) {
+      console.log('[AUTH CALLBACK] User authenticated:', user.email)
+      
       // Check if user exists in public.users table
-      const { data: existingUser } = await supabase
+      const { data: existingUser, error: userError } = await supabase
         .from('users')
         .select('id, role, is_verified')
         .eq('id', user.id)
         .single()
 
+      if (userError) {
+        console.log('[AUTH CALLBACK] Error fetching user from DB:', userError)
+      }
+
       if (!existingUser) {
+        console.log('[AUTH CALLBACK] New user - redirecting to registration')
         // New user - redirect to role selection or custom redirect
         if (redirectTo && (redirectTo.includes('/auth/register/student') || redirectTo.includes('/auth/register/specialist'))) {
+          console.log('[AUTH CALLBACK] Redirecting to:', redirectTo)
           return NextResponse.redirect(`${origin}${redirectTo}`)
         }
+        console.log('[AUTH CALLBACK] Redirecting to role selection')
         return NextResponse.redirect(`${origin}/auth/register`)
       }
 
+      console.log('[AUTH CALLBACK] Existing user found:', { role: existingUser.role, is_verified: existingUser.is_verified })
+
       if (!existingUser.is_verified) {
         // User exists but not verified - show pending screen
+        console.log('[AUTH CALLBACK] User not verified - redirecting to pending')
         return NextResponse.redirect(`${origin}/auth/pending`)
       }
 
@@ -53,14 +67,17 @@ export async function GET(request: Request) {
 
       // If redirectTo is a registration page, ignore it and go to dashboard
       if (redirectTo && !redirectTo.includes('/auth/register')) {
+        console.log('[AUTH CALLBACK] Redirecting to custom redirect:', redirectTo)
         return NextResponse.redirect(`${origin}${redirectTo}`)
       }
 
       const redirectPath = dashboardRoutes[existingUser.role] || '/'
+      console.log('[AUTH CALLBACK] Redirecting to dashboard:', redirectPath)
       return NextResponse.redirect(`${origin}${redirectPath}`)
     }
   }
 
   // If no code or user, redirect to login
+  console.log('[AUTH CALLBACK] No code or user - redirecting to login')
   return NextResponse.redirect(`${origin}/auth/login`)
 }

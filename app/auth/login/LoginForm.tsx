@@ -108,6 +108,8 @@ export default function LoginForm({ redirectTo, error }: LoginFormProps) {
             <p className="text-red-400 text-sm">
               {errorMessage === 'auth_failed' 
                 ? 'Error en la autenticación. Por favor intenta de nuevo.'
+                : errorMessage === 'incomplete_registration'
+                ? 'Tu registro no se completó correctamente. Por favor regístrate de nuevo.'
                 : errorMessage}
             </p>
           </div>

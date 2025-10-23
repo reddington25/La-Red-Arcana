@@ -7,13 +7,16 @@ export default async function PendingVerificationPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
+  console.log('[PENDING PAGE] User:', user?.email)
+
   // Must be authenticated
   if (!user) {
+    console.log('[PENDING PAGE] No user - redirecting to login')
     redirect('/auth/login')
   }
 
   // Get user data
-  const { data: userData } = await supabase
+  const { data: userData, error: userError } = await supabase
     .from('users')
     .select(`
       *,
@@ -22,13 +25,20 @@ export default async function PendingVerificationPage() {
     .eq('id', user.id)
     .single()
 
-  // If user doesn't exist in database, something went wrong
+  console.log('[PENDING PAGE] User data:', userData)
+  console.log('[PENDING PAGE] User error:', userError)
+
+  // If user doesn't exist in database, they need to complete registration
   if (!userData) {
-    redirect('/auth/register')
+    console.log('[PENDING PAGE] User not in DB - signing out and redirecting to login')
+    // Sign out the user to prevent loop
+    await supabase.auth.signOut()
+    redirect('/auth/login?error=incomplete_registration')
   }
 
   // If user is already verified, redirect to dashboard
   if (userData.is_verified) {
+    console.log('[PENDING PAGE] User verified - redirecting to dashboard')
     const dashboardMap = {
       student: '/student/dashboard',
       specialist: '/specialist/dashboard',
@@ -37,6 +47,8 @@ export default async function PendingVerificationPage() {
     }
     redirect(dashboardMap[userData.role as keyof typeof dashboardMap] || '/')
   }
+
+  console.log('[PENDING PAGE] Showing pending screen')
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black px-4">
