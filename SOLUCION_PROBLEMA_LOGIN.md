@@ -5,7 +5,9 @@
 He identificado **3 problemas principales** que están causando el error de login:
 
 ### 1. ❌ Service Worker Interfiriendo con Autenticación
+
 El Service Worker (`public/sw.js`) está interceptando las solicitudes de autenticación y causando el error:
+
 ```
 The script resource is behind a redirect, which is disallowed
 ```
@@ -13,13 +15,16 @@ The script resource is behind a redirect, which is disallowed
 **✅ SOLUCIONADO**: Ya actualicé el Service Worker para que NO intercepte rutas de autenticación.
 
 ### 2. ❌ Callback URL de Google Mal Configurado
+
 En tus screenshots veo que:
+
 - Google Cloud tiene: `https://uohpkoywggsqxgaymtwg.supabase.co/auth/v1/callback`
 - Pero también tienes URLs de Vercel mezcladas
 
 Esto causa conflictos porque Google no sabe a dónde redirigir después del login.
 
 ### 3. ❌ Cache del Navegador con Configuración Antigua
+
 El navegador tiene cacheada la configuración antigua del Service Worker.
 
 ---
@@ -36,17 +41,17 @@ El navegador tiene cacheada la configuración antigua del Service Worker.
 
 ```javascript
 // Desregistrar todos los Service Workers
-navigator.serviceWorker.getRegistrations().then(registrations => {
-  registrations.forEach(registration => registration.unregister())
-})
+navigator.serviceWorker.getRegistrations().then((registrations) => {
+  registrations.forEach((registration) => registration.unregister());
+});
 
 // Limpiar todo el cache
-caches.keys().then(names => {
-  names.forEach(name => caches.delete(name))
-})
+caches.keys().then((names) => {
+  names.forEach((name) => caches.delete(name));
+});
 
 // Limpiar localStorage
-localStorage.clear()
+localStorage.clear();
 ```
 
 4. **Cierra TODAS las pestañas** de tu aplicación
@@ -58,6 +63,7 @@ localStorage.clear()
 ### PASO 2: Configurar Google Cloud Correctamente
 
 1. **Ve a Google Cloud Console:**
+
    ```
    https://console.cloud.google.com/apis/credentials
    ```
@@ -65,6 +71,7 @@ localStorage.clear()
 2. **Encuentra tu OAuth 2.0 Client ID** y haz clic en editar (ícono de lápiz)
 
 3. **En "Authorized redirect URIs", DEBE tener SOLO esto:**
+
    ```
    https://uohpkoywggsqxgaymtwg.supabase.co/auth/v1/callback
    ```
@@ -80,6 +87,7 @@ localStorage.clear()
 ### PASO 3: Verificar Configuración en Supabase
 
 1. **Ve a tu proyecto en Supabase:**
+
    ```
    https://supabase.com/dashboard/project/uohpkoywggsqxgaymtwg/auth/providers
    ```
@@ -89,15 +97,17 @@ localStorage.clear()
 3. **Verifica que esté habilitado** (toggle en verde)
 
 4. **Verifica que el Client ID y Client Secret sean correctos:**
-   - Client ID: `751891669749-6v7b039jn83k9pqtpgt7b4305rqg58dv.apps.googleusercontent.com`
-   - Client Secret: `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`
+
+   
 
 5. **En "Site URL", debe estar:**
+
    ```
    https://la-red-arcana.vercel.app
    ```
 
 6. **En "Redirect URLs", debe tener:**
+
    ```
    http://localhost:3000/**
    https://la-red-arcana.vercel.app/**
@@ -141,6 +151,7 @@ Si sigues teniendo problemas, abre DevTools (F12) y:
 También verifica:
 
 1. **Pestaña Network:**
+
    - Busca la solicitud POST que falla
    - Haz clic en ella
    - Ve a la pestaña "Response"
@@ -156,20 +167,25 @@ También verifica:
 ## 📝 Notas Importantes
 
 ### Sobre el Modo Demo
+
 Tu `.env.local` tiene:
+
 ```
 NEXT_PUBLIC_DEMO_MODE=true
 ```
 
 Esto puede causar conflictos. Si quieres usar autenticación real, cámbialo a:
+
 ```
 NEXT_PUBLIC_DEMO_MODE=false
 ```
 
 ### Sobre las URLs de Vercel
+
 Por ahora, **NO agregues URLs de Vercel** en Google Cloud. Primero haz que funcione en localhost, y después agregaremos las URLs de producción.
 
 ### Sobre el Service Worker
+
 Ya actualicé el código para que NO interfiera con la autenticación. El cambio se aplicará automáticamente cuando limpies el cache.
 
 ---
@@ -179,13 +195,16 @@ Ya actualicé el código para que NO interfiera con la autenticación. El cambio
 Si después de seguir todos estos pasos sigues teniendo problemas:
 
 1. **Desactiva completamente el Service Worker:**
+
    - Elimina o renombra el archivo `public/sw.js`
    - Reinicia el servidor
 
 2. **Verifica las variables de entorno:**
+
    ```powershell
    cat .env.local
    ```
+
    - Asegúrate de que las URLs de Supabase sean correctas
    - Verifica que no haya espacios extra
 
