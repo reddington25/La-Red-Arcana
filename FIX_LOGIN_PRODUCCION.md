@@ -66,8 +66,7 @@ https://uohpkoywggsqxgaymtwg.supabase.co/auth/v1/callback
 3. **Verifica que esté habilitado** (toggle verde)
 
 4. **Verifica Client ID y Secret:**
-   - Client ID: `751891669749-6v7b039jn83k9pqtpgt7b4305rqg58dv.apps.googleusercontent.com`
-   - Client Secret: `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`
+
 
 5. **En "Site URL":**
    ```
