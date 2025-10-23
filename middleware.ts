@@ -83,21 +83,29 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    // Redirect authenticated users away from auth pages
-    if (pathname.startsWith('/auth/login') || pathname.startsWith('/auth/register')) {
-      // If verified, redirect to role-specific dashboard
-      if (userData?.is_verified) {
-        const dashboardMap: Record<string, string> = {
-          student: '/student/dashboard',
-          specialist: '/specialist/dashboard',
-          admin: '/admin/dashboard',
-          super_admin: '/admin/dashboard'
+    // Redirect authenticated users away from login page ONLY
+    if (pathname === '/auth/login') {
+      // If user exists in DB
+      if (userData) {
+        // If verified, redirect to role-specific dashboard
+        if (userData.is_verified) {
+          const dashboardMap: Record<string, string> = {
+            student: '/student/dashboard',
+            specialist: '/specialist/dashboard',
+            admin: '/admin/dashboard',
+            super_admin: '/admin/dashboard'
+          }
+          return NextResponse.redirect(new URL(dashboardMap[userData.role] || '/', request.url))
         }
-        return NextResponse.redirect(new URL(dashboardMap[userData.role] || '/', request.url))
+        // If not verified, redirect to pending page
+        return NextResponse.redirect(new URL('/auth/pending', request.url))
       }
-      // If not verified, redirect to pending page
-      return NextResponse.redirect(new URL('/auth/pending', request.url))
+      // If user is authenticated but NOT in DB, allow them to go to register
+      // (This will be handled by the register page itself)
     }
+    
+    // Allow access to /auth/register pages even if authenticated
+    // (User needs to complete registration)
   }
 
   return response
