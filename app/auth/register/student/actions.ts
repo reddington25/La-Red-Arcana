@@ -43,7 +43,18 @@ export async function completeStudentProfile(formData: FormData) {
   }
 
   try {
-    // Create user record
+    // Check if user already exists
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('id', user.id)
+      .single()
+
+    if (existingUser) {
+      return { error: 'Ya tienes una cuenta registrada. Por favor inicia sesión.' }
+    }
+
+    // Create user record with service role (bypass RLS)
     const { error: userError } = await supabase
       .from('users')
       .insert({
@@ -59,7 +70,14 @@ export async function completeStudentProfile(formData: FormData) {
 
     if (userError) {
       console.error('Error creating user:', userError)
-      return { error: 'Error al crear el usuario' }
+      // More specific error message
+      if (userError.code === '23505') {
+        return { error: 'Ya existe una cuenta con este email. Por favor inicia sesión.' }
+      }
+      if (userError.code === '42501') {
+        return { error: 'Error de permisos. Por favor contacta al administrador.' }
+      }
+      return { error: `Error al crear el usuario: ${userError.message}` }
     }
 
     // Create profile details
@@ -74,13 +92,15 @@ export async function completeStudentProfile(formData: FormData) {
 
     if (profileError) {
       console.error('Error creating profile:', profileError)
-      return { error: 'Error al crear el perfil' }
+      // If profile creation fails, delete the user to keep consistency
+      await supabase.from('users').delete().eq('id', user.id)
+      return { error: `Error al crear el perfil: ${profileError.message}` }
     }
 
     revalidatePath('/auth/pending')
     return { success: true }
   } catch (err) {
     console.error('Unexpected error:', err)
-    return { error: 'Error inesperado al completar el registro' }
+    return { error: 'Error inesperado al completar el registro. Por favor intenta de nuevo.' }
   }
 }
