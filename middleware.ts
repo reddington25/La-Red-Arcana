@@ -55,8 +55,13 @@ export async function middleware(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    // Redirect unverified users to pending verification page (except for logout and pending page)
-    if (userData && !userData.is_verified && pathname !== '/auth/pending' && pathname !== '/auth/logout') {
+    // If user is authenticated but NOT in database, allow access to registration pages
+    if (!userData && !pathname.startsWith('/auth/register') && !pathname.startsWith('/auth/callback')) {
+      return NextResponse.redirect(new URL('/auth/register', request.url))
+    }
+
+    // Redirect unverified users to pending verification page (except for logout, pending, and registration pages)
+    if (userData && !userData.is_verified && pathname !== '/auth/pending' && pathname !== '/auth/logout' && !pathname.startsWith('/auth/register')) {
       return NextResponse.redirect(new URL('/auth/pending', request.url))
     }
 

@@ -44,6 +44,7 @@
 1. **Abre tu sitio**: https://ts-red-arcana.vercel.app
 
 2. **Regístrate normalmente**:
+
    - Click en "Iniciar Sesión"
    - Click en "Sign in with Google"
    - Usa tu email personal (el que quieres como super admin)
@@ -57,10 +58,12 @@
 ### Paso 2: Convertirte en Super Admin
 
 1. **Abre Supabase Dashboard**:
+
    - https://supabase.com/dashboard
    - Selecciona tu proyecto
 
 2. **Ir al SQL Editor**:
+
    - Click en "SQL Editor" en el menú lateral
    - Click en "New query"
 
@@ -68,15 +71,15 @@
 
 ```sql
 -- Reemplaza 'tu-email@gmail.com' con tu email real
-UPDATE users 
-SET 
+UPDATE users
+SET
   role = 'super_admin',
   is_verified = true
 WHERE email = 'tu-email@gmail.com';
 
 -- Verificar que funcionó
-SELECT id, email, role, is_verified 
-FROM users 
+SELECT id, email, role, is_verified
+FROM users
 WHERE email = 'tu-email@gmail.com';
 ```
 
@@ -86,6 +89,7 @@ WHERE email = 'tu-email@gmail.com';
 ### Paso 3: Acceder al Panel de Super Admin
 
 1. **Cierra sesión y vuelve a iniciar sesión**:
+
    - Esto actualiza tu sesión con el nuevo rol
 
 2. **Navega a**: https://ts-red-arcana.vercel.app/admin/super-admin
@@ -102,20 +106,24 @@ WHERE email = 'tu-email@gmail.com';
 ### Método 1: Desde el Panel (Recomendado)
 
 1. **Ir al panel de super admin**:
+
    - https://ts-red-arcana.vercel.app/admin/super-admin
 
 2. **Click en "Create Admin"**:
+
    - Se abrirá un modal con instrucciones
 
 3. **Seguir las instrucciones del modal**:
-   
+
    **Paso A**: El nuevo admin debe registrarse primero
+
    - Envíale el link: https://ts-red-arcana.vercel.app/auth/login
    - Debe hacer click en "Sign in with Google"
    - Debe completar el registro (cualquier rol)
    - Debe confirmar su email
 
    **Paso B**: Tú ejecutas el SQL en Supabase
+
    - Copia el SQL que aparece en el modal
    - Ve a Supabase Dashboard → SQL Editor
    - Pega y ejecuta el SQL (reemplazando el email)
@@ -124,15 +132,15 @@ WHERE email = 'tu-email@gmail.com';
 
 ```sql
 -- Reemplaza con el email del nuevo admin
-UPDATE users 
-SET 
+UPDATE users
+SET
   role = 'admin',  -- o 'super_admin' si quieres darle máximo poder
   is_verified = true
 WHERE email = 'nuevo-admin@gmail.com';
 
 -- Actualizar sus datos de perfil
 UPDATE profile_details
-SET 
+SET
   real_name = 'Nombre del Admin',
   phone = '+591 12345678'
 WHERE user_id = (SELECT id FROM users WHERE email = 'nuevo-admin@gmail.com');
@@ -150,15 +158,15 @@ Si prefieres hacerlo todo de una vez:
 -- 1. El usuario debe haberse registrado primero en la plataforma
 -- 2. Luego ejecuta esto:
 
-UPDATE users 
-SET 
+UPDATE users
+SET
   role = 'admin',  -- o 'super_admin'
   is_verified = true
 WHERE email = 'nuevo-admin@gmail.com';
 
 -- 3. Verificar
-SELECT id, email, role, is_verified 
-FROM users 
+SELECT id, email, role, is_verified
+FROM users
 WHERE email = 'nuevo-admin@gmail.com';
 ```
 
@@ -169,6 +177,7 @@ WHERE email = 'nuevo-admin@gmail.com';
 ### Promover Admin a Super Admin
 
 **Desde el Panel**:
+
 1. Ve a `/admin/super-admin`
 2. Encuentra el admin en la lista
 3. Click en el ícono de editar (lápiz) junto a su rol
@@ -176,8 +185,9 @@ WHERE email = 'nuevo-admin@gmail.com';
 5. Click "Save" y confirma
 
 **Desde SQL**:
+
 ```sql
-UPDATE users 
+UPDATE users
 SET role = 'super_admin'
 WHERE email = 'admin@gmail.com';
 ```
@@ -185,6 +195,7 @@ WHERE email = 'admin@gmail.com';
 ### Degradar Super Admin a Admin
 
 **Desde el Panel**:
+
 1. Ve a `/admin/super-admin`
 2. Encuentra el super admin en la lista
 3. Click en el ícono de editar
@@ -209,7 +220,7 @@ WHERE email = 'admin@gmail.com';
 ### Desde SQL
 
 ```sql
-UPDATE users 
+UPDATE users
 SET is_verified = false
 WHERE email = 'admin@gmail.com';
 ```
@@ -227,7 +238,7 @@ WHERE email = 'admin@gmail.com';
 ### Desde SQL
 
 ```sql
-UPDATE users 
+UPDATE users
 SET is_verified = true
 WHERE email = 'admin@gmail.com';
 ```
@@ -251,21 +262,25 @@ WHERE email = 'admin@gmail.com';
 ### Cuentas Recomendadas
 
 **Super Admin (TÚ)**:
+
 - Email: tu-email-personal@gmail.com
 - Rol: super_admin
 - Para: Mostrar panel de super admin
 
 **Admin Regular**:
+
 - Email: admin-demo@gmail.com (o similar)
 - Rol: admin
 - Para: Mostrar que puedes crear admins
 
 **Estudiantes de Prueba**:
+
 - Email: estudiante1@gmail.com
 - Email: estudiante2@gmail.com
 - Para: Crear contratos de prueba
 
 **Especialistas de Prueba**:
+
 - Email: especialista1@gmail.com
 - Email: especialista2@gmail.com
 - Para: Hacer ofertas y mostrar badges
@@ -277,7 +292,7 @@ WHERE email = 'admin@gmail.com';
 ### Ver Todos los Usuarios y Sus Roles
 
 ```sql
-SELECT 
+SELECT
   email,
   role,
   is_verified,
@@ -290,7 +305,7 @@ ORDER BY created_at DESC;
 ### Ver Solo Admins
 
 ```sql
-SELECT 
+SELECT
   u.email,
   u.role,
   u.is_verified,
@@ -306,7 +321,7 @@ ORDER BY u.created_at DESC;
 ### Contar Usuarios por Rol
 
 ```sql
-SELECT 
+SELECT
   role,
   COUNT(*) as total,
   COUNT(*) FILTER (WHERE is_verified = true) as verified
@@ -340,12 +355,14 @@ ORDER BY role;
 ## 📊 Audit Log
 
 El audit log registra automáticamente:
+
 - ✅ Creación de admins
 - ✅ Cambios de rol
 - ✅ Desactivación/reactivación
 - ✅ Modificación de permisos
 
 **Ver el audit log**:
+
 1. Ve a `/admin/super-admin`
 2. Scroll hasta "Audit Log"
 3. Verás todas las acciones administrativas
@@ -359,14 +376,15 @@ El audit log registra automáticamente:
 **Causa**: Tu usuario no tiene rol de super_admin
 
 **Solución**:
+
 ```sql
 -- Verificar tu rol
-SELECT email, role, is_verified 
-FROM users 
+SELECT email, role, is_verified
+FROM users
 WHERE email = 'tu-email@gmail.com';
 
 -- Si no es super_admin, actualizar
-UPDATE users 
+UPDATE users
 SET role = 'super_admin', is_verified = true
 WHERE email = 'tu-email@gmail.com';
 ```
@@ -376,6 +394,7 @@ WHERE email = 'tu-email@gmail.com';
 **Causa**: El usuario no se registró primero o el SQL no se ejecutó
 
 **Solución**:
+
 1. Verificar que el usuario se registró en la plataforma
 2. Verificar que ejecutaste el SQL correctamente
 3. Refrescar la página del super admin panel
@@ -396,17 +415,17 @@ WHERE email = 'tu-email@gmail.com';
 -- ============================================
 
 -- 1. CREAR TU SUPER ADMIN (reemplaza el email)
-UPDATE users 
+UPDATE users
 SET role = 'super_admin', is_verified = true
 WHERE email = 'tu-email@gmail.com';
 
 -- 2. CREAR UN ADMIN REGULAR (opcional)
-UPDATE users 
+UPDATE users
 SET role = 'admin', is_verified = true
 WHERE email = 'admin@gmail.com';
 
 -- 3. VERIFICAR QUE FUNCIONÓ
-SELECT 
+SELECT
   email,
   role,
   is_verified,
@@ -416,7 +435,7 @@ WHERE role IN ('admin', 'super_admin')
 ORDER BY created_at DESC;
 
 -- 4. VER TODOS LOS USUARIOS
-SELECT 
+SELECT
   email,
   role,
   is_verified,
@@ -431,6 +450,7 @@ LIMIT 20;
 ## 🎯 Resumen Rápido
 
 **Para crear tu primer super admin:**
+
 1. Regístrate en la plataforma con Google
 2. Ve a Supabase → SQL Editor
 3. Ejecuta: `UPDATE users SET role = 'super_admin', is_verified = true WHERE email = 'tu-email@gmail.com';`
@@ -438,12 +458,14 @@ LIMIT 20;
 5. Ve a `/admin/super-admin`
 
 **Para crear otros admins:**
+
 1. Ellos se registran primero en la plataforma
 2. Tú ejecutas el SQL para cambiar su rol
 3. Ellos cierran sesión y vuelven a iniciar
 4. Ya pueden acceder al panel de admin
 
 **Roles disponibles:**
+
 - `super_admin` - Máximo poder (solo para ti)
 - `admin` - Administrador regular (para tu equipo)
 - `specialist` - Especialista verificado
