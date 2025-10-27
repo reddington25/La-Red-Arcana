@@ -26,18 +26,10 @@ export async function GET(request: Request) {
     if (user) {
       console.log('[AUTH CALLBACK] User authenticated:', user.email)
       
-      // Check if user exists in public.users table AND has profile_details
+      // Check if user exists in public.users table
       const { data: existingUser, error: userError } = await supabase
         .from('users')
-        .select(`
-          id, 
-          role, 
-          is_verified,
-          profile_details (
-            id,
-            real_name
-          )
-        `)
+        .select('id, role, is_verified')
         .eq('id', user.id)
         .single()
 
@@ -45,10 +37,18 @@ export async function GET(request: Request) {
         console.log('[AUTH CALLBACK] Error fetching user from DB:', userError)
       }
 
-      // Check if user has complete profile (both users and profile_details)
-      const hasCompleteProfile = existingUser && 
-                                 existingUser.profile_details && 
-                                 existingUser.profile_details.length > 0
+      // Check if user has profile_details separately
+      let hasCompleteProfile = false
+      if (existingUser) {
+        const { data: profileData } = await supabase
+          .from('profile_details')
+          .select('id')
+          .eq('user_id', user.id)
+          .single()
+        
+        hasCompleteProfile = !!profileData
+        console.log('[AUTH CALLBACK] Profile data exists:', hasCompleteProfile)
+      }
 
       if (!existingUser) {
         console.log('[AUTH CALLBACK] New user - redirecting to registration')

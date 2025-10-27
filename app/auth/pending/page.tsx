@@ -18,10 +18,7 @@ export default async function PendingVerificationPage() {
   // Get user data
   const { data: userData, error: userError } = await supabase
     .from('users')
-    .select(`
-      *,
-      profile_details (*)
-    `)
+    .select('*')
     .eq('id', user.id)
     .single()
 
@@ -34,6 +31,15 @@ export default async function PendingVerificationPage() {
     // Don't sign out - let them complete registration
     redirect('/auth/register')
   }
+
+  // Get profile details separately
+  const { data: profileData } = await supabase
+    .from('profile_details')
+    .select('*')
+    .eq('user_id', user.id)
+    .single()
+
+  console.log('[PENDING PAGE] Profile data:', profileData)
 
   // If user is already verified, redirect to dashboard
   if (userData.is_verified) {
@@ -53,7 +59,7 @@ export default async function PendingVerificationPage() {
     <div className="min-h-screen flex items-center justify-center bg-black px-4">
       <PendingVerificationScreen 
         user={userData}
-        profile={userData.profile_details}
+        profile={profileData}
       />
     </div>
   )
