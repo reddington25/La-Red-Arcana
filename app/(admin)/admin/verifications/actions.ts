@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
 export async function verifyUser(userId: string) {
@@ -23,8 +24,10 @@ export async function verifyUser(userId: string) {
     return { error: 'Not authorized' }
   }
 
-  // Update the user's verification status
-  const { error: updateError } = await supabase
+  // Use admin client to update the user's verification status (bypasses RLS)
+  const adminClient = createAdminClient()
+  
+  const { error: updateError } = await adminClient
     .from('users')
     .update({ is_verified: true })
     .eq('id', userId)
@@ -34,15 +37,16 @@ export async function verifyUser(userId: string) {
     return { error: 'Failed to verify user' }
   }
 
-  // Create a notification for the user
-  const { data: verifiedUser } = await supabase
+  // Get verified user info using admin client
+  const { data: verifiedUser } = await adminClient
     .from('users')
     .select('role, email')
     .eq('id', userId)
     .single()
 
+  // Create a notification for the user using admin client
   if (verifiedUser) {
-    await supabase
+    await adminClient
       .from('notifications')
       .insert({
         user_id: userId,
