@@ -1,39 +1,55 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { Users, Clock, AlertTriangle, DollarSign } from 'lucide-react'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 
 export default async function AdminDashboard() {
   const supabase = await createClient()
 
-  // Fetch dashboard statistics
+  // Verify that the current user is an admin
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) {
+    redirect('/auth/login')
+  }
+
+  const { data: currentUser } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!currentUser || !['admin', 'super_admin'].includes(currentUser.role)) {
+    redirect('/')
+  }
+
+  // Use admin client to fetch statistics (bypasses RLS)
+  const adminClient = createAdminClient()
+
   const [
-    pendingVerificationsResult,
-    pendingDepositsResult,
-    activeDisputesResult,
-    pendingWithdrawalsResult,
+    { count: pendingVerifications },
+    { count: pendingDeposits },
+    { count: activeDisputes },
+    { count: pendingWithdrawals },
   ] = await Promise.all([
-    supabase
+    adminClient
       .from('users')
-      .select('id', { count: 'exact' })
+      .select('*', { count: 'exact', head: true })
       .eq('is_verified', false),
-    supabase
+    adminClient
       .from('contracts')
-      .select('id', { count: 'exact' })
+      .select('*', { count: 'exact', head: true })
       .eq('status', 'pending_deposit'),
-    supabase
+    adminClient
       .from('disputes')
-      .select('id', { count: 'exact' })
+      .select('*', { count: 'exact', head: true })
       .eq('status', 'open'),
-    supabase
+    adminClient
       .from('withdrawal_requests')
-      .select('id', { count: 'exact' })
+      .select('*', { count: 'exact', head: true })
       .eq('status', 'pending'),
   ])
-
-  const pendingVerifications = pendingVerificationsResult.count || 0
-  const pendingDeposits = pendingDepositsResult.count || 0
-  const activeDisputes = activeDisputesResult.count || 0
-  const pendingWithdrawals = pendingWithdrawalsResult.count || 0
 
   const stats = [
     {

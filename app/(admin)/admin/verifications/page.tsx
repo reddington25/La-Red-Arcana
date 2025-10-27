@@ -1,15 +1,39 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { UserWithProfile } from '@/types/database'
 import VerificationCard from './VerificationCard'
 import VerificationRequestCard from './VerificationRequestCard'
+import { redirect } from 'next/navigation'
 
 export default async function VerificationsPage() {
   const supabase = await createClient()
 
-  // Fetch all unverified users
-  const { data: pendingUsers, error } = await supabase
+  // Verify that the current user is an admin
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) {
+    redirect('/auth/login')
+  }
+
+  const { data: currentUser } = await supabase
     .from('users')
-    .select('*')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!currentUser || !['admin', 'super_admin'].includes(currentUser.role)) {
+    redirect('/')
+  }
+
+  // Use admin client to fetch all unverified users (bypasses RLS)
+  const adminClient = createAdminClient()
+  
+  const { data: pendingUsers, error } = await adminClient
+    .from('users')
+    .select(`
+      *,
+      profile_details (*)
+    `)
     .eq('is_verified', false)
     .order('created_at', { ascending: true })
 
@@ -17,24 +41,7 @@ export default async function VerificationsPage() {
     console.error('Error fetching pending users:', error)
   }
 
-  // Fetch profile details separately for each user
-  const usersWithProfiles: UserWithProfile[] = []
-  if (pendingUsers) {
-    for (const user of pendingUsers) {
-      const { data: profile } = await supabase
-        .from('profile_details')
-        .select('*')
-        .eq('user_id', user.id)
-        .single()
-      
-      if (profile) {
-        usersWithProfiles.push({
-          ...user,
-          profile_details: profile
-        } as UserWithProfile)
-      }
-    }
-  }
+  const usersWithProfiles = (pendingUsers || []) as UserWithProfile[]
 
   // Fetch pending verification requests (profile changes)
   const { data: verificationRequests, error: requestsError } = await supabase

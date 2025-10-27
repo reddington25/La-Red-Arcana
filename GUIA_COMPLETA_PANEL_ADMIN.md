@@ -15,14 +15,17 @@ El panel de administración de Red Arcana te permite gestionar usuarios, verific
 El dashboard muestra 4 métricas clave:
 
 1. **Pending Verifications** (Azul)
+
    - Usuarios nuevos esperando verificación
    - Click para ir a la cola de verificación
 
 2. **Pending Deposits** (Amarillo)
+
    - Contratos esperando confirmación de depósito
    - Click para gestionar escrow
 
 3. **Active Disputes** (Rojo)
+
    - Disputas abiertas que requieren resolución
    - Click para manejar disputas
 
@@ -33,6 +36,7 @@ El dashboard muestra 4 métricas clave:
 ### Quick Actions
 
 Accesos rápidos a las secciones principales:
+
 - Review Verifications
 - Manage Escrow
 - Handle Disputes
@@ -53,12 +57,14 @@ Aquí verificas la identidad de nuevos usuarios (estudiantes y especialistas) an
 #### Para Estudiantes:
 
 1. **Revisar información:**
+
    - Nombre real (privado)
    - Alias público
    - Número de WhatsApp
    - Email
 
 2. **Verificar identidad:**
+
    - Contactar por WhatsApp al número registrado
    - Confirmar que la persona es real
    - Verificar que el email es válido
@@ -70,6 +76,7 @@ Aquí verificas la identidad de nuevos usuarios (estudiantes y especialistas) an
 #### Para Especialistas:
 
 1. **Revisar información adicional:**
+
    - Todo lo de estudiantes +
    - Foto de CI (documento de identidad)
    - CV (opcional)
@@ -79,11 +86,13 @@ Aquí verificas la identidad de nuevos usuarios (estudiantes y especialistas) an
    - Materias de especialización
 
 2. **Verificar documentos:**
+
    - Revisar que la foto del CI sea legible
    - Confirmar que el nombre coincide
    - Verificar que la universidad y carrera son reales
 
 3. **Contactar y verificar:**
+
    - Llamar por WhatsApp
    - Confirmar identidad
    - Hacer preguntas sobre su especialización
@@ -106,6 +115,7 @@ Aquí verificas la identidad de nuevos usuarios (estudiantes y especialistas) an
 ### ¿Qué es Escrow?
 
 El sistema de escrow (depósito en garantía) protege tanto a estudiantes como especialistas:
+
 - El estudiante deposita el dinero antes de que el especialista trabaje
 - El dinero se libera cuando el trabajo está completo
 - Si hay disputa, el admin decide
@@ -123,6 +133,7 @@ El sistema de escrow (depósito en garantía) protege tanto a estudiantes como e
 5. **Admin confirma el depósito aquí**
 
 **Acciones:**
+
 - Ver detalles del contrato
 - Subir QR de pago
 - Confirmar depósito recibido
@@ -138,6 +149,7 @@ El sistema de escrow (depósito en garantía) protege tanto a estudiantes como e
 4. **Admin procesa el retiro aquí**
 
 **Acciones:**
+
 - Ver saldo del especialista
 - Ver monto solicitado
 - Procesar retiro (transferir dinero)
@@ -147,6 +159,7 @@ El sistema de escrow (depósito en garantía) protege tanto a estudiantes como e
 ### Dashboard de Escrow
 
 Muestra:
+
 - Total en escrow
 - Depósitos pendientes
 - Retiros pendientes
@@ -168,16 +181,19 @@ Muestra:
 ### Proceso de Resolución
 
 1. **Revisar la disputa:**
+
    - Leer la razón de la disputa
    - Ver quién la inició (estudiante o especialista)
    - Revisar el contrato original
 
 2. **Investigar:**
+
    - Leer el chat del contrato
    - Ver archivos entregados
    - Contactar a ambas partes
 
 3. **Decidir:**
+
    - **Favor del estudiante:** Devolver dinero
    - **Favor del especialista:** Liberar pago
    - **Dividir:** Devolver parte, pagar parte
@@ -210,12 +226,14 @@ Los badges (insignias) son reconocimientos especiales para especialistas destaca
 ### Otorgar Arcana Badge
 
 **Criterios sugeridos:**
+
 - Calificación promedio ≥ 4.5 estrellas
 - Mínimo 10 trabajos completados
 - Sin disputas perdidas
 - Feedback positivo consistente
 
 **Proceso:**
+
 1. Revisar perfil del especialista
 2. Verificar que cumple criterios
 3. Click en "Grant Arcana Badge"
@@ -224,6 +242,7 @@ Los badges (insignias) son reconocimientos especiales para especialistas destaca
 ### Revocar Badge
 
 Si un especialista ya no cumple estándares:
+
 1. Click en "Revoke Badge"
 2. Agregar razón (opcional)
 3. Confirmar
@@ -257,18 +276,21 @@ Si un especialista ya no cumple estándares:
 ### Métricas Clave
 
 **Usuarios:**
+
 - Total de usuarios
 - Estudiantes vs Especialistas
 - Tasa de verificación
 - Usuarios activos
 
 **Contratos:**
+
 - Total de contratos
 - Contratos completados
 - Tasa de éxito
 - Valor promedio
 
 **Financiero:**
+
 - Total en escrow
 - Comisiones ganadas
 - Retiros procesados
@@ -283,7 +305,9 @@ Si un especialista ya no cumple estándares:
 **Problema:** Registraste un usuario pero no aparece en el panel.
 
 **Solución:**
+
 1. Verifica en Supabase que el usuario existe:
+
 ```sql
 SELECT u.email, u.role, u.is_verified, pd.real_name
 FROM users u
@@ -301,6 +325,7 @@ LIMIT 5;
 **Problema:** Click en un usuario pero no carga.
 
 **Solución:**
+
 1. Verifica que eres admin en Supabase
 2. Verifica las políticas RLS
 3. Revisa la consola del navegador (F12) para errores
@@ -310,6 +335,7 @@ LIMIT 5;
 **Problema:** Click en "Verify User" pero da error.
 
 **Solución:**
+
 1. Verifica que el usuario aún existe
 2. Verifica que no está ya verificado
 3. Revisa logs en consola
@@ -321,16 +347,19 @@ LIMIT 5;
 ### Mejores Prácticas
 
 1. **Verificación rigurosa:**
+
    - Siempre contactar por WhatsApp
    - Verificar documentos cuidadosamente
    - No aprobar sin confirmar identidad
 
 2. **Gestión de escrow:**
+
    - Confirmar pagos antes de liberar fondos
    - Guardar comprobantes
    - Documentar todas las transacciones
 
 3. **Resolución de disputas:**
+
    - Ser imparcial
    - Investigar a fondo
    - Documentar decisiones
