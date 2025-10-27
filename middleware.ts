@@ -51,12 +51,23 @@ export async function middleware(request: NextRequest) {
   if (user) {
     const { data: userData } = await supabase
       .from('users')
-      .select('role, is_verified')
+      .select(`
+        role, 
+        is_verified,
+        profile_details (
+          id
+        )
+      `)
       .eq('id', user.id)
       .single()
 
-    // If user is authenticated but NOT in database, allow access to registration pages
-    if (!userData && !pathname.startsWith('/auth/register') && !pathname.startsWith('/auth/callback')) {
+    // Check if user has complete profile
+    const hasCompleteProfile = userData && 
+                               userData.profile_details && 
+                               userData.profile_details.length > 0
+
+    // If user is authenticated but NOT in database OR missing profile, redirect to registration
+    if ((!userData || !hasCompleteProfile) && !pathname.startsWith('/auth/register') && !pathname.startsWith('/auth/callback')) {
       return NextResponse.redirect(new URL('/auth/register', request.url))
     }
 

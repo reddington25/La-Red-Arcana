@@ -9,29 +9,32 @@ Cuando el usuario elegía su rol (Estudiante/Especialista), era redirigido de vu
 El **middleware** estaba redirigiendo usuarios autenticados que intentaban acceder a `/auth/register` de vuelta a `/auth/pending`, incluso si NO habían completado el registro.
 
 ### Flujo Incorrecto (ANTES):
+
 ```
-Login con Google → 
-Seleccionar Rol → 
-Middleware detecta usuario autenticado → 
-Redirige a /auth/pending → 
-Página pending no carga (usuario no en DB) → 
+Login con Google →
+Seleccionar Rol →
+Middleware detecta usuario autenticado →
+Redirige a /auth/pending →
+Página pending no carga (usuario no en DB) →
 Error ❌
 ```
 
 ## ✅ Solución Aplicada
 
 Modifiqué el middleware para:
+
 1. **Solo redirigir desde `/auth/login`** (no desde `/auth/register`)
 2. **Permitir acceso a `/auth/register`** incluso si el usuario está autenticado
 3. **Verificar si el usuario existe en DB** antes de redirigir a pending
 
 ### Flujo Correcto (DESPUÉS):
+
 ```
-Login con Google → 
-Seleccionar Rol → 
-Completar Formulario → 
-Usuario guardado en DB → 
-Redirige a /auth/pending → 
+Login con Google →
+Seleccionar Rol →
+Completar Formulario →
+Usuario guardado en DB →
+Redirige a /auth/pending →
 Muestra "Cuenta en Revisión" ✅
 ```
 
@@ -40,6 +43,7 @@ Muestra "Cuenta en Revisión" ✅
 **Archivo modificado:** `middleware.ts`
 
 **Cambio:**
+
 - ANTES: Redirigía desde `/auth/login` Y `/auth/register`
 - DESPUÉS: Solo redirige desde `/auth/login`
 
@@ -105,16 +109,19 @@ En Vercel, deberías ver estos logs:
 Si después de desplegar sigues teniendo problemas:
 
 1. **Verifica que el despliegue se completó:**
+
    - Ve a: https://vercel.com/tu-proyecto
    - Verifica que el último despliegue tenga un ✓ verde
 
 2. **Limpia completamente el navegador:**
+
    - Cierra TODAS las pestañas de tu sitio
    - Limpia cookies y cache
    - Reinicia el navegador
    - Abre ventana de incógnito
 
 3. **Verifica los logs de Vercel:**
+
    - Ve a: https://vercel.com/tu-proyecto
    - Haz clic en el último despliegue
    - Ve a "Functions"
@@ -127,6 +134,7 @@ Si después de desplegar sigues teniendo problemas:
 Este problema ocurrió porque el middleware era demasiado agresivo al redirigir usuarios autenticados.
 
 **Lección aprendida:**
+
 - El middleware debe permitir que usuarios autenticados completen el registro
 - Solo redirigir cuando el usuario YA existe en la base de datos
 - Verificar el estado del usuario antes de redirigir

@@ -26,16 +26,29 @@ export async function GET(request: Request) {
     if (user) {
       console.log('[AUTH CALLBACK] User authenticated:', user.email)
       
-      // Check if user exists in public.users table
+      // Check if user exists in public.users table AND has profile_details
       const { data: existingUser, error: userError } = await supabase
         .from('users')
-        .select('id, role, is_verified')
+        .select(`
+          id, 
+          role, 
+          is_verified,
+          profile_details (
+            id,
+            real_name
+          )
+        `)
         .eq('id', user.id)
         .single()
 
       if (userError) {
         console.log('[AUTH CALLBACK] Error fetching user from DB:', userError)
       }
+
+      // Check if user has complete profile (both users and profile_details)
+      const hasCompleteProfile = existingUser && 
+                                 existingUser.profile_details && 
+                                 existingUser.profile_details.length > 0
 
       if (!existingUser) {
         console.log('[AUTH CALLBACK] New user - redirecting to registration')
@@ -48,7 +61,18 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${origin}/auth/register`)
       }
 
-      console.log('[AUTH CALLBACK] Existing user found:', { role: existingUser.role, is_verified: existingUser.is_verified })
+      if (!hasCompleteProfile) {
+        console.log('[AUTH CALLBACK] User exists but profile incomplete - redirecting to registration')
+        // User exists in users table but doesn't have profile_details
+        // This can happen with admins created via SQL
+        return NextResponse.redirect(`${origin}/auth/register`)
+      }
+
+      console.log('[AUTH CALLBACK] Existing user found:', { 
+        role: existingUser.role, 
+        is_verified: existingUser.is_verified,
+        has_profile: hasCompleteProfile
+      })
 
       if (!existingUser.is_verified) {
         // User exists but not verified - show pending screen
@@ -56,7 +80,7 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${origin}/auth/pending`)
       }
 
-      // User is verified and already has an account
+      // User is verified and has complete profile
       // Redirect to their dashboard (ignore redirectTo if it's a registration page)
       const dashboardRoutes: Record<string, string> = {
         student: '/student/dashboard',

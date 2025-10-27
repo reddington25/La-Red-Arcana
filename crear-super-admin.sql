@@ -1,5 +1,15 @@
 -- ============================================
--- SCRIPT PARA CREAR TU PRIMER SUPER ADMIN
+-- ⚠️ SCRIPT OBSOLETO - NO USAR
+-- ============================================
+-- Este script está DESACTUALIZADO y causa problemas.
+-- 
+-- USA EN SU LUGAR: crear-admin-completo.sql
+-- 
+-- PROBLEMA: Este script solo actualiza 'users' pero no 'profile_details',
+-- causando que el admin vuelva a la página de registro.
+--
+-- ============================================
+-- SCRIPT PARA CREAR TU PRIMER SUPER ADMIN (OBSOLETO)
 -- ============================================
 -- 
 -- INSTRUCCIONES:
