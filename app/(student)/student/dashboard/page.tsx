@@ -72,55 +72,67 @@ export default async function StudentDashboard() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">Dashboard de Estudiante</h1>
-          <p className="text-gray-400">Gestiona tus contratos y revisa las ofertas</p>
+          <p className="text-gray-400">Gestiona tus contratos y revisa las ofertas de especialistas</p>
         </div>
 
         <Link
           href="/student/contracts/new"
-          className="flex items-center gap-2 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold"
+          className="flex items-center gap-2 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold group"
+          title="Crea un nuevo contrato para recibir ofertas de especialistas"
         >
           <Plus className="w-5 h-5" />
-          Nuevo Contrato
+          <span>Nuevo Contrato</span>
         </Link>
       </div>
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg p-6">
+        <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg p-6" title="Todos tus contratos creados">
           <p className="text-gray-400 text-sm mb-1">Total de Contratos</p>
           <p className="text-3xl font-bold text-white">{contractsWithOfferCount.length}</p>
+          <p className="text-xs text-gray-500 mt-1">Todos los estados</p>
         </div>
-        <div className="bg-black/50 backdrop-blur border border-blue-500/30 rounded-lg p-6">
+        <div className="bg-black/50 backdrop-blur border border-blue-500/30 rounded-lg p-6" title="Contratos esperando ofertas de especialistas">
           <p className="text-gray-400 text-sm mb-1">Abiertos</p>
           <p className="text-3xl font-bold text-blue-400">
             {contractsWithOfferCount.filter(c => c.status === 'open').length}
           </p>
+          <p className="text-xs text-gray-500 mt-1">Recibiendo ofertas</p>
         </div>
-        <div className="bg-black/50 backdrop-blur border border-purple-500/30 rounded-lg p-6">
+        <div className="bg-black/50 backdrop-blur border border-purple-500/30 rounded-lg p-6" title="Contratos siendo trabajados por especialistas">
           <p className="text-gray-400 text-sm mb-1">En Progreso</p>
           <p className="text-3xl font-bold text-purple-400">
             {contractsWithOfferCount.filter(c => c.status === 'in_progress').length}
           </p>
+          <p className="text-xs text-gray-500 mt-1">Siendo trabajados</p>
         </div>
-        <div className="bg-black/50 backdrop-blur border border-green-500/30 rounded-lg p-6">
+        <div className="bg-black/50 backdrop-blur border border-green-500/30 rounded-lg p-6" title="Contratos finalizados exitosamente">
           <p className="text-gray-400 text-sm mb-1">Completados</p>
           <p className="text-3xl font-bold text-green-400">
             {contractsWithOfferCount.filter(c => c.status === 'completed').length}
           </p>
+          <p className="text-xs text-gray-500 mt-1">Finalizados</p>
         </div>
       </div>
 
       {/* Contracts List */}
       <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg p-6">
-        <h2 className="text-xl font-semibold text-white mb-6">Mis Contratos</h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-white">Mis Contratos</h2>
+          <p className="text-sm text-gray-500">Haz clic en un contrato para ver detalles y ofertas</p>
+        </div>
 
         {contractsWithOfferCount.length === 0 ? (
           <div className="text-center py-12">
             <FileText className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400 mb-4">No tienes contratos todavía</p>
+            <h3 className="text-xl font-semibold text-white mb-2">¡Comienza tu primer contrato!</h3>
+            <p className="text-gray-400 mb-6 max-w-md mx-auto">
+              Crea un contrato describiendo tu trabajo académico y recibe ofertas de especialistas verificados
+            </p>
             <Link
               href="/student/contracts/new"
               className="inline-flex items-center gap-2 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold"
+              title="Crear tu primer contrato para recibir ofertas"
             >
               <Plus className="w-5 h-5" />
               Crear Primer Contrato

@@ -3,6 +3,7 @@
 ## 🎯 QUÉ ES Y POR QUÉ LO NECESITAS
 
 El **Service Role Key** es una clave especial de Supabase que:
+
 - ✅ Bypasea TODAS las políticas RLS
 - ✅ Permite al admin ver todos los datos
 - ✅ Es la solución estándar para paneles de admin
@@ -129,6 +130,7 @@ Vercel desplegará automáticamente.
 **Causa:** La variable de entorno no está configurada o el servidor no se reinició.
 
 **Solución:**
+
 1. Verifica que agregaste la variable en `.env.local`
 2. Verifica que el nombre es exactamente: `SUPABASE_SERVICE_ROLE_KEY`
 3. Reinicia el servidor de desarrollo
@@ -140,7 +142,9 @@ Vercel desplegará automáticamente.
 **Causa:** No hay usuarios pendientes de verificación.
 
 **Solución:**
+
 1. Ejecuta en Supabase SQL Editor:
+
 ```sql
 SELECT * FROM users WHERE is_verified = false;
 ```
@@ -154,14 +158,17 @@ SELECT * FROM users WHERE is_verified = false;
 **Causa:** Tu usuario no es admin.
 
 **Solución:**
+
 1. Verifica tu rol en Supabase:
+
 ```sql
 SELECT email, role FROM users WHERE email = 'tu-email@gmail.com';
 ```
 
 2. Si no es `admin` o `super_admin`, ejecuta:
+
 ```sql
-UPDATE users 
+UPDATE users
 SET role = 'admin', is_verified = true
 WHERE email = 'tu-email@gmail.com';
 ```
@@ -216,7 +223,7 @@ Después de configurar el service role key:
 ✅ Verificar rol de admin antes de usar  
 ❌ NO usar en Client Components  
 ❌ NO exponer en el navegador  
-❌ NO compartir públicamente  
+❌ NO compartir públicamente
 
 ---
 

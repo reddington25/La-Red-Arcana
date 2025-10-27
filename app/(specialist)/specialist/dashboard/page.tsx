@@ -120,7 +120,7 @@ export default async function SpecialistDashboardPage() {
       
       {/* Stats Cards */}
       <div className="grid md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg p-6">
+        <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg p-6" title="Contratos que estás trabajando actualmente">
           <div className="flex items-center justify-between mb-2">
             <div className="text-gray-400 text-sm">Contratos Activos</div>
             <Briefcase className="w-5 h-5 text-red-400" />
@@ -128,9 +128,12 @@ export default async function SpecialistDashboardPage() {
           <div className="text-3xl font-bold text-white">
             {activeContracts?.length || 0}
           </div>
+          <div className="text-xs text-gray-500 mt-1">
+            En progreso ahora
+          </div>
         </div>
         
-        <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg p-6">
+        <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg p-6" title="Contratos finalizados exitosamente">
           <div className="flex items-center justify-between mb-2">
             <div className="text-gray-400 text-sm">Completados</div>
             <CheckCircle className="w-5 h-5 text-green-400" />
@@ -138,9 +141,12 @@ export default async function SpecialistDashboardPage() {
           <div className="text-3xl font-bold text-white">
             {completedContracts?.length || 0}
           </div>
+          <div className="text-xs text-gray-500 mt-1">
+            Trabajos finalizados
+          </div>
         </div>
         
-        <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg p-6">
+        <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg p-6" title="Ofertas que enviaste esperando respuesta">
           <div className="flex items-center justify-between mb-2">
             <div className="text-gray-400 text-sm">Ofertas Pendientes</div>
             <Clock className="w-5 h-5 text-yellow-400" />
@@ -148,9 +154,12 @@ export default async function SpecialistDashboardPage() {
           <div className="text-3xl font-bold text-white">
             {pendingOffersCount || 0}
           </div>
+          <div className="text-xs text-gray-500 mt-1">
+            Esperando respuesta
+          </div>
         </div>
         
-        <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg p-6">
+        <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg p-6" title="Total ganado en contratos completados">
           <div className="flex items-center justify-between mb-2">
             <div className="text-gray-400 text-sm">Ganancias Totales</div>
             <TrendingUp className="w-5 h-5 text-green-400" />
@@ -168,12 +177,15 @@ export default async function SpecialistDashboardPage() {
       <div className="bg-gradient-to-br from-red-500/20 to-black/50 backdrop-blur border border-red-500/50 rounded-lg p-6 mb-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <div className="text-gray-400 text-sm mb-1">Saldo Disponible</div>
+            <div className="text-gray-400 text-sm mb-1">Saldo Disponible para Retiro</div>
             <div className="text-4xl font-bold text-white mb-2">
               Bs. {balanceAfterCommission.toFixed(2)}
             </div>
             <div className="text-sm text-gray-400">
               Saldo bruto: Bs. {balance.toFixed(2)} - Comisión 15%: Bs. {(balance * 0.15).toFixed(2)}
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              💡 El saldo se acredita cuando el estudiante confirma el trabajo completado
             </div>
           </div>
           
@@ -184,7 +196,8 @@ export default async function SpecialistDashboardPage() {
         </div>
         
         {balanceAfterCommission < 50 && (
-          <div className="mt-4 text-sm text-yellow-400">
+          <div className="mt-4 text-sm text-yellow-400 flex items-center gap-2">
+            <Clock className="w-4 h-4" />
             El monto mínimo para solicitar retiro es Bs. 50
           </div>
         )}
@@ -193,10 +206,14 @@ export default async function SpecialistDashboardPage() {
       {/* Active Contracts */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-white">Contratos Activos</h2>
+          <div>
+            <h2 className="text-2xl font-bold text-white">Contratos Activos</h2>
+            <p className="text-sm text-gray-500">Trabajos que estás realizando actualmente</p>
+          </div>
           <Link
             href="/specialist/opportunities"
-            className="text-red-400 hover:text-red-300 text-sm flex items-center gap-1"
+            className="text-red-400 hover:text-red-300 text-sm flex items-center gap-1 font-medium"
+            title="Busca nuevos contratos disponibles"
           >
             Ver oportunidades
             <ArrowRight className="w-4 h-4" />
@@ -206,10 +223,12 @@ export default async function SpecialistDashboardPage() {
         {!activeContracts || activeContracts.length === 0 ? (
           <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg p-8 text-center">
             <Briefcase className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-            <p className="text-gray-400">No tienes contratos activos</p>
+            <h3 className="text-xl font-semibold text-white mb-2">No tienes contratos activos</h3>
+            <p className="text-gray-400 mb-4">Busca oportunidades y envía ofertas para comenzar a trabajar</p>
             <Link
               href="/specialist/opportunities"
-              className="inline-block mt-4 px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+              className="inline-block mt-4 px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors font-semibold"
+              title="Explora contratos disponibles y envía ofertas"
             >
               Buscar Oportunidades
             </Link>
@@ -256,12 +275,16 @@ export default async function SpecialistDashboardPage() {
       
       {/* Completed Contracts */}
       <div>
-        <h2 className="text-2xl font-bold text-white mb-4">Contratos Completados Recientes</h2>
+        <div className="mb-4">
+          <h2 className="text-2xl font-bold text-white">Contratos Completados Recientes</h2>
+          <p className="text-sm text-gray-500">Historial de tus últimos trabajos finalizados</p>
+        </div>
         
         {!completedContracts || completedContracts.length === 0 ? (
           <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg p-8 text-center">
             <CheckCircle className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-            <p className="text-gray-400">Aún no has completado ningún contrato</p>
+            <h3 className="text-xl font-semibold text-white mb-2">Aún no has completado ningún contrato</h3>
+            <p className="text-gray-400">Completa tu primer trabajo para comenzar a construir tu reputación</p>
           </div>
         ) : (
           <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg divide-y divide-red-500/20">

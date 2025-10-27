@@ -20,15 +20,25 @@ export async function updateSession(request: NextRequest) {
             request,
           })
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(name, value, {
+              ...options,
+              sameSite: 'lax',
+              secure: process.env.NODE_ENV === 'production',
+            })
           )
         },
       },
     }
   )
 
-  // Refreshing the auth token
-  await supabase.auth.getUser()
+  // IMPORTANT: Refreshing the auth token and session
+  // This ensures the session is valid and cookies are updated
+  const { data: { user }, error } = await supabase.auth.getUser()
+  
+  // If there's an error getting the user, the session might be invalid
+  if (error) {
+    console.error('Session refresh error:', error)
+  }
 
   return supabaseResponse
 }

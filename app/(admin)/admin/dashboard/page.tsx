@@ -53,7 +53,8 @@ export default async function AdminDashboard() {
 
   const stats = [
     {
-      title: 'Pending Verifications',
+      title: 'Verificaciones Pendientes',
+      description: 'Usuarios esperando aprobación',
       value: pendingVerifications || 0,
       icon: Users,
       color: 'text-blue-400',
@@ -62,7 +63,8 @@ export default async function AdminDashboard() {
       href: '/admin/verifications',
     },
     {
-      title: 'Pending Deposits',
+      title: 'Depósitos Pendientes',
+      description: 'Pagos esperando confirmación',
       value: pendingDeposits || 0,
       icon: Clock,
       color: 'text-yellow-400',
@@ -71,7 +73,8 @@ export default async function AdminDashboard() {
       href: '/admin/escrow',
     },
     {
-      title: 'Active Disputes',
+      title: 'Disputas Activas',
+      description: 'Conflictos que requieren resolución',
       value: activeDisputes || 0,
       icon: AlertTriangle,
       color: 'text-red-400',
@@ -80,7 +83,8 @@ export default async function AdminDashboard() {
       href: '/admin/disputes',
     },
     {
-      title: 'Pending Withdrawals',
+      title: 'Retiros Pendientes',
+      description: 'Solicitudes de retiro por procesar',
       value: pendingWithdrawals || 0,
       icon: DollarSign,
       color: 'text-green-400',
@@ -95,10 +99,10 @@ export default async function AdminDashboard() {
       {/* Header */}
       <div>
         <h1 className="text-4xl font-orbitron font-bold text-white mb-2">
-          Admin Dashboard
+          Panel de Administración
         </h1>
         <p className="text-gray-400">
-          Manage verifications, escrow, disputes, and badges
+          Gestiona verificaciones, pagos, disputas y distintivos
         </p>
       </div>
 
@@ -118,7 +122,8 @@ export default async function AdminDashboard() {
                   {stat.value}
                 </span>
               </div>
-              <h3 className="text-white font-semibold">{stat.title}</h3>
+              <h3 className="text-white font-semibold mb-1">{stat.title}</h3>
+              <p className="text-gray-500 text-xs">{stat.description}</p>
             </Link>
           )
         })}
@@ -126,42 +131,54 @@ export default async function AdminDashboard() {
 
       {/* Quick Actions */}
       <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg p-6">
-        <h2 className="text-2xl font-bold text-white mb-4">Quick Actions</h2>
+        <h2 className="text-2xl font-bold text-white mb-4">Acciones Rápidas</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Link
             href="/admin/verifications"
-            className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg p-4 text-center transition-colors"
+            className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg p-4 text-center transition-colors group"
           >
             <Users className="w-6 h-6 text-blue-400 mx-auto mb-2" />
-            <span className="text-white text-sm font-medium">
-              Review Verifications
+            <span className="text-white text-sm font-medium block mb-1">
+              Revisar Verificaciones
+            </span>
+            <span className="text-gray-500 text-xs">
+              Aprobar o rechazar usuarios
             </span>
           </Link>
           <Link
             href="/admin/escrow"
-            className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg p-4 text-center transition-colors"
+            className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg p-4 text-center transition-colors group"
           >
             <DollarSign className="w-6 h-6 text-green-400 mx-auto mb-2" />
-            <span className="text-white text-sm font-medium">
-              Manage Escrow
+            <span className="text-white text-sm font-medium block mb-1">
+              Gestionar Pagos
+            </span>
+            <span className="text-gray-500 text-xs">
+              Depósitos y retiros
             </span>
           </Link>
           <Link
             href="/admin/disputes"
-            className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg p-4 text-center transition-colors"
+            className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg p-4 text-center transition-colors group"
           >
             <AlertTriangle className="w-6 h-6 text-red-400 mx-auto mb-2" />
-            <span className="text-white text-sm font-medium">
-              Handle Disputes
+            <span className="text-white text-sm font-medium block mb-1">
+              Resolver Disputas
+            </span>
+            <span className="text-gray-500 text-xs">
+              Mediar conflictos
             </span>
           </Link>
           <Link
             href="/admin/badges"
-            className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg p-4 text-center transition-colors"
+            className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg p-4 text-center transition-colors group"
           >
             <Users className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
-            <span className="text-white text-sm font-medium">
-              Manage Badges
+            <span className="text-white text-sm font-medium block mb-1">
+              Gestionar Distintivos
+            </span>
+            <span className="text-gray-500 text-xs">
+              Otorgar Garantía Arcana
             </span>
           </Link>
         </div>
