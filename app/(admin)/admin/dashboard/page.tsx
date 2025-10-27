@@ -7,28 +7,33 @@ export default async function AdminDashboard() {
 
   // Fetch dashboard statistics
   const [
-    { count: pendingVerifications },
-    { count: pendingDeposits },
-    { count: activeDisputes },
-    { count: pendingWithdrawals },
+    pendingVerificationsResult,
+    pendingDepositsResult,
+    activeDisputesResult,
+    pendingWithdrawalsResult,
   ] = await Promise.all([
     supabase
       .from('users')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact' })
       .eq('is_verified', false),
     supabase
       .from('contracts')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact' })
       .eq('status', 'pending_deposit'),
     supabase
       .from('disputes')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact' })
       .eq('status', 'open'),
     supabase
       .from('withdrawal_requests')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact' })
       .eq('status', 'pending'),
   ])
+
+  const pendingVerifications = pendingVerificationsResult.count || 0
+  const pendingDeposits = pendingDepositsResult.count || 0
+  const activeDisputes = activeDisputesResult.count || 0
+  const pendingWithdrawals = pendingWithdrawalsResult.count || 0
 
   const stats = [
     {

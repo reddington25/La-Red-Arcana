@@ -6,13 +6,10 @@ import VerificationRequestCard from './VerificationRequestCard'
 export default async function VerificationsPage() {
   const supabase = await createClient()
 
-  // Fetch all unverified users with their profile details
+  // Fetch all unverified users
   const { data: pendingUsers, error } = await supabase
     .from('users')
-    .select(`
-      *,
-      profile_details (*)
-    `)
+    .select('*')
     .eq('is_verified', false)
     .order('created_at', { ascending: true })
 
@@ -20,7 +17,24 @@ export default async function VerificationsPage() {
     console.error('Error fetching pending users:', error)
   }
 
-  const usersWithProfiles = (pendingUsers || []) as UserWithProfile[]
+  // Fetch profile details separately for each user
+  const usersWithProfiles: UserWithProfile[] = []
+  if (pendingUsers) {
+    for (const user of pendingUsers) {
+      const { data: profile } = await supabase
+        .from('profile_details')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+      
+      if (profile) {
+        usersWithProfiles.push({
+          ...user,
+          profile_details: profile
+        } as UserWithProfile)
+      }
+    }
+  }
 
   // Fetch pending verification requests (profile changes)
   const { data: verificationRequests, error: requestsError } = await supabase
