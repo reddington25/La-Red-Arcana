@@ -43,18 +43,7 @@ export async function completeStudentProfile(formData: FormData) {
   }
 
   try {
-    // Check if user already exists
-    const { data: existingUser } = await supabase
-      .from('users')
-      .select('id')
-      .eq('id', user.id)
-      .single()
-
-    if (existingUser) {
-      return { error: 'Ya tienes una cuenta registrada. Por favor inicia sesión.' }
-    }
-
-    // Create user record with service role (bypass RLS)
+    // Create user record directly (no need to check if exists, DB will handle duplicates)
     const { error: userError } = await supabase
       .from('users')
       .insert({
