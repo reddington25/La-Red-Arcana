@@ -49,11 +49,18 @@ export async function middleware(request: NextRequest) {
 
   // If user is authenticated, check verification status and role-based access
   if (user) {
-    const { data: userData } = await supabase
+    const { data: userData, error: userError } = await supabase
       .from('users')
       .select('role, is_verified')
       .eq('id', user.id)
       .single()
+
+    // If there's an error fetching user data, log it but don't block
+    if (userError) {
+      console.error('[MIDDLEWARE] Error fetching user data:', userError)
+      // Allow the request to continue - the page will handle auth
+      return response
+    }
 
     // Check if user has profile_details separately
     let hasCompleteProfile = false
@@ -94,6 +101,7 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/', request.url))
       }
     }
+  }
 
     // Redirect authenticated users away from login page ONLY
     if (pathname === '/auth/login') {
