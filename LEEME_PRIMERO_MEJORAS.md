@@ -6,11 +6,15 @@
 **Problema**: Al hacer clic en botones, eras redirigido al login.
 **Estado**: ✅ **RESUELTO**
 
-### 2. 🌐 Dashboard Admin en Inglés
+### 2. 🔴 CRÍTICO: Indicador "Modo Offline" Incorrecto
+**Problema**: Aparecía mensaje de "Sin conexión - Modo offline" en toda la página.
+**Estado**: ✅ **RESUELTO** - Indicador deshabilitado
+
+### 3. 🌐 Dashboard Admin en Inglés
 **Problema**: Todo el dashboard de admin estaba en inglés.
 **Estado**: ✅ **RESUELTO** - Ahora está completamente en español
 
-### 3. 🎯 Dashboards Poco Intuitivos
+### 4. 🎯 Dashboards Poco Intuitivos
 **Problema**: No había descripciones claras de botones y funciones.
 **Estado**: ✅ **RESUELTO** - Agregados tooltips y descripciones
 
@@ -41,11 +45,12 @@
 ## 📚 Documentación Creada
 
 1. **`SOLUCION_PROBLEMA_SESION.md`** - Explicación técnica completa
-2. **`GUIA_RAPIDA_DASHBOARDS.md`** - Guía de uso de cada dashboard
-3. **`RESUMEN_MEJORAS_DASHBOARDS.md`** - Resumen de todos los cambios
-4. **`CHECKLIST_VERIFICACION_SESION.md`** - Checklist de pruebas
-5. **`solucionar-problema-sesion.ps1`** - Script de solución automática
-6. **`diagnosticar-sesion.ps1`** - Script de diagnóstico
+2. **`FIX_INDICADOR_OFFLINE.md`** - Solución al indicador offline
+3. **`GUIA_RAPIDA_DASHBOARDS.md`** - Guía de uso de cada dashboard
+4. **`RESUMEN_MEJORAS_DASHBOARDS.md`** - Resumen de todos los cambios
+5. **`CHECKLIST_VERIFICACION_SESION.md`** - Checklist de pruebas
+6. **`solucionar-problema-sesion.ps1`** - Script de solución automática
+7. **`diagnosticar-sesion.ps1`** - Script de diagnóstico
 
 ---
 
@@ -54,6 +59,7 @@
 ### Archivos Modificados
 - ✅ `lib/supabase/middleware.ts` - Cookies configuradas correctamente
 - ✅ `lib/supabase/server.ts` - Cookies configuradas correctamente
+- ✅ `app/layout.tsx` - Indicador offline deshabilitado
 - ✅ `app/(admin)/admin/dashboard/page.tsx` - Traducido al español
 - ✅ `app/(student)/student/dashboard/page.tsx` - Más intuitivo
 - ✅ `app/(specialist)/specialist/dashboard/page.tsx` - Más intuitivo

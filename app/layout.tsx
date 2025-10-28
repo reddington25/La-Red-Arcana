@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Orbitron } from "next/font/google";
 import "./globals.css";
 import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
-import { OfflineIndicator } from "@/components/pwa/OfflineIndicator";
+// import { OfflineIndicator } from "@/components/pwa/OfflineIndicator"; // DESHABILITADO: Causaba confusión mostrando "modo offline" incorrectamente
 import { Toaster } from "@/components/ui/toaster";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { MatrixRain } from "@/components/matrix-rain/MatrixRain";
@@ -62,7 +62,7 @@ export default function RootLayout({
       <body className={`${orbitron.variable} antialiased bg-black`}>
         <ErrorBoundary>
           <MatrixRain />
-          <OfflineIndicator />
+          {/* <OfflineIndicator /> */} {/* DESHABILITADO: Causaba confusión */}
           {children}
           <PWAInstallPrompt />
           <Toaster />

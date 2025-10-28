@@ -16,19 +16,25 @@
    - Pasos para probar la solución
    - Problemas conocidos y soluciones
 
-2. **[CHECKLIST_VERIFICACION_SESION.md](CHECKLIST_VERIFICACION_SESION.md)**
+2. **[FIX_INDICADOR_OFFLINE.md](FIX_INDICADOR_OFFLINE.md)**
+   - Solución al indicador "Modo offline" incorrecto
+   - Por qué se deshabilitó
+   - Cómo reactivarlo en el futuro
+   - Opciones de corrección
+
+3. **[CHECKLIST_VERIFICACION_SESION.md](CHECKLIST_VERIFICACION_SESION.md)**
    - Checklist completo de verificación
    - Pruebas paso a paso
    - Registro de pruebas
    - Métricas de éxito
 
-3. **[diagnosticar-sesion.ps1](diagnosticar-sesion.ps1)**
+4. **[diagnosticar-sesion.ps1](diagnosticar-sesion.ps1)**
    - Script de diagnóstico automático
    - Verifica archivos y configuración
    - Identifica problemas comunes
    - Proporciona soluciones
 
-4. **[solucionar-problema-sesion.ps1](solucionar-problema-sesion.ps1)**
+5. **[solucionar-problema-sesion.ps1](solucionar-problema-sesion.ps1)**
    - Script de solución automática
    - Limpia cache y entorno
    - Reinicia el servidor
@@ -110,6 +116,12 @@
 2. Ejecuta: `solucionar-problema-sesion.ps1`
 3. Verifica: `CHECKLIST_VERIFICACION_SESION.md`
 
+### "Aparece mensaje de 'Modo offline' incorrectamente"
+
+1. Lee: `FIX_INDICADOR_OFFLINE.md`
+2. Reinicia el servidor: `npm run dev`
+3. El indicador ya está deshabilitado
+
 ### "No entiendo cómo usar el dashboard"
 
 1. Lee: `GUIA_RAPIDA_DASHBOARDS.md`
@@ -181,6 +193,7 @@
 ### Por Palabra Clave
 
 - **Sesión**: `SOLUCION_PROBLEMA_SESION.md`, `CHECKLIST_VERIFICACION_SESION.md`
+- **Offline**: `FIX_INDICADOR_OFFLINE.md`
 - **Dashboard**: `GUIA_RAPIDA_DASHBOARDS.md`, `RESUMEN_MEJORAS_DASHBOARDS.md`
 - **Cookies**: `SOLUCION_PROBLEMA_SESION.md`
 - **Login**: `SOLUCION_PROBLEMA_SESION.md`, `CHECKLIST_VERIFICACION_SESION.md`
