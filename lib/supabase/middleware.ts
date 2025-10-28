@@ -15,7 +15,7 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
           supabaseResponse = NextResponse.next({
             request,
           })
@@ -27,14 +27,8 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // IMPORTANT: Refreshing the auth token and session
-  // This ensures the session is valid and cookies are updated
-  const { data: { user }, error } = await supabase.auth.getUser()
-  
-  // If there's an error getting the user, the session might be invalid
-  if (error) {
-    console.error('Session refresh error:', error)
-  }
+  // Refreshing the auth token
+  await supabase.auth.getUser()
 
   return supabaseResponse
 }
