@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Upload, X, FileText, AlertCircle } from 'lucide-react'
 import { createContract } from './actions'
+import { createClient } from '@/lib/supabase/client'
 import { validateFileType, formatFileSize } from '@/lib/supabase/storage'
 import { validateFileUpload, showErrorToast, showSuccessToast } from '@/lib/utils/error-handler'
 import { LoadingButton } from '@/components/ui/loading-spinner'
@@ -91,6 +92,24 @@ export default function ContractForm() {
     setLoading(true)
 
     try {
+      // Verify session before submitting
+      const supabase = createClient()
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      console.log('[FORM] Session check:', { hasSession: !!session, error: sessionError })
+      
+      if (sessionError || !session) {
+        const errorMsg = 'Sesión expirada. Por favor, inicia sesión de nuevo.'
+        setError(errorMsg)
+        showErrorToast(errorMsg)
+        setLoading(false)
+        // Redirect to login after 2 seconds
+        setTimeout(() => {
+          window.location.href = '/auth/login?redirectTo=/student/contracts/new'
+        }, 2000)
+        return
+      }
+
       const result = await createContract(
         {
           title,

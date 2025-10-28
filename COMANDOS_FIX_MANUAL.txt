@@ -1,0 +1,30 @@
+# COMANDOS PARA APLICAR FIX MANUALMENTE
+
+# 1. Agregar archivos
+git add "app/(student)/student/contracts/new/page.tsx"
+git add "app/(student)/student/contracts/new/ContractForm.tsx"
+git add "app/(student)/student/contracts/new/actions.ts"
+
+# 2. Commit
+git commit -m "fix: Mejorar autenticacion en crear contrato"
+
+# 3. Push
+git push origin main
+
+# 4. Esperar despliegue en Vercel (2-3 minutos)
+
+# 5. Limpiar cookies del navegador
+# - Abre DevTools (F12)
+# - Application → Cookies
+# - Click derecho → Clear
+# - Recarga (Ctrl + Shift + R)
+
+# 6. Hacer login de nuevo
+
+# 7. Intentar crear contrato
+
+# 8. Ver logs en console del navegador (F12)
+# Debe mostrar: [FORM] Session check: { hasSession: true }
+
+# 9. Si sigue sin funcionar, ver logs de Vercel:
+vercel logs --follow

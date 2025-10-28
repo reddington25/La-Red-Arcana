@@ -14,27 +14,46 @@ export interface CreateContractFormData {
 }
 
 export async function createContract(formData: CreateContractFormData, files: File[]) {
-  const supabase = await createClient()
+  console.log('[CREATE CONTRACT] Starting...')
+  
+  try {
+    const supabase = await createClient()
 
-  // Get current user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    // Get current user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
 
-  if (!user) {
-    return { error: 'No autenticado' }
-  }
+    console.log('[CREATE CONTRACT] User:', user?.id)
+    console.log('[CREATE CONTRACT] Auth error:', authError)
 
-  // Validate user is a verified student
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role, is_verified')
-    .eq('id', user.id)
-    .single()
+    if (authError) {
+      console.error('[CREATE CONTRACT] Auth error:', authError)
+      return { error: `Error de autenticación: ${authError.message}` }
+    }
 
-  if (!profile || profile.role !== 'student' || !profile.is_verified) {
-    return { error: 'No autorizado' }
-  }
+    if (!user) {
+      console.log('[CREATE CONTRACT] No user found - returning error')
+      return { error: 'No autenticado. Por favor, inicia sesión de nuevo.' }
+    }
+
+    // Validate user is a verified student
+    const { data: profile, error: profileError } = await supabase
+      .from('users')
+      .select('role, is_verified')
+      .eq('id', user.id)
+      .single()
+
+    if (profileError) {
+      console.error('[CREATE CONTRACT] Profile error:', profileError)
+      return { error: `Error al verificar perfil: ${profileError.message}` }
+    }
+
+    if (!profile || profile.role !== 'student' || !profile.is_verified) {
+      console.log('[CREATE CONTRACT] User not authorized:', { profile })
+      return { error: 'No autorizado para crear contratos' }
+    }
 
   // Validate form data
   if (!formData.title || formData.title.length < 5 || formData.title.length > 200) {
@@ -100,25 +119,29 @@ export async function createContract(formData: CreateContractFormData, files: Fi
     }
   }
 
-  // Trigger Edge Function to notify specialists
-  try {
-    const { data, error: functionError } = await supabase.functions.invoke('notify-specialists', {
-      body: {
-        contract_id: contract.id,
-        tags: formData.tags,
-      },
-    })
+    // Trigger Edge Function to notify specialists
+    try {
+      const { data, error: functionError } = await supabase.functions.invoke('notify-specialists', {
+        body: {
+          contract_id: contract.id,
+          tags: formData.tags,
+        },
+      })
 
-    if (functionError) {
-      console.error('Error invoking notify-specialists function:', functionError)
-    } else {
-      console.log('Notification result:', data)
+      if (functionError) {
+        console.error('Error invoking notify-specialists function:', functionError)
+      } else {
+        console.log('Notification result:', data)
+      }
+    } catch (error) {
+      // Don't fail contract creation if notification fails
+      console.error('Error sending notifications:', error)
     }
-  } catch (error) {
-    // Don't fail contract creation if notification fails
-    console.error('Error sending notifications:', error)
-  }
 
-  revalidatePath('/student/dashboard')
-  redirect(`/student/contracts/${contract.id}`)
+    revalidatePath('/student/dashboard')
+    redirect(`/student/contracts/${contract.id}`)
+  } catch (error) {
+    console.error('[CREATE CONTRACT] Unexpected error:', error)
+    return { error: 'Error inesperado al crear el contrato. Por favor, intenta de nuevo.' }
+  }
 }
