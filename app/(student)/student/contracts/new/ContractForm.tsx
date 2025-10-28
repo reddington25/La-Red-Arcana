@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Upload, X, FileText, AlertCircle } from 'lucide-react'
 import { createContract } from './actions'
@@ -43,6 +43,26 @@ export default function ContractForm() {
   const [serviceType, setServiceType] = useState<'full' | 'review'>('full')
   const [initialPrice, setInitialPrice] = useState('')
   const [files, setFiles] = useState<File[]>([])
+
+  // Recuperar draft si existe
+  useEffect(() => {
+    const draft = localStorage.getItem('draft_contract')
+    if (draft) {
+      try {
+        const data = JSON.parse(draft)
+        setTitle(data.title || '')
+        setDescription(data.description || '')
+        setSelectedTags(data.selectedTags || [])
+        setServiceType(data.serviceType || 'full')
+        setInitialPrice(data.initialPrice || '')
+        
+        // Mostrar mensaje
+        showSuccessToast('Se recuperó tu borrador anterior')
+      } catch (error) {
+        console.error('[FORM] Error loading draft:', error)
+      }
+    }
+  }, [])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return
@@ -92,17 +112,44 @@ export default function ContractForm() {
     setLoading(true)
 
     try {
-      // Verify session before submitting
+      // Verificar y refrescar sesión
       const supabase = createClient()
+      
+      // Primero intentar refrescar la sesión
+      console.log('[FORM] Refreshing session...')
+      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
+      
+      if (refreshError) {
+        console.error('[FORM] Error refreshing session:', refreshError)
+      } else {
+        console.log('[FORM] Session refreshed successfully')
+      }
+      
+      // Luego verificar que existe
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       
-      console.log('[FORM] Session check:', { hasSession: !!session, error: sessionError })
+      console.log('[FORM] Session check:', { 
+        hasSession: !!session, 
+        error: sessionError,
+        expiresAt: session?.expires_at,
+        userId: session?.user?.id
+      })
       
       if (sessionError || !session) {
-        const errorMsg = 'Sesión expirada. Por favor, inicia sesión de nuevo.'
+        const errorMsg = 'Tu sesión ha expirado. Redirigiendo al login...'
         setError(errorMsg)
         showErrorToast(errorMsg)
         setLoading(false)
+        
+        // Guardar el estado del formulario en localStorage
+        localStorage.setItem('draft_contract', JSON.stringify({
+          title,
+          description,
+          selectedTags,
+          serviceType,
+          initialPrice,
+        }))
+        
         // Redirect to login after 2 seconds
         setTimeout(() => {
           window.location.href = '/auth/login?redirectTo=/student/contracts/new'
@@ -110,7 +157,7 @@ export default function ContractForm() {
         return
       }
 
-      // Create FormData for API request
+      // Crear FormData para API request
       const formData = new FormData()
       formData.append('title', title)
       formData.append('description', description)
@@ -123,27 +170,41 @@ export default function ContractForm() {
         formData.append(`file_${index}`, file)
       })
 
-      // Send to API route
+      console.log('[FORM] Sending request to API...')
+
+      // Send to API route con Authorization header como backup
       const response = await fetch('/api/contracts', {
         method: 'POST',
         body: formData,
         credentials: 'include', // Important: include cookies
+        headers: {
+          // Incluir el access token explícitamente como backup
+          'Authorization': `Bearer ${session.access_token}`,
+        },
       })
+
+      console.log('[FORM] Response status:', response.status)
 
       const result = await response.json()
 
       if (!response.ok || result.error) {
+        console.error('[FORM] Error from API:', result.error)
         setError(result.error || 'Error al crear el contrato')
         showErrorToast(result.error || 'Error al crear el contrato')
         setLoading(false)
       } else {
+        console.log('[FORM] Contract created successfully:', result.contractId)
         showSuccessToast('Contrato creado exitosamente. Los especialistas serán notificados.')
+        
+        // Limpiar draft
+        localStorage.removeItem('draft_contract')
+        
         // Redirect to contract page
         router.push(`/student/contracts/${result.contractId}`)
       }
     } catch (err) {
-      console.error('[FORM] Error:', err)
-      const errorMessage = 'Error al crear el contrato'
+      console.error('[FORM] Unexpected error:', err)
+      const errorMessage = 'Error al crear el contrato. Por favor, intenta de nuevo.'
       setError(errorMessage)
       showErrorToast(errorMessage)
       setLoading(false)

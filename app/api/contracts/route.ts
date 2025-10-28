@@ -4,18 +4,49 @@ import { uploadContractFiles } from '@/lib/supabase/storage'
 
 export async function POST(request: NextRequest) {
   console.log('[API CONTRACTS] Starting...')
+  console.log('[API CONTRACTS] Method:', request.method)
+  console.log('[API CONTRACTS] URL:', request.url)
   
   try {
     const supabase = await createClient()
+    let user = null
+    let authError = null
 
-    // Get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
+    // Intentar obtener el token del header Authorization primero
+    const authHeader = request.headers.get('authorization')
+    console.log('[API CONTRACTS] Authorization header present:', !!authHeader)
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.replace('Bearer ', '')
+      console.log('[API CONTRACTS] Using Authorization header token')
+      
+      // Crear cliente con el token explícito
+      const { data: { user: tokenUser }, error: tokenError } = await supabase.auth.getUser(token)
+      
+      if (tokenError) {
+        console.error('[API CONTRACTS] Error with token:', tokenError)
+      } else if (tokenUser) {
+        console.log('[API CONTRACTS] User from token:', tokenUser.id)
+        user = tokenUser
+      }
+    }
 
-    console.log('[API CONTRACTS] User:', user?.id)
-    console.log('[API CONTRACTS] Auth error:', authError)
+    // Si no hay usuario del token, intentar con cookies
+    if (!user) {
+      console.log('[API CONTRACTS] Trying to get user from cookies...')
+      console.log('[API CONTRACTS] Cookies:', request.cookies.getAll().map(c => c.name))
+      
+      const {
+        data: { user: cookieUser },
+        error: cookieError,
+      } = await supabase.auth.getUser()
+      
+      user = cookieUser
+      authError = cookieError
+      
+      console.log('[API CONTRACTS] User from cookies:', user?.id)
+      console.log('[API CONTRACTS] Cookie auth error:', cookieError)
+    }
 
     if (authError) {
       console.error('[API CONTRACTS] Auth error:', authError)
@@ -26,12 +57,14 @@ export async function POST(request: NextRequest) {
     }
 
     if (!user) {
-      console.log('[API CONTRACTS] No user found')
+      console.log('[API CONTRACTS] No user found from any source')
       return NextResponse.json(
         { error: 'No autenticado. Por favor, inicia sesión de nuevo.' },
         { status: 401 }
       )
     }
+
+    console.log('[API CONTRACTS] Authenticated user:', user.id)
 
     // Validate user is a verified student
     const { data: profile, error: profileError } = await supabase
