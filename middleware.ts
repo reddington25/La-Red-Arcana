@@ -5,6 +5,12 @@ import { createServerClient } from '@supabase/ssr'
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
+  // Skip middleware for Server Actions (POST requests to page routes)
+  // Server Actions handle their own auth via createClient()
+  if (request.method === 'POST' && !pathname.startsWith('/api/')) {
+    return NextResponse.next()
+  }
+
   // Public routes that don't require authentication
   const publicRoutes = ['/', '/auth/login', '/auth/callback', '/demo']
   const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith('/auth/register'))
@@ -38,7 +44,16 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+  // Debug logging
+  if (!user) {
+    console.log('[MIDDLEWARE] No user found for path:', pathname)
+    console.log('[MIDDLEWARE] Cookies:', request.cookies.getAll().map(c => c.name))
+    if (authError) {
+      console.log('[MIDDLEWARE] Auth error:', authError)
+    }
+  }
 
   // If user is not authenticated and trying to access protected route
   if (!user && !isPublicRoute) {
@@ -138,7 +153,8 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public files (images, icons, manifest, etc.)
+     * - api routes (handled separately)
      */
-    '/((?!_next/static|_next/image|favicon.ico|icon-.*\\.png|manifest\\..*|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|json)$).*)',
+    '/((?!_next/static|_next/image|_next/data|favicon.ico|icon-.*\\.png|manifest\\..*|api/.*|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|json)$).*)',
   ],
 }
