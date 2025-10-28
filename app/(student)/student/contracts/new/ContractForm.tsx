@@ -110,26 +110,39 @@ export default function ContractForm() {
         return
       }
 
-      const result = await createContract(
-        {
-          title,
-          description,
-          tags: selectedTags,
-          serviceType,
-          initialPrice: parseFloat(initialPrice),
-        },
-        files
-      )
+      // Create FormData for API request
+      const formData = new FormData()
+      formData.append('title', title)
+      formData.append('description', description)
+      formData.append('tags', JSON.stringify(selectedTags))
+      formData.append('serviceType', serviceType)
+      formData.append('initialPrice', initialPrice)
 
-      if (result?.error) {
-        setError(result.error)
-        showErrorToast(result.error)
+      // Add files
+      files.forEach((file, index) => {
+        formData.append(`file_${index}`, file)
+      })
+
+      // Send to API route
+      const response = await fetch('/api/contracts', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include', // Important: include cookies
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || result.error) {
+        setError(result.error || 'Error al crear el contrato')
+        showErrorToast(result.error || 'Error al crear el contrato')
         setLoading(false)
       } else {
         showSuccessToast('Contrato creado exitosamente. Los especialistas serán notificados.')
+        // Redirect to contract page
+        router.push(`/student/contracts/${result.contractId}`)
       }
-      // If successful, redirect happens in server action
     } catch (err) {
+      console.error('[FORM] Error:', err)
       const errorMessage = 'Error al crear el contrato'
       setError(errorMessage)
       showErrorToast(errorMessage)
