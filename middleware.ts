@@ -47,11 +47,15 @@ export async function middleware(request: NextRequest) {
   const { data: { user }, error: authError } = await supabase.auth.getUser()
 
   // Debug logging
+  console.log('[MIDDLEWARE] Path:', pathname)
+  console.log('[MIDDLEWARE] Method:', request.method)
+  console.log('[MIDDLEWARE] Cookies:', request.cookies.getAll().map(c => ({ name: c.name, value: c.value.substring(0, 20) + '...' })))
+  console.log('[MIDDLEWARE] User:', user ? user.id : 'null')
+  
   if (!user) {
     console.log('[MIDDLEWARE] No user found for path:', pathname)
-    console.log('[MIDDLEWARE] Cookies:', request.cookies.getAll().map(c => c.name))
     if (authError) {
-      console.log('[MIDDLEWARE] Auth error:', authError)
+      console.log('[MIDDLEWARE] Auth error:', authError.message, authError.status)
     }
   }
 
