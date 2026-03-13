@@ -48,6 +48,11 @@ export default function AdminNav({ userRole }: AdminNavProps) {
     ? [
         ...baseNavItems,
         {
+          href: '/admin/security',
+          label: 'Security',
+          icon: Shield,
+        },
+        {
           href: '/admin/super-admin',
           label: 'Super Admin',
           icon: Shield,

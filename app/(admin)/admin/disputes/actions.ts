@@ -115,6 +115,25 @@ export async function resolveDispute(params: ResolveDisputeParams) {
       return { error: 'Failed to update dispute status' }
     }
 
+    // Log the manual financial transaction
+    if (specialistPayment > 0) {
+      const { error: auditError } = await supabase
+        .from('financial_audit_logs')
+        .insert({
+          admin_id: adminId,
+          user_id: specialistId,
+          action_type: 'dispute_resolution_payment',
+          amount: specialistPayment,
+          details: {
+            disputeId,
+            contractId,
+            action,
+            originalFinalPrice: finalPrice
+          }
+        })
+      if (auditError) console.error('Error logging financial audit:', auditError)
+    }
+
     // Update contract status back to completed (or keep as disputed for records)
     // For this implementation, we'll keep it as disputed for audit trail
     // but you could change it to 'completed' or 'resolved' if preferred

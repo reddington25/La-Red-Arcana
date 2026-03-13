@@ -8,7 +8,9 @@ const corsHeaders = {
 
 interface NotificationRequest {
   contract_id: string
-  tags: string[]
+  department: string
+  faculty: string
+  career: string
 }
 
 serve(async (req) => {
@@ -23,7 +25,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { contract_id, tags } = await req.json() as NotificationRequest
+    const { contract_id, department, faculty, career } = await req.json() as NotificationRequest
 
     // Get contract details
     const { data: contract, error: contractError } = await supabaseClient
@@ -41,31 +43,34 @@ serve(async (req) => {
       throw new Error('Contract not found')
     }
 
-    // Find specialists with matching tags who are verified
+    // Find specialists with exact career match who are verified
+    // We use !inner on profile_details to filter the parent (users) table
     const { data: specialists, error: specialistsError } = await supabaseClient
       .from('users')
       .select(`
         id,
         email,
-        profile_details (
+        profile_details!inner (
           real_name,
-          subject_tags
+          department,
+          faculty,
+          career
         )
       `)
       .eq('role', 'specialist')
       .eq('is_verified', true)
+      .eq('profile_details.department', department)
+      .eq('profile_details.faculty', faculty)
+      .eq('profile_details.career', career)
 
     if (specialistsError) {
+      console.error('Error fetching specialists:', specialistsError)
       throw new Error('Error fetching specialists')
     }
 
-    // Filter specialists with matching tags
-    const matchingSpecialists = specialists?.filter(specialist => {
-      const specialistTags = specialist.profile_details?.subject_tags || []
-      return tags.some(tag => specialistTags.includes(tag))
-    }) || []
+    const matchingSpecialists = specialists || []
 
-    console.log(`Found ${matchingSpecialists.length} matching specialists`)
+    console.log(`Found ${matchingSpecialists.length} matching specialists for career: ${career}`)
 
     // Send email notifications using Resend
     const resendApiKey = Deno.env.get('RESEND_API_KEY')
@@ -100,12 +105,15 @@ serve(async (req) => {
                 <p>Hola ${specialist.profile_details?.real_name || 'Especialista'},</p>
                 <p>Hay un nuevo contrato que coincide con tus áreas de especialización:</p>
                 
-                <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                  <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
                   <h3 style="margin-top: 0;">${contract.title}</h3>
                   <p><strong>Descripción:</strong> ${contract.description.substring(0, 200)}${contract.description.length > 200 ? '...' : ''}</p>
                   <p><strong>Tipo de Servicio:</strong> ${contract.service_type === 'full' ? 'Realización Completa' : 'Revisión y Corrección'}</p>
                   <p><strong>Precio Inicial:</strong> Bs. ${contract.initial_price}</p>
-                  <p><strong>Etiquetas:</strong> ${contract.tags.join(', ')}</p>
+                  <p><strong>Área Académica:</strong> ${department} - ${faculty} - ${career}</p>
+                  ${contract.deadline ? `<p><strong>Fecha Límite:</strong> ${new Date(contract.deadline).toLocaleDateString('es-BO', { 
+                    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                  })}</p>` : ''}
                 </div>
                 
                 <p>

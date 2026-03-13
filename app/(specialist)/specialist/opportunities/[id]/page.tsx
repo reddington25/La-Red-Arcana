@@ -23,7 +23,10 @@ export default async function ContractDetailPage({ params }: { params: Promise<{
       id,
       title,
       description,
-      tags,
+      department,
+      faculty,
+      career,
+      deadline,
       service_type,
       initial_price,
       file_urls,
@@ -80,6 +83,14 @@ export default async function ContractDetailPage({ params }: { params: Promise<{
               locale: es 
             })}
           </div>
+          {contract.deadline && (
+            <div className="flex items-center gap-1 text-red-400">
+              <Clock className="w-4 h-4" />
+              Límite: {new Date(contract.deadline).toLocaleDateString('es-BO', { 
+                day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+              })}
+            </div>
+          )}
         </div>
       </div>
       
@@ -178,18 +189,22 @@ export default async function ContractDetailPage({ params }: { params: Promise<{
             </div>
           </div>
           
-          {/* Tags */}
+          {/* Academic Area */}
           <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg p-6">
-            <div className="text-sm text-gray-400 mb-3">Materias</div>
-            <div className="flex flex-wrap gap-2">
-              {contract.tags.map((tag: string) => (
-                <span
-                  key={tag}
-                  className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-sm border border-red-500/50"
-                >
-                  {tag}
-                </span>
-              ))}
+            <div className="text-sm text-gray-400 mb-3">Área Académica</div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm text-purple-400 bg-purple-500/10 px-3 py-2 rounded-lg border border-purple-500/30">
+                <span>📍</span>
+                {contract.department}
+              </div>
+              <div className="flex items-center gap-2 text-sm text-blue-400 bg-blue-500/10 px-3 py-2 rounded-lg border border-blue-500/30">
+                <span>🏛️</span>
+                {contract.faculty}
+              </div>
+              <div className="flex items-center gap-2 text-sm text-green-400 bg-green-500/10 px-3 py-2 rounded-lg border border-green-500/30">
+                <span>🎓</span>
+                {contract.career}
+              </div>
             </div>
           </div>
         </div>

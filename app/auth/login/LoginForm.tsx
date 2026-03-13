@@ -62,22 +62,21 @@ export default function LoginForm({ redirectTo, error }: LoginFormProps) {
     try {
       setIsLoading(true)
       setErrorMessage(undefined)
-      
-      const supabase = createClient()
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
       })
 
-      if (error) {
-        const errorMsg = error.message === 'Invalid login credentials'
-          ? 'Email o contraseña incorrectos'
-          : 'Error al iniciar sesión. Por favor intenta de nuevo.'
+      const data = await res.json()
+
+      if (!res.ok) {
+        const errorMsg = data.error || 'Error al iniciar sesión. Por favor intenta de nuevo.'
         setErrorMessage(errorMsg)
         showErrorToast(errorMsg)
         setIsLoading(false)
       } else {
-        // Redirect will happen automatically via middleware
+        // Redirect will happen automatically via middleware or window.location
         window.location.href = redirectTo || '/auth/callback'
       }
     } catch (err) {

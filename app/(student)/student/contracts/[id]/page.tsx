@@ -218,20 +218,39 @@ export default async function ContractDetailPage({
                 </p>
               </div>
 
+              {contract.deadline && (
+                <div>
+                  <div className="flex items-center gap-2 text-red-400 text-sm mb-1">
+                    <Clock className="w-4 h-4" />
+                    Fecha Límite
+                  </div>
+                  <p className="text-white font-medium">
+                    {new Date(contract.deadline).toLocaleDateString('es-BO', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+              )}
+
               <div>
                 <div className="flex items-center gap-2 text-gray-400 text-sm mb-2">
                   <Tag className="w-4 h-4" />
-                  Etiquetas
+                  Área Académica
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {contract.tags.map((tag: string) => (
-                    <span
-                      key={tag}
-                      className="px-2 py-1 bg-red-500/10 text-red-400 text-xs rounded-full"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+                  <span className="px-2 py-1 bg-purple-500/10 text-purple-400 text-xs rounded-full border border-purple-500/30">
+                    📍 {contract.department}
+                  </span>
+                  <span className="px-2 py-1 bg-blue-500/10 text-blue-400 text-xs rounded-full border border-blue-500/30">
+                    🏛️ {contract.faculty}
+                  </span>
+                  <span className="px-2 py-1 bg-green-500/10 text-green-400 text-xs rounded-full border border-green-500/30">
+                    🎓 {contract.career}
+                  </span>
                 </div>
               </div>
             </div>

@@ -17,12 +17,15 @@ export async function completeStudentProfile(formData: FormData) {
   const realName = formData.get('real_name') as string
   const alias = formData.get('alias') as string
   const phoneInput = formData.get('phone') as string
-  
+  const department = formData.get('department') as string
+  const faculty = formData.get('faculty') as string
+  const career = formData.get('career') as string
+
   // Add Bolivia country code (+591) automatically
   const phone = `+591${phoneInput}`
 
   // Validate required fields
-  if (!realName || !alias || !phoneInput) {
+  if (!realName || !alias || !phoneInput || !department || !faculty || !career) {
     return { error: 'Todos los campos son requeridos' }
   }
 
@@ -76,7 +79,10 @@ export async function completeStudentProfile(formData: FormData) {
         user_id: user.id,
         real_name: realName,
         alias: alias,
-        phone: phone
+        phone: phone,
+        department: department,
+        faculty: faculty,
+        career: career
       })
 
     if (profileError) {

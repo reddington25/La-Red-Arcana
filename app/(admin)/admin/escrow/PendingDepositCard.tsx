@@ -78,6 +78,17 @@ export default function PendingDepositCard({
           <div className="text-2xl font-bold text-yellow-400 mb-1">
             Bs. {contract.final_price?.toFixed(2)}
           </div>
+          {contract.deadline && (
+            <div className="text-xs text-red-400 font-semibold mb-1">
+              Vence: {new Date(contract.deadline).toLocaleDateString('es-BO', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </div>
+          )}
           <div className="text-xs text-gray-400">
             Updated {formatDistanceToNow(new Date(contract.updated_at), { addSuffix: true })}
           </div>

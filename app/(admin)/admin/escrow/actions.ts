@@ -153,6 +153,23 @@ export async function processWithdrawal(
       return { success: false, error: updateError.message }
     }
 
+    // Log the manual financial transaction
+    if (status === 'completed') {
+      const { error: auditError } = await supabase
+        .from('financial_audit_logs')
+        .insert({
+          admin_id: adminId,
+          user_id: request.specialist_id,
+          action_type: 'withdrawal_processed',
+          amount: request.amount,
+          details: {
+            requestId,
+            notes
+          }
+        })
+      if (auditError) console.error('Error logging financial audit:', auditError)
+    }
+
     // Notify specialist
     await supabase.from('notifications').insert({
       user_id: request.specialist_id,

@@ -18,29 +18,19 @@ export async function completeSpecialistProfile(formData: FormData) {
   const realName = formData.get('real_name') as string
   const phoneInput = formData.get('phone') as string
   const university = formData.get('university') as string
-  const career = formData.get('career') as string
   const academicStatus = formData.get('academic_status') as string
-  const subjectTagsJson = formData.get('subject_tags') as string
+  const department = formData.get('department') as string
+  const faculty = formData.get('faculty') as string
+  const career = formData.get('career') as string
   const ciFile = formData.get('ci_file') as File
   const cvFile = formData.get('cv_file') as File | null
-  
+
   // Add Bolivia country code (+591) automatically
   const phone = `+591${phoneInput}`
 
   // Validate required fields
-  if (!realName || !phoneInput || !university || !career || !academicStatus || !subjectTagsJson) {
+  if (!realName || !phoneInput || !university || !academicStatus || !department || !faculty || !career) {
     return { error: 'Todos los campos obligatorios son requeridos' }
-  }
-
-  // Parse subject tags
-  let subjectTags: string[]
-  try {
-    subjectTags = JSON.parse(subjectTagsJson)
-    if (!Array.isArray(subjectTags) || subjectTags.length === 0) {
-      return { error: 'Debes seleccionar al menos una materia de especialización' }
-    }
-  } catch {
-    return { error: 'Error al procesar las materias seleccionadas' }
   }
 
   // Validate CI file
@@ -95,9 +85,11 @@ export async function completeSpecialistProfile(formData: FormData) {
         ci_photo_url: ciUploadResult.url,
         cv_url: cvUrl,
         university: university,
-        career: career,
         academic_status: academicStatus,
-        subject_tags: subjectTags
+        department: department,
+        faculty: faculty,
+        career: career,
+        subject_tags: null // Deprecated field
       })
 
     if (profileError) {

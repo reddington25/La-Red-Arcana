@@ -3,13 +3,13 @@
 
 export type UserRole = 'student' | 'specialist' | 'admin' | 'super_admin'
 
-export type ContractStatus = 
-  | 'open' 
-  | 'assigned' 
-  | 'pending_deposit' 
-  | 'in_progress' 
-  | 'completed' 
-  | 'disputed' 
+export type ContractStatus =
+  | 'open'
+  | 'assigned'
+  | 'pending_deposit'
+  | 'in_progress'
+  | 'completed'
+  | 'disputed'
   | 'cancelled'
 
 export type ServiceType = 'full' | 'review'
@@ -37,19 +37,23 @@ export interface ProfileDetails {
   real_name: string
   alias: string | null
   phone: string
-  
+
+  // Academic hierarchy fields
+  department: string | null
+  faculty: string | null
+  career: string | null
+
   // Specialist-specific fields
   ci_photo_url: string | null
   cv_url: string | null
   university: string | null
-  career: string | null
   academic_status: string | null
-  subject_tags: string[] | null
-  
+  subject_tags: string[] | null // Deprecated - replaced by department/faculty/career
+
   // Verification fields
   pending_phone: string | null
   pending_verification: boolean | null
-  
+
   created_at: string
   updated_at: string
 }
@@ -58,18 +62,25 @@ export interface Contract {
   id: string
   student_id: string
   specialist_id: string | null
-  
+
   title: string
   description: string
   file_urls: string[]
-  tags: string[]
+  tags: string[] // Deprecated - replaced by department/faculty/career
   service_type: ServiceType
-  
+
+  // Academic hierarchy fields
+  department: string
+  faculty: string
+  career: string
+
   status: ContractStatus
-  
+
   initial_price: number
   final_price: number | null
-  
+
+  deadline: string | null
+
   created_at: string
   updated_at: string
   completed_at: string | null
@@ -79,10 +90,10 @@ export interface Offer {
   id: string
   contract_id: string
   specialist_id: string
-  
+
   price: number
   message: string | null
-  
+
   created_at: string
 }
 
@@ -90,9 +101,9 @@ export interface Message {
   id: string
   contract_id: string
   sender_id: string
-  
+
   content: string
-  
+
   created_at: string
 }
 
@@ -101,11 +112,11 @@ export interface AdminMessage {
   user_id: string
   admin_id: string
   contract_id: string | null
-  
+
   message: string
   attachment_url: string | null
   read: boolean
-  
+
   created_at: string
 }
 
@@ -114,10 +125,10 @@ export interface Review {
   contract_id: string
   reviewer_id: string
   reviewee_id: string
-  
+
   rating: number
   comment: string
-  
+
   created_at: string
 }
 
@@ -125,12 +136,12 @@ export interface Dispute {
   id: string
   contract_id: string
   initiator_id: string
-  
+
   reason: string
   status: DisputeStatus
   resolution_notes: string | null
   resolved_by: string | null
-  
+
   created_at: string
   resolved_at: string | null
 }
@@ -138,12 +149,12 @@ export interface Dispute {
 export interface WithdrawalRequest {
   id: string
   specialist_id: string
-  
+
   amount: number
   status: WithdrawalStatus
   processed_by: string | null
   notes: string | null
-  
+
   created_at: string
   processed_at: string | null
 }
@@ -151,13 +162,13 @@ export interface WithdrawalRequest {
 export interface Notification {
   id: string
   user_id: string
-  
+
   type: string
   title: string
   message: string
   link: string | null
   read: boolean
-  
+
   created_at: string
 }
 

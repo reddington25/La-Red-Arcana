@@ -76,6 +76,18 @@ export default function DisputeCard({ dispute, adminId }: DisputeCardProps) {
               <div className="text-gray-400">
                 Price: <span className="text-red-400 font-semibold">Bs. {contract.final_price}</span>
               </div>
+              {contract.deadline && (
+                <div className="text-gray-400">
+                  Deadline: <span className="text-red-400 font-semibold">
+                    {new Date(contract.deadline).toLocaleDateString('es-BO', {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 

@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
   console.log('[API CONTRACTS] Starting...')
   console.log('[API CONTRACTS] Method:', request.method)
   console.log('[API CONTRACTS] URL:', request.url)
-  
+
   try {
     const supabase = await createClient()
     let user = null
@@ -15,14 +15,14 @@ export async function POST(request: NextRequest) {
     // Intentar obtener el token del header Authorization primero
     const authHeader = request.headers.get('authorization')
     console.log('[API CONTRACTS] Authorization header present:', !!authHeader)
-    
+
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.replace('Bearer ', '')
       console.log('[API CONTRACTS] Using Authorization header token')
-      
+
       // Crear cliente con el token explícito
       const { data: { user: tokenUser }, error: tokenError } = await supabase.auth.getUser(token)
-      
+
       if (tokenError) {
         console.error('[API CONTRACTS] Error with token:', tokenError)
       } else if (tokenUser) {
@@ -35,15 +35,15 @@ export async function POST(request: NextRequest) {
     if (!user) {
       console.log('[API CONTRACTS] Trying to get user from cookies...')
       console.log('[API CONTRACTS] Cookies:', request.cookies.getAll().map(c => c.name))
-      
+
       const {
         data: { user: cookieUser },
         error: cookieError,
       } = await supabase.auth.getUser()
-      
+
       user = cookieUser
       authError = cookieError
-      
+
       console.log('[API CONTRACTS] User from cookies:', user?.id)
       console.log('[API CONTRACTS] Cookie auth error:', cookieError)
     }
@@ -93,7 +93,10 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const title = formData.get('title') as string
     const description = formData.get('description') as string
-    const tags = JSON.parse(formData.get('tags') as string)
+    const department = formData.get('department') as string
+    const faculty = formData.get('faculty') as string
+    const career = formData.get('career') as string
+    const deadline = formData.get('deadline') as string
     const serviceType = formData.get('serviceType') as 'full' | 'review'
     const initialPrice = parseFloat(formData.get('initialPrice') as string)
 
@@ -112,9 +115,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!tags || tags.length === 0) {
+    if (!department || !faculty || !career) {
       return NextResponse.json(
-        { error: 'Debes seleccionar al menos una etiqueta' },
+        { error: 'Debes seleccionar departamento, facultad y carrera' },
         { status: 400 }
       )
     }
@@ -122,6 +125,25 @@ export async function POST(request: NextRequest) {
     if (!initialPrice || initialPrice < 10 || initialPrice > 10000) {
       return NextResponse.json(
         { error: 'El precio debe estar entre 10 y 10000 Bs' },
+        { status: 400 }
+      )
+    }
+
+    if (!deadline) {
+      return NextResponse.json(
+        { error: 'Debes seleccionar una fecha y hora límite' },
+        { status: 400 }
+      )
+    }
+
+    // Validate deadline is at least 12 hours in the future
+    const deadlineDate = new Date(deadline)
+    const minDeadline = new Date()
+    minDeadline.setHours(minDeadline.getHours() + 12)
+
+    if (isNaN(deadlineDate.getTime()) || deadlineDate < minDeadline) {
+      return NextResponse.json(
+        { error: 'La fecha límite debe ser al menos 12 horas en el futuro' },
         { status: 400 }
       )
     }
@@ -143,7 +165,11 @@ export async function POST(request: NextRequest) {
         student_id: user.id,
         title,
         description,
-        tags,
+        department,
+        faculty,
+        career,
+        deadline: deadlineDate.toISOString(),
+        tags: [], // Deprecated field
         service_type: serviceType,
         initial_price: initialPrice,
         status: 'open',
@@ -164,7 +190,7 @@ export async function POST(request: NextRequest) {
     let fileUrls: string[] = []
     if (files && files.length > 0) {
       const uploadResults = await uploadContractFiles(contract.id, files)
-      
+
       // Check for upload errors
       const uploadErrors = uploadResults.filter(r => r.error)
       if (uploadErrors.length > 0) {
@@ -190,11 +216,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Trigger Edge Function to notify specialists
+    // Only notify specialists with exact career match
     try {
       const { data, error: functionError } = await supabase.functions.invoke('notify-specialists', {
         body: {
           contract_id: contract.id,
-          tags,
+          department,
+          faculty,
+          career,
         },
       })
 

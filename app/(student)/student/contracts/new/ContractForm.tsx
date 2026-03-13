@@ -8,41 +8,39 @@ import { createClient } from '@/lib/supabase/client'
 import { validateFileType, formatFileSize } from '@/lib/supabase/storage'
 import { validateFileUpload, showErrorToast, showSuccessToast } from '@/lib/utils/error-handler'
 import { LoadingButton } from '@/components/ui/loading-spinner'
-
-const SUBJECT_TAGS = [
-  'Matemáticas',
-  'Física',
-  'Química',
-  'Programación',
-  'Bases de Datos',
-  'Redes',
-  'Sistemas Operativos',
-  'Ingeniería de Software',
-  'Cálculo',
-  'Álgebra',
-  'Estadística',
-  'Economía',
-  'Contabilidad',
-  'Derecho',
-  'Filosofía',
-  'Historia',
-  'Literatura',
-  'Inglés',
-  'Biología',
-  'Arquitectura',
-]
+import { DEPARTMENTS, FACULTIES, getCareersByFaculty, type Department, type Faculty } from '@/lib/constants/academic-hierarchy'
 
 export default function ContractForm() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
+
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [serviceType, setServiceType] = useState<'full' | 'review'>('full')
   const [initialPrice, setInitialPrice] = useState('')
+  const [deadline, setDeadline] = useState('')
   const [files, setFiles] = useState<File[]>([])
+
+  // Academic hierarchy state
+  const [selectedDepartment, setSelectedDepartment] = useState<Department | ''>('')
+  const [selectedFaculty, setSelectedFaculty] = useState<Faculty | ''>('')
+  const [selectedCareer, setSelectedCareer] = useState<string>('')
+
+  // Get available careers based on selected faculty
+  const availableCareers = selectedFaculty ? getCareersByFaculty(selectedFaculty) : []
+
+  // Reset dependent fields when parent changes
+  const handleDepartmentChange = (dept: Department | '') => {
+    setSelectedDepartment(dept)
+    setSelectedFaculty('')
+    setSelectedCareer('')
+  }
+
+  const handleFacultyChange = (fac: Faculty | '') => {
+    setSelectedFaculty(fac)
+    setSelectedCareer('')
+  }
 
   // Recuperar draft si existe
   useEffect(() => {
@@ -52,10 +50,13 @@ export default function ContractForm() {
         const data = JSON.parse(draft)
         setTitle(data.title || '')
         setDescription(data.description || '')
-        setSelectedTags(data.selectedTags || [])
         setServiceType(data.serviceType || 'full')
         setInitialPrice(data.initialPrice || '')
-        
+        setDeadline(data.deadline || '')
+        setSelectedDepartment(data.department || '')
+        setSelectedFaculty(data.faculty || '')
+        setSelectedCareer(data.career || '')
+
         // Mostrar mensaje
         showSuccessToast('Se recuperó tu borrador anterior')
       } catch (error) {
@@ -76,7 +77,7 @@ export default function ContractForm() {
         maxSizeMB: 10,
         allowedTypes: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/png']
       })
-      
+
       if (!validation.valid) {
         errors.push(`${file.name}: ${validation.error}`)
       } else {
@@ -98,14 +99,6 @@ export default function ContractForm() {
     setFiles(prev => prev.filter((_, i) => i !== index))
   }
 
-  const toggleTag = (tag: string) => {
-    setSelectedTags(prev =>
-      prev.includes(tag)
-        ? prev.filter(t => t !== tag)
-        : [...prev, tag]
-    )
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -114,42 +107,45 @@ export default function ContractForm() {
     try {
       // Verificar y refrescar sesión
       const supabase = createClient()
-      
+
       // Primero intentar refrescar la sesión
       console.log('[FORM] Refreshing session...')
       const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
-      
+
       if (refreshError) {
         console.error('[FORM] Error refreshing session:', refreshError)
       } else {
         console.log('[FORM] Session refreshed successfully')
       }
-      
+
       // Luego verificar que existe
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-      
-      console.log('[FORM] Session check:', { 
-        hasSession: !!session, 
+
+      console.log('[FORM] Session check:', {
+        hasSession: !!session,
         error: sessionError,
         expiresAt: session?.expires_at,
         userId: session?.user?.id
       })
-      
+
       if (sessionError || !session) {
         const errorMsg = 'Tu sesión ha expirado. Redirigiendo al login...'
         setError(errorMsg)
         showErrorToast(errorMsg)
         setLoading(false)
-        
+
         // Guardar el estado del formulario en localStorage
         localStorage.setItem('draft_contract', JSON.stringify({
           title,
           description,
-          selectedTags,
           serviceType,
           initialPrice,
+          deadline,
+          department: selectedDepartment,
+          faculty: selectedFaculty,
+          career: selectedCareer,
         }))
-        
+
         // Redirect to login after 2 seconds
         setTimeout(() => {
           window.location.href = '/auth/login?redirectTo=/student/contracts/new'
@@ -161,9 +157,12 @@ export default function ContractForm() {
       const formData = new FormData()
       formData.append('title', title)
       formData.append('description', description)
-      formData.append('tags', JSON.stringify(selectedTags))
+      formData.append('department', selectedDepartment)
+      formData.append('faculty', selectedFaculty)
+      formData.append('career', selectedCareer)
       formData.append('serviceType', serviceType)
       formData.append('initialPrice', initialPrice)
+      formData.append('deadline', deadline)
 
       // Add files
       files.forEach((file, index) => {
@@ -195,10 +194,10 @@ export default function ContractForm() {
       } else {
         console.log('[FORM] Contract created successfully:', result.contractId)
         showSuccessToast('Contrato creado exitosamente. Los especialistas serán notificados.')
-        
+
         // Limpiar draft
         localStorage.removeItem('draft_contract')
-        
+
         // Redirect to contract page
         router.push(`/student/contracts/${result.contractId}`)
       }
@@ -310,30 +309,78 @@ export default function ContractForm() {
         )}
       </div>
 
-      {/* Subject Tags */}
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
-          Etiquetas de Materia * (Selecciona al menos una)
-        </label>
-        <div className="flex flex-wrap gap-2">
-          {SUBJECT_TAGS.map(tag => (
-            <button
-              key={tag}
-              type="button"
-              onClick={() => toggleTag(tag)}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                selectedTags.includes(tag)
-                  ? 'bg-red-500 text-white'
-                  : 'bg-black/50 text-gray-400 border border-red-500/30 hover:border-red-500/50'
-              }`}
-            >
-              {tag}
-            </button>
-          ))}
+      {/* Academic Hierarchy Fields */}
+      <div className="space-y-4">
+        {/* Department */}
+        <div>
+          <label htmlFor="department" className="block text-sm font-medium text-gray-300 mb-2">
+            Departamento *
+          </label>
+          <select
+            id="department"
+            value={selectedDepartment}
+            onChange={(e) => handleDepartmentChange(e.target.value as Department | '')}
+            required
+            className="w-full px-4 py-3 bg-black/50 border border-red-500/30 rounded-lg text-white focus:outline-none focus:border-red-500"
+          >
+            <option value="">Selecciona el departamento</option>
+            {DEPARTMENTS.map(dept => (
+              <option key={dept} value={dept}>{dept}</option>
+            ))}
+          </select>
+          <p className="text-xs text-gray-500 mt-1">Departamento donde necesitas el servicio</p>
         </div>
-        <p className="text-xs text-gray-500 mt-2">
-          {selectedTags.length} etiqueta(s) seleccionada(s)
-        </p>
+
+        {/* Faculty */}
+        <div>
+          <label htmlFor="faculty" className="block text-sm font-medium text-gray-300 mb-2">
+            Facultad *
+          </label>
+          <select
+            id="faculty"
+            value={selectedFaculty}
+            onChange={(e) => handleFacultyChange(e.target.value as Faculty | '')}
+            required
+            disabled={!selectedDepartment}
+            className="w-full px-4 py-3 bg-black/50 border border-red-500/30 rounded-lg text-white focus:outline-none focus:border-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <option value="">Selecciona la facultad</option>
+            {FACULTIES.map(fac => (
+              <option key={fac} value={fac}>{fac}</option>
+            ))}
+          </select>
+          {!selectedDepartment && (
+            <p className="text-xs text-gray-500 mt-1">Primero selecciona un departamento</p>
+          )}
+        </div>
+
+        {/* Career */}
+        <div>
+          <label htmlFor="career" className="block text-sm font-medium text-gray-300 mb-2">
+            Carrera *
+          </label>
+          <select
+            id="career"
+            value={selectedCareer}
+            onChange={(e) => setSelectedCareer(e.target.value)}
+            required
+            disabled={!selectedFaculty}
+            className="w-full px-4 py-3 bg-black/50 border border-red-500/30 rounded-lg text-white focus:outline-none focus:border-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <option value="">Selecciona la carrera</option>
+            {availableCareers.map(career => (
+              <option key={career} value={career}>{career}</option>
+            ))}
+          </select>
+          {!selectedFaculty && (
+            <p className="text-xs text-gray-500 mt-1">Primero selecciona una facultad</p>
+          )}
+          {selectedCareer && (
+            <p className="text-xs text-gray-500 mt-1">
+              Los especialistas de {selectedCareer} en {selectedDepartment} serán notificados
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Service Type */}
@@ -345,11 +392,10 @@ export default function ContractForm() {
           <button
             type="button"
             onClick={() => setServiceType('full')}
-            className={`p-4 rounded-lg border-2 text-left transition-colors ${
-              serviceType === 'full'
+            className={`p-4 rounded-lg border-2 text-left transition-colors ${serviceType === 'full'
                 ? 'border-red-500 bg-red-500/10'
                 : 'border-red-500/30 bg-black/50 hover:border-red-500/50'
-            }`}
+              }`}
           >
             <h3 className="font-semibold text-white mb-1">Realización del Trabajo Completo</h3>
             <p className="text-sm text-gray-400">
@@ -360,11 +406,10 @@ export default function ContractForm() {
           <button
             type="button"
             onClick={() => setServiceType('review')}
-            className={`p-4 rounded-lg border-2 text-left transition-colors ${
-              serviceType === 'review'
+            className={`p-4 rounded-lg border-2 text-left transition-colors ${serviceType === 'review'
                 ? 'border-red-500 bg-red-500/10'
                 : 'border-red-500/30 bg-black/50 hover:border-red-500/50'
-            }`}
+              }`}
           >
             <h3 className="font-semibold text-white mb-1">Revisión y Corrección</h3>
             <p className="text-sm text-gray-400">
@@ -396,6 +441,25 @@ export default function ContractForm() {
         </p>
       </div>
 
+      {/* Deadline */}
+      <div>
+        <label htmlFor="deadline" className="block text-sm font-medium text-gray-300 mb-2">
+          Fecha y Hora Límite *
+        </label>
+        <input
+          type="datetime-local"
+          id="deadline"
+          value={deadline}
+          onChange={(e) => setDeadline(e.target.value)}
+          min={new Date(new Date().getTime() + 12 * 60 * 60 * 1000).toISOString().slice(0, 16)}
+          className="w-full px-4 py-3 bg-black/50 border border-red-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-500 cursor-pointer"
+          required
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          El tiempo máximo que tiene el especialista para entregar el trabajo (mínimo 12 horas desde ahora)
+        </p>
+      </div>
+
       {/* Submit Button */}
       <div className="flex gap-4">
         <button
@@ -408,7 +472,7 @@ export default function ContractForm() {
         </button>
         <button
           type="submit"
-          disabled={loading || selectedTags.length === 0}
+          disabled={loading || !selectedDepartment || !selectedFaculty || !selectedCareer || !deadline}
           className="flex-1 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
         >
           {loading ? <LoadingButton>Creando...</LoadingButton> : 'Publicar Contrato'}

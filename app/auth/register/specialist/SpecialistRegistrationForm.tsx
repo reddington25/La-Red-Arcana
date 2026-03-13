@@ -4,54 +4,37 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
 import { completeSpecialistProfile } from './actions'
+import { DEPARTMENTS, FACULTIES, getCareersByFaculty, type Department, type Faculty } from '@/lib/constants/academic-hierarchy'
 
 interface SpecialistRegistrationFormProps {
   user: User
 }
 
-// Common subject tags for specialists
-const SUBJECT_TAGS = [
-  'Matemáticas',
-  'Física',
-  'Química',
-  'Biología',
-  'Programación',
-  'Ingeniería de Software',
-  'Bases de Datos',
-  'Redes',
-  'Estadística',
-  'Cálculo',
-  'Álgebra',
-  'Economía',
-  'Contabilidad',
-  'Administración',
-  'Derecho',
-  'Historia',
-  'Filosofía',
-  'Literatura',
-  'Inglés',
-  'Arquitectura',
-  'Diseño Gráfico',
-  'Marketing',
-  'Psicología',
-  'Medicina',
-  'Enfermería'
-]
-
 export default function SpecialistRegistrationForm({ user }: SpecialistRegistrationFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [ciFile, setCiFile] = useState<File | null>(null)
   const [cvFile, setCvFile] = useState<File | null>(null)
 
-  function toggleTag(tag: string) {
-    setSelectedTags(prev =>
-      prev.includes(tag)
-        ? prev.filter(t => t !== tag)
-        : [...prev, tag]
-    )
+  // Academic hierarchy state
+  const [selectedDepartment, setSelectedDepartment] = useState<Department | ''>('')
+  const [selectedFaculty, setSelectedFaculty] = useState<Faculty | ''>('')
+  const [selectedCareer, setSelectedCareer] = useState<string>('')
+
+  // Get available careers based on selected faculty
+  const availableCareers = selectedFaculty ? getCareersByFaculty(selectedFaculty) : []
+
+  // Reset dependent fields when parent changes
+  const handleDepartmentChange = (dept: Department | '') => {
+    setSelectedDepartment(dept)
+    setSelectedFaculty('')
+    setSelectedCareer('')
+  }
+
+  const handleFacultyChange = (fac: Faculty | '') => {
+    setSelectedFaculty(fac)
+    setSelectedCareer('')
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -59,9 +42,21 @@ export default function SpecialistRegistrationForm({ user }: SpecialistRegistrat
     setIsLoading(true)
     setError(null)
 
-    // Validate at least one tag selected
-    if (selectedTags.length === 0) {
-      setError('Debes seleccionar al menos una materia de especialización')
+    // Validate academic hierarchy fields
+    if (!selectedDepartment) {
+      setError('Debes seleccionar un departamento')
+      setIsLoading(false)
+      return
+    }
+
+    if (!selectedFaculty) {
+      setError('Debes seleccionar una facultad')
+      setIsLoading(false)
+      return
+    }
+
+    if (!selectedCareer) {
+      setError('Debes seleccionar una carrera')
       setIsLoading(false)
       return
     }
@@ -78,7 +73,9 @@ export default function SpecialistRegistrationForm({ user }: SpecialistRegistrat
     if (cvFile) {
       formData.append('cv_file', cvFile)
     }
-    formData.append('subject_tags', JSON.stringify(selectedTags))
+    formData.append('department', selectedDepartment)
+    formData.append('faculty', selectedFaculty)
+    formData.append('career', selectedCareer)
 
     try {
       const result = await completeSpecialistProfile(formData)
@@ -113,7 +110,7 @@ export default function SpecialistRegistrationForm({ user }: SpecialistRegistrat
         {/* Info Banner */}
         <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/50 rounded-lg">
           <p className="text-yellow-400 text-sm">
-            <strong>Proceso de verificación:</strong> Tu solicitud será revisada manualmente por nuestro equipo. 
+            <strong>Proceso de verificación:</strong> Tu solicitud será revisada manualmente por nuestro equipo.
             Te contactaremos por WhatsApp para verificar tu identidad y credenciales académicas.
           </p>
         </div>
@@ -273,30 +270,69 @@ export default function SpecialistRegistrationForm({ user }: SpecialistRegistrat
             </select>
           </div>
 
-          {/* Subject Tags */}
+          {/* Department */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-3">
-              Materias de Especialización <span className="text-red-400">*</span>
+            <label htmlFor="department" className="block text-sm font-medium text-gray-300 mb-2">
+              Departamento <span className="text-red-400">*</span>
             </label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-64 overflow-y-auto p-4 bg-gray-900 border border-gray-700 rounded-lg">
-              {SUBJECT_TAGS.map(tag => (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => toggleTag(tag)}
-                  className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
-                    selectedTags.includes(tag)
-                      ? 'bg-red-600 text-white'
-                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                  }`}
-                >
-                  {tag}
-                </button>
+            <select
+              id="department"
+              value={selectedDepartment}
+              onChange={(e) => handleDepartmentChange(e.target.value as Department | '')}
+              required
+              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-red-500 focus:outline-none"
+            >
+              <option value="">Selecciona tu departamento</option>
+              {DEPARTMENTS.map(dept => (
+                <option key={dept} value={dept}>{dept}</option>
               ))}
-            </div>
-            <p className="mt-2 text-xs text-gray-500">
-              Seleccionadas: {selectedTags.length} {selectedTags.length > 0 && `(${selectedTags.join(', ')})`}
-            </p>
+            </select>
+          </div>
+
+          {/* Faculty */}
+          <div>
+            <label htmlFor="faculty" className="block text-sm font-medium text-gray-300 mb-2">
+              Facultad <span className="text-red-400">*</span>
+            </label>
+            <select
+              id="faculty"
+              value={selectedFaculty}
+              onChange={(e) => handleFacultyChange(e.target.value as Faculty | '')}
+              required
+              disabled={!selectedDepartment}
+              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-red-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <option value="">Selecciona tu facultad</option>
+              {FACULTIES.map(fac => (
+                <option key={fac} value={fac}>{fac}</option>
+              ))}
+            </select>
+            {!selectedDepartment && (
+              <p className="mt-1 text-xs text-gray-500">Primero selecciona un departamento</p>
+            )}
+          </div>
+
+          {/* Career */}
+          <div>
+            <label htmlFor="career" className="block text-sm font-medium text-gray-300 mb-2">
+              Carrera <span className="text-red-400">*</span>
+            </label>
+            <select
+              id="career"
+              value={selectedCareer}
+              onChange={(e) => setSelectedCareer(e.target.value)}
+              required
+              disabled={!selectedFaculty}
+              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-red-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <option value="">Selecciona tu carrera</option>
+              {availableCareers.map(career => (
+                <option key={career} value={career}>{career}</option>
+              ))}
+            </select>
+            {!selectedFaculty && (
+              <p className="mt-1 text-xs text-gray-500">Primero selecciona una facultad</p>
+            )}
           </div>
 
           {/* Submit Button */}
@@ -319,7 +355,7 @@ export default function SpecialistRegistrationForm({ user }: SpecialistRegistrat
         {/* Info Text */}
         <div className="mt-6 p-4 bg-gray-900/50 rounded-lg">
           <p className="text-xs text-gray-400 leading-relaxed">
-            Al enviar tu aplicación, aceptas que nuestro equipo revise tus documentos y credenciales académicas. 
+            Al enviar tu aplicación, aceptas que nuestro equipo revise tus documentos y credenciales académicas.
             Te contactaremos por WhatsApp para una breve entrevista de verificación. El proceso puede tomar de 24 a 72 horas.
           </p>
         </div>
