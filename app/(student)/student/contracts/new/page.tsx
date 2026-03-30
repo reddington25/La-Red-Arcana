@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import ContractForm from './ContractForm'
 
+export const dynamic = 'force-dynamic'
+
 export default async function NewContractPage() {
   // Verify authentication on the server
   const supabase = await createClient()

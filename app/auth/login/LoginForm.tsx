@@ -232,7 +232,7 @@ export default function LoginForm({ redirectTo, error }: LoginFormProps) {
               href="/auth/register?role=student"
               className="flex-1 text-center bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
             >
-              Registrarse como Estudiante
+              Registrarse como Usuario
             </Link>
             <Link
               href="/auth/register?role=specialist"

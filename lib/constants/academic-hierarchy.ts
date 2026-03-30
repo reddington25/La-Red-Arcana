@@ -1,26 +1,53 @@
 // Academic Hierarchy Constants
 // Departments, Faculties, and Careers for the platform
 
-export type Department = 'Santa Cruz' | 'Cochabamba' | 'La Paz'
-export type Faculty = 'Tecnologia' | 'Economia' | 'Derecho'
+export type Department = 'Santa Cruz' | 'Cochabamba' | 'La Paz' | 'Chuquisaca' | 'Tarija' | 'Oruro' | 'Potosi' | 'Pando' | 'Beni'
+export type Faculty = 
+  | 'Facultad de Tecnologia' 
+  | 'Facultad de Economia' 
+  | 'Facultad de Derecho'
+  | 'Facultad de Ciencias Agrícolas y Agropecuarias'
+  | 'Facultad de Ciencias Farmacéuticas y Bioquímicas'
+  | 'Facultad de Desarrollo Rural y Territorial'
+  | 'Facultad de Odontología'
+  | 'Facultad de Medicina'
+  | 'Facultad de Arquitectura'
+  | 'Facultad de Humanidades'
+  | 'Facultad de Ciencias Sociales'
+  | 'Facultad de Ciencias Veterinarias'
 
 // Department list
 export const DEPARTMENTS: Department[] = [
   'Santa Cruz',
   'Cochabamba',
   'La Paz',
+  'Chuquisaca',
+  'Tarija',
+  'Oruro',
+  'Potosi',
+  'Pando',
+  'Beni'
 ]
 
 // Faculty list (same for all departments)
 export const FACULTIES: Faculty[] = [
-  'Tecnologia',
-  'Economia',
-  'Derecho',
+  'Facultad de Tecnologia',
+  'Facultad de Economia',
+  'Facultad de Derecho',
+  'Facultad de Ciencias Agrícolas y Agropecuarias',
+  'Facultad de Ciencias Farmacéuticas y Bioquímicas',
+  'Facultad de Desarrollo Rural y Territorial',
+  'Facultad de Odontología',
+  'Facultad de Medicina',
+  'Facultad de Arquitectura',
+  'Facultad de Humanidades',
+  'Facultad de Ciencias Sociales',
+  'Facultad de Ciencias Veterinarias'
 ]
 
 // Careers by Faculty
 export const CAREERS_BY_FACULTY: Record<Faculty, string[]> = {
-  'Tecnologia': [
+  'Facultad de Tecnologia': [
     'Ing. de Alimentos',
     'Ing. Civil',
     'Ing. Mecanica',
@@ -33,20 +60,87 @@ export const CAREERS_BY_FACULTY: Record<Faculty, string[]> = {
     'Ing. Petroquimica',
     'Ing. Electronica',
     'Ing. en Energia',
-    'Ing. Matematica',
     'Ing. en Biotecnologia',
+    'Lic. En Matematica',
+    'Lic. En Biologia',
+    'Lic. En Fisica',
+    'Lic. En Quimica',
+    'Prog. Desc De Tec Univ Sup En Gastronomia',
+    'Ing. Ambiental',
+    'Ing. De Procesos Industriales'
   ],
-  'Economia': [
+  'Facultad de Economia': [
     'Adm. de Empresas',
     'Contaduria Publica',
     'Economia',
     'Ing. Comercial',
     'Ing. Financiera',
   ],
-  'Derecho': [
+  'Facultad de Derecho': [
     'Lic. Ciencias Juridicas',
     'Lic. Ciencias Politicas',
   ],
+  'Facultad de Ciencias Agrícolas y Agropecuarias': [
+    'Ing. Agricola',
+    'Ing. Fitotecnista',
+    'Ing. Forestal',
+    'Ing. Agronomo Zootecnista',
+    'Ing. Agroindustrial',
+    'Lice. En Ingenieria Agronomica',
+    'Ing. Del Medio Ambiente',
+    'Tec. Superior En Mecanizacion Agricola'
+  ],
+  'Facultad de Ciencias Farmacéuticas y Bioquímicas': [
+    'Lic. En Bioquimica Y Farmacia'
+  ],
+  'Facultad de Desarrollo Rural y Territorial': [
+    'Lic. En Prod. Agraria Y Des. Territorial',
+    'Ing. En Gest De Rec Hid. Agro',
+    'Lic. Desarr. Rural Sostenible',
+    'Ing. En Piscicultura',
+    'Tec. Superior En Agronomia'
+  ],
+  'Facultad de Odontología': [
+    'Lic. En Odontologia'
+  ],
+  'Facultad de Medicina': [
+    'Lic. En Fisioterapia Y Kinesiologia',
+    'Lic. En Medicina',
+    'Lic. En Nutricion Y Dietetica',
+    'Lic. En Enfermeria'
+  ],
+  'Facultad de Arquitectura': [
+    'Lic. En Dis. Interiores Y Del Mobiliario',
+    'Lic. En Diseño Graf Y Comunic Visual',
+    'Lic. En Planif. Del Terr. Y Med. Amb',
+    'Lic. En Arquitectura',
+    'Lic. En Turismo',
+    'Tec. Univ. Med. Etnoturismo Comunit',
+    'Tec. Univ. Superior En Construcciones'
+  ],
+  'Facultad de Humanidades': [
+    'Lic. De Linguis. Aplic. Y Ensen. De Leng',
+    'Lic. En Linguis. Aplic.enseñanza Lenguas',
+    'Lic. En Ciencias De La Educacion',
+    'Lic. En Comunicacion Social',
+    'Lic. Enciatura En Psicologia',
+    'Lic. En Trabajo Social',
+    'Prog Tec Sup. En Educ. Infant Parvulario',
+    'Prog. Lic. En Pedagogia Social Producti',
+    'Prog. Lic. En Cs. Act. Fisica Y Deporte',
+    'Prog. Lic. Esp. En Cien. Soc. E Intercul',
+    'Prog. Lic. Esp. En Leng. Orig. Y Comunic',
+    'Prog. De Licenciatura En Musica',
+    'Prog. Lic. Esp. Ed. Intercul.bilingue'
+  ],
+  'Facultad de Ciencias Sociales': [
+    'Lic. En Sociologia',
+    'Lic. En Antropologia',
+    'Lic. En Historia'
+  ],
+  'Facultad de Ciencias Veterinarias': [
+    'Lic. En Medicina Veterinaria Y Zootecnia'
+  ]
 }
 
 // Helper function to get all careers

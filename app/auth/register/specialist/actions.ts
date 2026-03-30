@@ -66,7 +66,8 @@ export async function completeSpecialistProfile(formData: FormData) {
         has_arcana_badge: false,
         average_rating: 0,
         total_reviews: 0,
-        balance: 0
+        balance: 0,
+        arcanas: 100
       })
 
     if (userError) {

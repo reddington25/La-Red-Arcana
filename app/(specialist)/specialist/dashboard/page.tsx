@@ -13,6 +13,9 @@ import {
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import WithdrawalButton from './WithdrawalButton'
+import { PublicationsFeed } from '@/components/ui/PublicationsFeed'
+import { ArcanaCrystal } from '@/components/ui/ArcanaCrystal'
+import CreatePublicationForm from './CreatePublicationForm'
 
 export default async function SpecialistDashboardPage() {
   const supabase = await createClient()
@@ -29,8 +32,11 @@ export default async function SpecialistDashboardPage() {
     .select(`
       balance, 
       has_arcana_badge, 
+      excellence_badge,
       average_rating, 
-      total_reviews
+      manual_rating,
+      total_reviews,
+      arcanas
     `)
     .eq('id', user.id)
     .single()
@@ -99,20 +105,39 @@ export default async function SpecialistDashboardPage() {
   
   return (
     <div className="max-w-7xl mx-auto">
+      {/* Publication Form */}
+      <div className="mb-6 flex justify-end">
+        <CreatePublicationForm />
+      </div>
+
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-white mb-2">
           Bienvenido, {profileData?.real_name}
         </h1>
         <div className="flex items-center gap-4">
-          {userData?.has_arcana_badge && (
-            <span className="bg-gradient-to-r from-yellow-500/20 to-red-500/20 border border-yellow-500/50 text-yellow-400 px-3 py-1 rounded-full text-sm font-semibold">
-              ⭐ Garantía Arcana
+          {userData?.excellence_badge && (
+            <span className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/50 text-purple-400 px-3 py-1 rounded-full text-sm font-semibold">
+              ⭐ Experto de Excelencia
             </span>
           )}
-          {userData && userData.total_reviews > 0 && (
+          {userData?.has_arcana_badge && (
+            <span className="bg-gradient-to-r from-yellow-500/20 to-red-500/20 border border-yellow-500/50 text-yellow-400 px-3 py-1 rounded-full text-sm font-semibold">
+              🛡️ Garantía Arcana
+            </span>
+          )}
+          {userData && (
             <span className="text-gray-400">
-              ⭐ {userData.average_rating.toFixed(1)} ({userData.total_reviews} reseñas)
+              {userData.total_reviews < 3 ? (
+                 <span className="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full text-sm font-semibold border-blue-500/50 border">🌱 Perfil Nuevo</span>
+              ) : (
+                 `⭐ ${(userData.manual_rating !== null ? userData.manual_rating : userData.average_rating).toFixed(1)} (${userData.total_reviews} reseñas)`
+              )}
+            </span>
+          )}
+          {userData && (
+            <span className="bg-black/50 backdrop-blur border border-red-500/30 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
+              <ArcanaCrystal size={16} /> {userData.arcanas || 0}
             </span>
           )}
         </div>
@@ -142,7 +167,7 @@ export default async function SpecialistDashboardPage() {
             {completedContracts?.length || 0}
           </div>
           <div className="text-xs text-gray-500 mt-1">
-            Trabajos finalizados
+            Proyectos finalizados
           </div>
         </div>
         
@@ -185,7 +210,7 @@ export default async function SpecialistDashboardPage() {
               Saldo bruto: Bs. {balance.toFixed(2)} - Comisión 15%: Bs. {(balance * 0.15).toFixed(2)}
             </div>
             <div className="text-xs text-gray-500 mt-1">
-              💡 El saldo se acredita cuando el estudiante confirma el trabajo completado
+              💡 El saldo se acredita cuando el usuario confirma el proyecto completado
             </div>
           </div>
           
@@ -208,7 +233,7 @@ export default async function SpecialistDashboardPage() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-2xl font-bold text-white">Contratos Activos</h2>
-            <p className="text-sm text-gray-500">Trabajos que estás realizando actualmente</p>
+            <p className="text-sm text-gray-500">Proyectos que estás realizando actualmente</p>
           </div>
           <Link
             href="/specialist/opportunities"
@@ -248,7 +273,7 @@ export default async function SpecialistDashboardPage() {
                       <StatusBadge status={contract.status} />
                     </div>
                     <div className="flex items-center gap-4 text-sm text-gray-400">
-                      <span>Estudiante: {(contract.student as any).profile_details?.[0]?.alias || 'N/A'}</span>
+                      <span>Usuario: {(contract.student as any).profile_details?.[0]?.alias || 'N/A'}</span>
                       <span>
                         {formatDistanceToNow(new Date(contract.updated_at), { 
                           addSuffix: true,
@@ -277,14 +302,14 @@ export default async function SpecialistDashboardPage() {
       <div>
         <div className="mb-4">
           <h2 className="text-2xl font-bold text-white">Contratos Completados Recientes</h2>
-          <p className="text-sm text-gray-500">Historial de tus últimos trabajos finalizados</p>
+          <p className="text-sm text-gray-500">Historial de tus últimos proyectos finalizados</p>
         </div>
         
         {!completedContracts || completedContracts.length === 0 ? (
           <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg p-8 text-center">
             <CheckCircle className="w-12 h-12 text-gray-600 mx-auto mb-3" />
             <h3 className="text-xl font-semibold text-white mb-2">Aún no has completado ningún contrato</h3>
-            <p className="text-gray-400">Completa tu primer trabajo para comenzar a construir tu reputación</p>
+            <p className="text-gray-400">Completa tu primer proyecto para comenzar a construir tu reputación</p>
           </div>
         ) : (
           <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg divide-y divide-red-500/20">
@@ -297,7 +322,7 @@ export default async function SpecialistDashboardPage() {
                   <div className="flex-1">
                     <h3 className="text-white font-medium">{contract.title}</h3>
                     <div className="text-sm text-gray-400 mt-1">
-                      Estudiante: {(contract.student as any).profile_details?.[0]?.alias || 'N/A'} • 
+                      Usuario: {(contract.student as any).profile_details?.[0]?.alias || 'N/A'} • 
                       Completado {formatDistanceToNow(new Date(contract.completed_at!), { 
                         addSuffix: true,
                         locale: es 
@@ -315,6 +340,11 @@ export default async function SpecialistDashboardPage() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Publications Feed */}
+      <div className="mt-8">
+        <PublicationsFeed />
       </div>
     </div>
   )

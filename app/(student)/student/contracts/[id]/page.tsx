@@ -44,7 +44,10 @@ export default async function ContractDetailPage({
       specialist:users!specialist_id (
         id,
         has_arcana_badge,
+        excellence_badge,
         average_rating,
+        manual_rating,
+        total_reviews,
         profile_details (
           alias,
           real_name
@@ -71,7 +74,9 @@ export default async function ContractDetailPage({
       specialist:users!specialist_id (
         id,
         has_arcana_badge,
+        excellence_badge,
         average_rating,
+        manual_rating,
         total_reviews,
         profile_details (
           alias,
@@ -265,9 +270,22 @@ export default async function ContractDetailPage({
                   {contract.specialist.profile_details.alias || contract.specialist.profile_details.real_name}
                 </p>
                 <div className="flex items-center gap-2 text-sm text-gray-400">
-                  <span>⭐ {contract.specialist.average_rating.toFixed(1)}</span>
+                  {contract.specialist.total_reviews < 3 ? (
+                    <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-full text-xs font-semibold">
+                      🌱 Perfil Nuevo
+                    </span>
+                  ) : (
+                    <span>⭐ {contract.specialist.manual_rating !== null ? contract.specialist.manual_rating.toFixed(1) : contract.specialist.average_rating.toFixed(1)}</span>
+                  )}
+                  {contract.specialist.excellence_badge && (
+                    <span className="text-purple-400 text-xs px-2 py-0.5 bg-purple-500/10 rounded-full border border-purple-500/30">
+                      ⭐ Experto de Excelencia
+                    </span>
+                  )}
                   {contract.specialist.has_arcana_badge && (
-                    <span className="text-yellow-400 text-xs">🛡️ Garantía Arcana</span>
+                    <span className="text-yellow-400 text-xs px-2 py-0.5 bg-yellow-500/10 rounded-full border border-yellow-500/30">
+                      🛡️ Garantía Arcana
+                    </span>
                   )}
                 </div>
               </div>

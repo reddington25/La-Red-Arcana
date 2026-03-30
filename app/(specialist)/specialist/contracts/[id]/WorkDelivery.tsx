@@ -32,7 +32,7 @@ export default function WorkDelivery({
       return
     }
 
-    if (!confirm('¿Estás seguro de que deseas entregar estos archivos? El estudiante podrá revisarlos y marcar el contrato como completado.')) {
+    if (!confirm('¿Estás seguro de que deseas entregar estos archivos? El usuario podrá revisarlos y marcar el contrato como completado.')) {
       return
     }
 
@@ -49,7 +49,7 @@ export default function WorkDelivery({
     if (result.error) {
       alert(result.error)
     } else {
-      alert('Archivos entregados exitosamente. El estudiante será notificado.')
+      alert('Archivos entregados exitosamente. El usuario será notificado.')
       setFiles([])
     }
 
@@ -62,14 +62,14 @@ export default function WorkDelivery({
       <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg p-6">
         <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
           <FileText className="w-5 h-5" />
-          Entrega del Trabajo
+          Entrega del Proyecto
         </h2>
 
         {contractStatus === 'in_progress' && (
           <>
             <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mb-4">
               <p className="text-blue-400 text-sm">
-                Sube los archivos finales del trabajo completado. El estudiante podrá revisarlos y marcar el contrato como completado.
+                Sube los archivos finales del proyecto completado. El usuario podrá revisarlos y marcar el contrato como completado.
               </p>
             </div>
 
@@ -126,7 +126,7 @@ export default function WorkDelivery({
                 ) : (
                   <>
                     <Upload className="w-5 h-5" />
-                    Entregar Trabajo
+                    Entregar Proyecto
                   </>
                 )}
               </button>
@@ -141,7 +141,7 @@ export default function WorkDelivery({
               <p className="font-semibold">Contrato Completado</p>
             </div>
             <p className="text-sm text-gray-300">
-              El estudiante ha marcado el contrato como completado. Tu pago ha sido acreditado a tu saldo.
+              El usuario ha marcado el contrato como completado. Tu pago ha sido acreditado a tu saldo.
             </p>
           </div>
         )}

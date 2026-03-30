@@ -27,7 +27,7 @@ export async function updateStudentProfile(formData: FormData) {
   // Get current profile
   const { data: currentProfile } = await supabase
     .from('profile_details')
-    .select('phone, pending_phone')
+    .select('phone, alias, pending_phone')
     .eq('user_id', user.id)
     .single()
   
@@ -35,85 +35,85 @@ export async function updateStudentProfile(formData: FormData) {
     return { success: false, error: 'Perfil no encontrado' }
   }
   
-  // Check if phone changed
+  const aliasChanged = alias !== currentProfile.alias
   const phoneChanged = phone !== currentProfile.phone
   
+  if (!aliasChanged && !phoneChanged) {
+    return { success: true, message: 'No se detectaron cambios' }
+  }
+
+  const requests = []
+  
+  if (aliasChanged) {
+    requests.push({
+      user_id: user.id,
+      field_name: 'alias',
+      old_value: currentProfile.alias,
+      new_value: alias,
+      status: 'pending'
+    })
+  }
+
   if (phoneChanged) {
-    // Phone change requires verification
-    // Update pending_phone and set pending_verification flag
-    const { error: updateError } = await supabase
-      .from('profile_details')
-      .update({
-        alias: alias,
-        pending_phone: phone,
-        pending_verification: true
-      })
-      .eq('user_id', user.id)
-    
-    if (updateError) {
-      return { success: false, error: 'Error al actualizar el perfil' }
-    }
-    
-    // Create verification request
+    requests.push({
+      user_id: user.id,
+      field_name: 'phone',
+      old_value: currentProfile.phone,
+      new_value: phone,
+      status: 'pending'
+    })
+  }
+  
+  // Insert verification requests
+  if (requests.length > 0) {
     const { error: requestError } = await supabase
       .from('verification_requests')
-      .insert({
-        user_id: user.id,
-        field_name: 'phone',
-        old_value: currentProfile.phone,
-        new_value: phone,
-        status: 'pending'
-      })
+      .insert(requests)
     
     if (requestError) {
-      console.error('Error creating verification request:', requestError)
+      console.error('Error creating verification requests:', requestError)
+      return { success: false, error: 'Error al procesar la solicitud de actualización' }
     }
+  }
+  
+  // Update profile to show it has pending verification
+  const updates: any = { pending_verification: true }
+  if (phoneChanged) updates.pending_phone = phone
+  
+  const { error: updateError } = await supabase
+    .from('profile_details')
+    .update(updates)
+    .eq('user_id', user.id)
+  
+  if (updateError) {
+    return { success: false, error: 'Error al actualizar el perfil' }
+  }
+  
+  // Create notification for admin
+  const { data: admins } = await supabase
+    .from('users')
+    .select('id')
+    .in('role', ['admin', 'super_admin'])
+  
+  if (admins && admins.length > 0) {
+    const notifications = admins.map(admin => ({
+      user_id: admin.id,
+      type: 'verification_request',
+      title: 'Nueva Solicitud de Actualización de Perfil',
+      message: `Un estudiante ha solicitado cambiar su información de perfil`,
+      link: `/admin/verifications`,
+      read: false
+    }))
     
-    // Create notification for admin
-    const { data: admins } = await supabase
-      .from('users')
-      .select('id')
-      .in('role', ['admin', 'super_admin'])
-    
-    if (admins && admins.length > 0) {
-      const notifications = admins.map(admin => ({
-        user_id: admin.id,
-        type: 'verification_request',
-        title: 'Nueva Solicitud de Verificación',
-        message: `El usuario ha solicitado cambiar su número de WhatsApp`,
-        link: `/admin/verifications`,
-        read: false
-      }))
-      
-      await supabase
-        .from('notifications')
-        .insert(notifications)
-    }
-    
-    revalidatePath('/student/profile')
-    
-    return { 
-      success: true, 
-      message: 'Alias actualizado. El cambio de WhatsApp está pendiente de verificación administrativa.' 
-    }
-  } else {
-    // Only alias changed, update directly
-    const { error: updateError } = await supabase
-      .from('profile_details')
-      .update({
-        alias: alias
-      })
-      .eq('user_id', user.id)
-    
-    if (updateError) {
-      return { success: false, error: 'Error al actualizar el perfil' }
-    }
-    
-    revalidatePath('/student/profile')
-    
-    return { 
-      success: true, 
-      message: 'Perfil actualizado correctamente' 
-    }
+    await supabase
+      .from('notifications')
+      .insert(notifications)
+  }
+  
+  revalidatePath('/student/profile')
+  
+  return { 
+    success: true, 
+    message: 'Tus modificaciones fueron enviadas. Están pendientes de verificación administrativa.' 
   }
 }

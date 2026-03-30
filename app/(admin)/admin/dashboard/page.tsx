@@ -1,8 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { Users, Clock, AlertTriangle, DollarSign } from 'lucide-react'
+import { Users, Clock, AlertTriangle, DollarSign, Gem } from 'lucide-react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { PublicationsFeed } from '@/components/ui/PublicationsFeed'
 
 export default async function AdminDashboard() {
   const supabase = await createClient()
@@ -181,7 +182,24 @@ export default async function AdminDashboard() {
               Otorgar Garantía Arcana
             </span>
           </Link>
+          <Link
+            href="/admin/arcanas"
+            className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg p-4 text-center transition-colors group"
+          >
+            <Gem className="w-6 h-6 text-red-400 mx-auto mb-2" />
+            <span className="text-white text-sm font-medium block mb-1">
+              Gestionar Arcanas
+            </span>
+            <span className="text-gray-500 text-xs">
+              Añadir puntos Arcanas
+            </span>
+          </Link>
         </div>
+      </div>
+
+      {/* Publications Feed */}
+      <div>
+        <PublicationsFeed />
       </div>
     </div>
   )

@@ -12,7 +12,9 @@ interface Offer {
   specialist: {
     id: string
     has_arcana_badge: boolean
+    excellence_badge: boolean
     average_rating: number
+    manual_rating: number | null
     total_reviews: number
     profile_details: {
       alias: string | null
@@ -58,6 +60,12 @@ export default function OfferCard({ offer, contractId, contractStatus }: OfferCa
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
             <h3 className="text-lg font-semibold text-white">{displayName}</h3>
+            {offer.specialist.excellence_badge && (
+              <div className="flex items-center gap-1 px-2 py-1 bg-purple-500/20 text-purple-400 rounded-full text-xs font-semibold">
+                <Star className="w-3 h-3 fill-purple-400" />
+                Experto de Excelencia
+              </div>
+            )}
             {offer.specialist.has_arcana_badge && (
               <div className="flex items-center gap-1 px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs font-semibold">
                 <Shield className="w-3 h-3" />
@@ -67,13 +75,19 @@ export default function OfferCard({ offer, contractId, contractStatus }: OfferCa
           </div>
 
           <div className="flex items-center gap-4 text-sm text-gray-400">
-            <div className="flex items-center gap-1">
-              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-              <span className="font-medium text-white">
-                {offer.specialist.average_rating.toFixed(1)}
-              </span>
-              <span>({offer.specialist.total_reviews} reseñas)</span>
-            </div>
+            {offer.specialist.total_reviews < 3 ? (
+              <div className="flex items-center gap-1 px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs font-semibold">
+                <span>🌱 Perfil Nuevo</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1">
+                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                <span className="font-medium text-white">
+                  {(offer.specialist.manual_rating !== null ? offer.specialist.manual_rating : offer.specialist.average_rating).toFixed(1)}
+                </span>
+                <span>({offer.specialist.total_reviews} reseñas)</span>
+              </div>
+            )}
           </div>
         </div>
 

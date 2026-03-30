@@ -47,15 +47,15 @@ export function StudentProfileEditForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Pending Verification Alert */}
-      {pendingVerification && pendingPhone && (
+      {pendingVerification && (
         <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
             <div>
-              <h3 className="font-semibold text-yellow-400 mb-1">Cambio Pendiente de Verificación</h3>
+              <h3 className="font-semibold text-yellow-400 mb-1">Cambios en Revisión Administrativa</h3>
               <p className="text-sm text-yellow-300">
-                Tu nuevo número de WhatsApp <strong>{pendingPhone}</strong> está pendiente de verificación por el equipo administrativo.
-                Una vez aprobado, reemplazará tu número actual.
+                Tienes modificaciones en tu perfil pendientes de aprobación. 
+                Mientras tanto visualizarás tus datos anteriores.
               </p>
             </div>
           </div>
@@ -82,7 +82,7 @@ export function StudentProfileEditForm({
           maxLength={50}
         />
         <p className="text-xs text-gray-500 mt-1">
-          Este es el nombre que verán los especialistas. Puedes cambiarlo en cualquier momento.
+          Este es el nombre que verán los especialistas. Los cambios requieren verificación administrativa.
         </p>
       </div>
 

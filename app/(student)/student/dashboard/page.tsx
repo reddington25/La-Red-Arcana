@@ -2,6 +2,10 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Plus, FileText, Clock, CheckCircle, AlertTriangle, XCircle } from 'lucide-react'
 import { ContractStatus } from '@/types/database'
+import { PublicationsFeed } from '@/components/ui/PublicationsFeed'
+import { ArcanaCrystal } from '@/components/ui/ArcanaCrystal'
+
+export const dynamic = 'force-dynamic'
 
 const STATUS_CONFIG: Record<ContractStatus, { label: string; icon: any; color: string }> = {
   open: {
@@ -52,6 +56,14 @@ export default async function StudentDashboard() {
     return null
   }
 
+  // Get user's arcanas
+  const { data: userData } = await supabase
+    .from('users')
+    .select('arcanas')
+    .eq('id', user.id)
+    .single()
+
+
   // Get student's contracts with offer counts
   const { data: contracts } = await supabase
     .from('contracts')
@@ -69,9 +81,16 @@ export default async function StudentDashboard() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Dashboard de Estudiante</h1>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-3xl font-bold text-white">Dashboard de Usuario</h1>
+            {userData && (
+              <span className="bg-black/50 backdrop-blur border border-red-500/30 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
+                <ArcanaCrystal size={16} /> {userData.arcanas || 0}
+              </span>
+            )}
+          </div>
           <p className="text-gray-400">Gestiona tus contratos y revisa las ofertas de especialistas</p>
         </div>
 
@@ -99,12 +118,12 @@ export default async function StudentDashboard() {
           </p>
           <p className="text-xs text-gray-500 mt-1">Recibiendo ofertas</p>
         </div>
-        <div className="bg-black/50 backdrop-blur border border-purple-500/30 rounded-lg p-6" title="Contratos siendo trabajados por especialistas">
+        <div className="bg-black/50 backdrop-blur border border-purple-500/30 rounded-lg p-6" title="Proyectos siendo trabajados por especialistas">
           <p className="text-gray-400 text-sm mb-1">En Progreso</p>
           <p className="text-3xl font-bold text-purple-400">
             {contractsWithOfferCount.filter(c => c.status === 'in_progress').length}
           </p>
-          <p className="text-xs text-gray-500 mt-1">Siendo trabajados</p>
+          <p className="text-xs text-gray-500 mt-1">En desarrollo</p>
         </div>
         <div className="bg-black/50 backdrop-blur border border-green-500/30 rounded-lg p-6" title="Contratos finalizados exitosamente">
           <p className="text-gray-400 text-sm mb-1">Completados</p>
@@ -127,7 +146,7 @@ export default async function StudentDashboard() {
             <FileText className="w-16 h-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-white mb-2">¡Comienza tu primer contrato!</h3>
             <p className="text-gray-400 mb-6 max-w-md mx-auto">
-              Crea un contrato describiendo tu trabajo académico y recibe ofertas de especialistas verificados
+              Crea un contrato describiendo tu proyecto y recibe ofertas de especialistas verificados
             </p>
             <Link
               href="/student/contracts/new"
@@ -215,6 +234,10 @@ export default async function StudentDashboard() {
             })}
           </div>
         )}
+      </div>
+
+      <div className="mt-8">
+        <PublicationsFeed />
       </div>
     </div>
   )

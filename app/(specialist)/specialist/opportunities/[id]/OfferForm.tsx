@@ -90,7 +90,7 @@ export default function OfferForm({ contractId, initialPrice }: Props) {
           />
         </div>
         <p className="mt-1 text-xs text-gray-500">
-          Precio inicial del estudiante: Bs. {initialPrice.toFixed(2)}
+          Precio inicial del usuario: Bs. {initialPrice.toFixed(2)}
         </p>
       </div>
       
@@ -110,7 +110,7 @@ export default function OfferForm({ contractId, initialPrice }: Props) {
             rows={4}
             maxLength={500}
             className="w-full pl-10 pr-4 py-2 bg-black/50 border border-red-500/30 rounded text-white focus:outline-none focus:border-red-500 resize-none"
-            placeholder="Explica brevemente tu experiencia o enfoque para este trabajo..."
+            placeholder="Explica brevemente tu experiencia o enfoque para este proyecto..."
           />
         </div>
         <p className="mt-1 text-xs text-gray-500">
@@ -138,7 +138,7 @@ export default function OfferForm({ contractId, initialPrice }: Props) {
       </button>
       
       <p className="text-xs text-gray-500 text-center">
-        Al enviar una contraoferta, el estudiante podrá ver tu perfil y decidir si acepta tu oferta
+        Al enviar una contraoferta, el usuario podrá ver tu perfil y decidir si acepta tu oferta
       </p>
     </form>
   )

@@ -22,8 +22,8 @@ export default async function OpportunitiesPage() {
   const specialistFaculty = profile?.faculty || ''
   const specialistCareer = profile?.career || ''
 
-  // Get open contracts from same department and faculty
-  // RLS policy already filters by department and faculty
+  // Get all open contracts
+  // RLS policy now allows specialists to view all open contracts
   const { data: contracts } = await supabase
     .from('contracts')
     .select(`
@@ -48,7 +48,6 @@ export default async function OpportunitiesPage() {
     .eq('status', 'open')
     .order('created_at', { ascending: false })
 
-  // Contracts are already filtered by RLS policy to show only from same department and faculty
   const matchingContracts = contracts || []
 
   return (
@@ -56,7 +55,7 @@ export default async function OpportunitiesPage() {
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-white mb-2">Oportunidades</h1>
         <p className="text-gray-400">
-          Contratos disponibles en {specialistDepartment} - Facultad de {specialistFaculty}
+          Explora los contratos disponibles para tu especialidad
         </p>
       </div>
 

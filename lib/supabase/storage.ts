@@ -2,7 +2,7 @@ import { createClient } from './client'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
-export type StorageBucket = 'contract-files' | 'payment-qrs' | 'user-documents'
+export type StorageBucket = 'contract-files' | 'payment-qrs' | 'user-documents' | 'specialist-publications' | 'arcana-receipts'
 
 export interface UploadResult {
   url: string
@@ -186,6 +186,17 @@ export function validateFileType(file: File, bucket: StorageBucket): boolean {
       'application/pdf',
       'image/jpeg',
       'image/png'
+    ],
+    'specialist-publications': [
+      'image/jpeg',
+      'image/png',
+      'image/webp'
+    ],
+    'arcana-receipts': [
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'application/pdf'
     ]
   }
 

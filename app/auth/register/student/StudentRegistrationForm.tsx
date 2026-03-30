@@ -85,7 +85,7 @@ export default function StudentRegistrationForm({ user }: StudentRegistrationFor
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-white font-orbitron mb-2">
-          Registro de Estudiante
+          Registro de Usuario
         </h1>
         <p className="text-gray-400">
           Completa tu perfil para comenzar
@@ -156,7 +156,7 @@ export default function StudentRegistrationForm({ user }: StudentRegistrationFor
               minLength={3}
               maxLength={30}
               className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-red-500 focus:outline-none"
-              placeholder="ej: EstudianteX, AcademicPro, Juan123"
+              placeholder="ej: UsuarioX, AcademicPro, Juan123"
             />
             <p className="mt-1 text-xs text-gray-500">
               Este será tu nombre visible en la plataforma. Mínimo 3 caracteres.
@@ -251,6 +251,27 @@ export default function StudentRegistrationForm({ user }: StudentRegistrationFor
             {!selectedFaculty && (
               <p className="mt-1 text-xs text-gray-500">Primero selecciona una facultad</p>
             )}
+          </div>
+
+          {/* Terms and Conditions */}
+          <div className="flex items-start gap-3 mt-6">
+            <div className="flex items-center h-5 mt-1">
+              <input
+                id="terms"
+                name="terms"
+                type="checkbox"
+                required
+                className="w-4 h-4 rounded bg-gray-900 border-gray-700 text-red-600 focus:ring-red-500 focus:ring-offset-gray-900"
+              />
+            </div>
+            <div className="text-sm">
+              <label htmlFor="terms" className="font-medium text-gray-300">
+                Acepto los Términos y Condiciones
+              </label>
+              <p className="text-gray-500">
+                Al marcar esta casilla, aceptas los términos y condiciones de uso de la plataforma Red Arcana.
+              </p>
+            </div>
           </div>
 
           {/* Submit Button */}

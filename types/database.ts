@@ -24,7 +24,9 @@ export interface User {
   role: UserRole
   is_verified: boolean
   has_arcana_badge: boolean
+  excellence_badge: boolean
   average_rating: number
+  manual_rating: number | null
   total_reviews: number
   balance: number
   created_at: string

@@ -110,7 +110,7 @@ export default function PendingVerificationScreen({ user, profile }: PendingVeri
               <div className="flex justify-between">
                 <span className="text-gray-400">Rol:</span>
                 <span className="text-white capitalize">
-                  {user.role === 'student' ? 'Estudiante' : 'Especialista'}
+                  {user.role === 'student' ? 'Usuario' : 'Especialista'}
                 </span>
               </div>
               {user.role === 'student' && profile.alias && (

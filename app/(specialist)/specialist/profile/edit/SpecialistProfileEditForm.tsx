@@ -6,12 +6,14 @@ import { updateSpecialistProfile } from './actions'
 
 interface SpecialistProfileEditFormProps {
   userId: string
+  currentAlias: string
   currentPhone: string
   currentCvUrl: string | null
   currentAcademicStatus: string
   currentSubjectTags: string[]
   pendingPhone: string | null
   pendingVerification: boolean
+  userCreatedAt: string
 }
 
 const AVAILABLE_TAGS = [
@@ -60,13 +62,16 @@ const ACADEMIC_STATUS_OPTIONS = [
 
 export function SpecialistProfileEditForm({
   userId,
+  currentAlias,
   currentPhone,
   currentCvUrl,
   currentAcademicStatus,
   currentSubjectTags,
   pendingPhone,
-  pendingVerification
+  pendingVerification,
+  userCreatedAt
 }: SpecialistProfileEditFormProps) {
+  const [alias, setAlias] = useState(currentAlias)
   const [phone, setPhone] = useState(currentPhone)
   const [cvFile, setCvFile] = useState<File | null>(null)
   const [academicStatus, setAcademicStatus] = useState(currentAcademicStatus)
@@ -74,11 +79,24 @@ export function SpecialistProfileEditForm({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
+  // Calculate max tags based on time (Initial 5 + 3 per every 3 months, max 20)
+  const registrationDate = new Date(userCreatedAt)
+  const now = new Date()
+  const monthsDiff = (now.getFullYear() - registrationDate.getFullYear()) * 12 + (now.getMonth() - registrationDate.getMonth())
+  const maxTags = Math.min(20, 5 + Math.floor(monthsDiff / 3) * 3)
+
   function toggleTag(tag: string) {
     if (subjectTags.includes(tag)) {
       setSubjectTags(subjectTags.filter(t => t !== tag))
     } else {
-      setSubjectTags([...subjectTags, tag])
+      if (subjectTags.length < maxTags) {
+        setSubjectTags([...subjectTags, tag])
+      } else {
+        setMessage({ 
+          type: 'error', 
+          text: `Has alcanzado tu límite actual de ${maxTags} etiquetas. Desbloqueas 3 más cada 3 meses.` 
+        })
+      }
     }
   }
 
@@ -88,6 +106,7 @@ export function SpecialistProfileEditForm({
     setMessage(null)
 
     const formData = new FormData()
+    formData.append('alias', alias)
     formData.append('phone', phone)
     formData.append('academicStatus', academicStatus)
     formData.append('subjectTags', JSON.stringify(subjectTags))
@@ -111,20 +130,44 @@ export function SpecialistProfileEditForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Pending Verification Alert */}
-      {pendingVerification && pendingPhone && (
+      {pendingVerification && (
         <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
             <div>
-              <h3 className="font-semibold text-yellow-400 mb-1">Cambio Pendiente de Verificación</h3>
+              <h3 className="font-semibold text-yellow-400 mb-1">Cambios en Revisión Administrativa</h3>
               <p className="text-sm text-yellow-300">
-                Tu nuevo número de WhatsApp <strong>{pendingPhone}</strong> está pendiente de verificación por el equipo administrativo.
-                Una vez aprobado, reemplazará tu número actual.
+                Tienes modificaciones en tu perfil pendientes de aprobación. 
+                Mientras tanto visualizarás tus datos anteriores.
               </p>
             </div>
           </div>
         </div>
       )}
+
+      {/* Alias Field */}
+      <div>
+        <label htmlFor="alias" className="block text-sm font-medium text-gray-300 mb-2">
+          <div className="flex items-center gap-2">
+            <span className="w-4 h-4 text-red-400 flex items-center justify-center">@</span>
+            Alias Público
+          </div>
+        </label>
+        <input
+          type="text"
+          id="alias"
+          value={alias}
+          onChange={(e) => setAlias(e.target.value)}
+          className="w-full px-4 py-2 bg-black/50 border border-red-500/30 rounded-lg text-white focus:outline-none focus:border-red-500"
+          placeholder="Tu alias público"
+          required
+          minLength={3}
+          maxLength={50}
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          Este es el nombre que verán los clientes. Los cambios requieren verificación administrativa.
+        </p>
+      </div>
 
       {/* Phone Field */}
       <div>
@@ -222,6 +265,9 @@ export function SpecialistProfileEditForm({
           <div className="flex items-center gap-2">
             <Tag className="w-4 h-4 text-red-400" />
             Especializaciones (Selecciona al menos una)
+            <span className="ml-auto text-xs font-normal text-gray-400">
+              {subjectTags.length} / {maxTags} etiquetas
+            </span>
           </div>
         </label>
         <div className="flex flex-wrap gap-2">

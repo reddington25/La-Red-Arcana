@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Shield, Users, DollarSign, AlertTriangle, Award, LogOut } from 'lucide-react'
+import { Shield, Users, DollarSign, AlertTriangle, Award, LogOut, Gem } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
@@ -40,6 +40,11 @@ export default function AdminNav({ userRole }: AdminNavProps) {
       href: '/admin/badges',
       label: 'Badge Management',
       icon: Award,
+    },
+    {
+      href: '/admin/arcanas',
+      label: 'Arcanas',
+      icon: Gem,
     },
   ]
 

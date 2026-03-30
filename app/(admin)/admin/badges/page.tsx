@@ -22,9 +22,9 @@ export default async function BadgeManagementPage() {
 
   const specialistsWithProfiles = (specialists || []) as UserWithProfile[]
   
-  // Separate specialists with and without badges
-  const badgeHolders = specialistsWithProfiles.filter(s => s.has_arcana_badge)
-  const eligibleSpecialists = specialistsWithProfiles.filter(s => !s.has_arcana_badge)
+  // Separate specialists with and without any badges
+  const badgeHolders = specialistsWithProfiles.filter(s => s.has_arcana_badge || s.excellence_badge)
+  const eligibleSpecialists = specialistsWithProfiles.filter(s => !s.has_arcana_badge && !s.excellence_badge)
 
   return (
     <div className="space-y-8">

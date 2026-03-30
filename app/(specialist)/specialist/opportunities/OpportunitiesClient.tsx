@@ -2,9 +2,10 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { FileText, Tag, DollarSign, Clock, Filter, ArrowUpDown } from 'lucide-react'
+import { FileText, Clock, Filter, ArrowUpDown } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { FACULTIES } from '@/lib/constants/academic-hierarchy'
 
 type Contract = {
   id: string
@@ -29,6 +30,7 @@ type Props = {
 }
 
 type SortOption = 'newest' | 'oldest' | 'price_high' | 'price_low' | 'relevance'
+type ViewTab = 'local' | 'faculty' | 'global'
 
 export default function OpportunitiesClient({
   initialContracts,
@@ -37,35 +39,26 @@ export default function OpportunitiesClient({
   specialistCareer
 }: Props) {
   const [contracts] = useState<Contract[]>(initialContracts)
-  const [careerFilter, setCareerFilter] = useState<'all' | 'exact' | 'faculty'>('all')
+  const [viewTab, setViewTab] = useState<ViewTab>('local')
+  const [globalFacultyFilter, setGlobalFacultyFilter] = useState<string>('all')
   const [serviceTypeFilter, setServiceTypeFilter] = useState<'all' | 'full' | 'review'>('all')
   const [sortBy, setSortBy] = useState<SortOption>('relevance')
   const [showFilters, setShowFilters] = useState(false)
-
-  // Get all unique careers from contracts in this faculty
-  const facultyCareers = useMemo(() => {
-    const careerSet = new Set<string>()
-    contracts.forEach(contract => {
-      if (contract.faculty === specialistFaculty) {
-        careerSet.add(contract.career)
-      }
-    })
-    return Array.from(careerSet).sort()
-  }, [contracts, specialistFaculty])
 
   // Filter and sort contracts
   const filteredContracts = useMemo(() => {
     let filtered = [...contracts]
 
-    // Filter by career match
-    if (careerFilter === 'exact') {
-      filtered = filtered.filter(contract => contract.career === specialistCareer)
-    } else if (careerFilter === 'faculty') {
-      filtered = filtered.filter(contract =>
-        contract.faculty === specialistFaculty && contract.career !== specialistCareer
-      )
+    // View Tab filtering
+    if (viewTab === 'local') {
+      filtered = filtered.filter(c => c.department === specialistDepartment && c.faculty === specialistFaculty)
+    } else if (viewTab === 'faculty') {
+      filtered = filtered.filter(c => c.faculty === specialistFaculty)
+    } else if (viewTab === 'global') {
+      if (globalFacultyFilter !== 'all') {
+        filtered = filtered.filter(c => c.faculty === globalFacultyFilter)
+      }
     }
-    // 'all' shows both exact and faculty matches
 
     // Filter by service type
     if (serviceTypeFilter !== 'all') {
@@ -94,12 +87,38 @@ export default function OpportunitiesClient({
     })
 
     return filtered
-  }, [contracts, careerFilter, serviceTypeFilter, sortBy, specialistCareer, specialistFaculty])
-
-
+  }, [contracts, viewTab, globalFacultyFilter, serviceTypeFilter, sortBy, specialistCareer, specialistFaculty, specialistDepartment])
 
   return (
     <div>
+      {/* Tabs */}
+      <div className="flex bg-black/50 backdrop-blur rounded-lg p-1 border border-red-500/30 mb-6 overflow-x-auto custom-scrollbar">
+        <button
+          onClick={() => setViewTab('local')}
+          className={`flex-1 min-w-[200px] text-center px-4 py-3 text-sm font-medium rounded-md transition-colors ${
+            viewTab === 'local' ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          {specialistDepartment}
+        </button>
+        <button
+          onClick={() => setViewTab('faculty')}
+          className={`flex-1 min-w-[200px] text-center px-4 py-3 text-sm font-medium rounded-md transition-colors ${
+            viewTab === 'faculty' ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          Toda tu Facultad
+        </button>
+        <button
+          onClick={() => setViewTab('global')}
+          className={`flex-1 min-w-[200px] text-center px-4 py-3 text-sm font-medium rounded-md transition-colors ${
+            viewTab === 'global' ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          Global
+        </button>
+      </div>
+
       {/* Filters and Sort */}
       <div className="mb-6 bg-black/50 backdrop-blur border border-red-500/30 rounded-lg p-4">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
@@ -108,7 +127,7 @@ export default function OpportunitiesClient({
             className="flex items-center gap-2 px-4 py-2 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 transition-colors"
           >
             <Filter className="w-4 h-4" />
-            Filtros {careerFilter !== 'all' && '(1)'}
+            Filtros {serviceTypeFilter !== 'all' || (viewTab === 'global' && globalFacultyFilter !== 'all') ? '(Activos)' : ''}
           </button>
 
           <div className="flex items-center gap-2">
@@ -129,44 +148,24 @@ export default function OpportunitiesClient({
 
         {showFilters && (
           <div className="space-y-4 pt-4 border-t border-red-500/30">
-            {/* Career Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Filtrar por Carrera
-              </label>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setCareerFilter('all')}
-                  className={`px-4 py-2 rounded transition-colors ${careerFilter === 'all'
-                    ? 'bg-red-500 text-white'
-                    : 'bg-black/50 text-gray-400 hover:bg-red-500/20'
-                    }`}
+            {/* Global Faculty Filter */}
+            {viewTab === 'global' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Filtrar por Facultad
+                </label>
+                <select
+                  value={globalFacultyFilter}
+                  onChange={(e) => setGlobalFacultyFilter(e.target.value)}
+                  className="w-full max-w-sm px-4 py-2 bg-black/50 border border-red-500/30 text-white rounded focus:outline-none focus:border-red-500"
                 >
-                  Todas
-                </button>
-                <button
-                  onClick={() => setCareerFilter('exact')}
-                  className={`px-4 py-2 rounded transition-colors ${careerFilter === 'exact'
-                    ? 'bg-red-500 text-white'
-                    : 'bg-black/50 text-gray-400 hover:bg-red-500/20'
-                    }`}
-                >
-                  Mi Carrera ({specialistCareer})
-                </button>
-                <button
-                  onClick={() => setCareerFilter('faculty')}
-                  className={`px-4 py-2 rounded transition-colors ${careerFilter === 'faculty'
-                    ? 'bg-red-500 text-white'
-                    : 'bg-black/50 text-gray-400 hover:bg-red-500/20'
-                    }`}
-                >
-                  Otras Carreras de {specialistFaculty}
-                </button>
+                  <option value="all">Todas las Facultades</option>
+                  {FACULTIES.map(fac => (
+                    <option key={fac} value={fac}>{fac}</option>
+                  ))}
+                </select>
               </div>
-              <p className="text-xs text-gray-500 mt-2">
-                Mostrando contratos de {specialistDepartment}
-              </p>
-            </div>
+            )}
 
             {/* Service Type Filter */}
             <div>
@@ -190,7 +189,7 @@ export default function OpportunitiesClient({
                     : 'bg-black/50 text-gray-400 hover:bg-red-500/20'
                     }`}
                 >
-                  Trabajo Completo
+                  Desarrollo del Proyecto
                 </button>
                 <button
                   onClick={() => setServiceTypeFilter('review')}
@@ -254,16 +253,15 @@ function ContractCard({ contract, specialistCareer, specialistFaculty }: {
         <div className="flex-1">
           <div className="flex items-start justify-between mb-2">
             <h3 className="text-xl font-semibold text-white">{contract.title}</h3>
-            {isExactMatch && (
+            {isExactMatch ? (
               <span className="bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded-full font-semibold">
                 Tu Carrera
               </span>
-            )}
-            {isFacultyMatch && (
+            ) : isFacultyMatch ? (
               <span className="bg-blue-500/20 text-blue-400 text-xs px-2 py-1 rounded-full font-semibold">
                 Tu Facultad
               </span>
-            )}
+            ) : null}
           </div>
 
           <p className="text-gray-400 mb-4 line-clamp-2">
@@ -273,10 +271,7 @@ function ContractCard({ contract, specialistCareer, specialistFaculty }: {
           <div className="flex flex-wrap gap-4 text-sm text-gray-400">
             <div className="flex items-center gap-1">
               <Clock className="w-4 h-4" />
-              Creado {formatDistanceToNow(new Date(contract.created_at), {
-                addSuffix: true,
-                locale: es
-              })}
+              Creado {formatDistanceToNow(new Date(contract.created_at), { addSuffix: true, locale: es })}
             </div>
 
             {contract.deadline && (
@@ -290,7 +285,7 @@ function ContractCard({ contract, specialistCareer, specialistFaculty }: {
 
             <div className="flex items-center gap-1">
               <FileText className="w-4 h-4" />
-              {contract.service_type === 'full' ? 'Trabajo Completo' : 'Revisión'}
+              {contract.service_type === 'full' ? 'Desarrollo del Proyecto' : 'Revisión'}
             </div>
           </div>
 

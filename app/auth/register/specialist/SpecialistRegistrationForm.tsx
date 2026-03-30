@@ -228,22 +228,6 @@ export default function SpecialistRegistrationForm({ user }: SpecialistRegistrat
             />
           </div>
 
-          {/* Career */}
-          <div>
-            <label htmlFor="career" className="block text-sm font-medium text-gray-300 mb-2">
-              Carrera <span className="text-red-400">*</span>
-            </label>
-            <input
-              type="text"
-              id="career"
-              name="career"
-              required
-              maxLength={100}
-              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-red-500 focus:outline-none"
-              placeholder="ej: Ingeniería de Sistemas"
-            />
-          </div>
-
           {/* Academic Status */}
           <div>
             <label htmlFor="academic_status" className="block text-sm font-medium text-gray-300 mb-2">
@@ -333,6 +317,27 @@ export default function SpecialistRegistrationForm({ user }: SpecialistRegistrat
             {!selectedFaculty && (
               <p className="mt-1 text-xs text-gray-500">Primero selecciona una facultad</p>
             )}
+          </div>
+
+          {/* Terms and Conditions */}
+          <div className="flex items-start gap-3 mt-6">
+            <div className="flex items-center h-5 mt-1">
+              <input
+                id="terms"
+                name="terms"
+                type="checkbox"
+                required
+                className="w-4 h-4 rounded bg-gray-900 border-gray-700 text-red-600 focus:ring-red-500 focus:ring-offset-gray-900"
+              />
+            </div>
+            <div className="text-sm">
+              <label htmlFor="terms" className="font-medium text-gray-300">
+                Acepto los Términos y Condiciones
+              </label>
+              <p className="text-gray-500">
+                Al marcar esta casilla, aceptas los términos y condiciones de uso de la plataforma Red Arcana.
+              </p>
+            </div>
           </div>
 
           {/* Submit Button */}

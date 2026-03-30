@@ -39,13 +39,13 @@ export default function WorkDelivery({
       <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg p-6">
         <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
           <FileText className="w-5 h-5" />
-          Entrega del Trabajo
+          Entrega del Proyecto
         </h2>
 
         {contractStatus === 'in_progress' && (
           <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-4">
             <p className="text-yellow-400 text-sm">
-              El especialista subirá los archivos finales aquí cuando complete el trabajo.
+              El especialista subirá los archivos finales aquí cuando complete el proyecto.
             </p>
           </div>
         )}

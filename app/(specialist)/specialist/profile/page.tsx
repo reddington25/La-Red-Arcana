@@ -158,7 +158,7 @@ export default async function SpecialistProfilePage() {
         
         {/* Reviews */}
         <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-white mb-4">Reseñas de Estudiantes</h2>
+          <h2 className="text-xl font-semibold text-white mb-4">Reseñas de Usuarios</h2>
           <ReviewsList userId={user.id} />
         </div>
 

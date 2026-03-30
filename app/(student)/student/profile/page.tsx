@@ -5,6 +5,8 @@ import { RatingSummary } from '@/components/reviews/RatingSummary'
 import { ReviewsList } from '@/components/reviews/ReviewsList'
 import { StudentProfileEditForm } from './StudentProfileEditForm'
 
+export const dynamic = 'force-dynamic'
+
 export default async function StudentProfilePage() {
   const supabase = await createClient()
   
@@ -36,7 +38,7 @@ export default async function StudentProfilePage() {
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-white mb-2">Mi Perfil</h1>
-        <p className="text-gray-400">Información de tu cuenta de estudiante</p>
+        <p className="text-gray-400">Información de tu cuenta de usuario</p>
       </div>
       
       <div className="space-y-6">

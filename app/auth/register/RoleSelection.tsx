@@ -38,9 +38,9 @@ export default function RoleSelection() {
                 />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-white mb-3">Estudiante</h2>
+            <h2 className="text-2xl font-bold text-white mb-3">Usuario</h2>
             <p className="text-gray-400 mb-6">
-              Publica tus trabajos académicos y recibe contraofertas de especialistas verificados
+              Publica tus proyectos y recibe contraofertas de especialistas verificados
             </p>
             <ul className="text-left text-sm text-gray-300 space-y-2 mb-6">
               <li className="flex items-start gap-2">
@@ -58,7 +58,7 @@ export default function RoleSelection() {
             </ul>
             <div className="mt-auto pt-4 border-t border-gray-700 w-full">
               <span className="text-red-400 font-semibold group-hover:text-red-300">
-                Registrarse como Estudiante →
+                Registrarse como Usuario →
               </span>
             </div>
           </div>
@@ -87,7 +87,7 @@ export default function RoleSelection() {
             </div>
             <h2 className="text-2xl font-bold text-white mb-3">Especialista</h2>
             <p className="text-gray-400 mb-6">
-              Monetiza tu conocimiento ayudando a estudiantes con trabajos académicos
+              Monetiza tu conocimiento ayudando a usuarios con proyectos
             </p>
             <ul className="text-left text-sm text-gray-300 space-y-2 mb-6">
               <li className="flex items-start gap-2">

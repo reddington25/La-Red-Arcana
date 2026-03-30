@@ -99,6 +99,8 @@ export async function POST(request: NextRequest) {
     const deadline = formData.get('deadline') as string
     const serviceType = formData.get('serviceType') as 'full' | 'review'
     const initialPrice = parseFloat(formData.get('initialPrice') as string)
+    const termsAccepted = formData.get('termsAccepted') === 'true'
+    const termsAcceptedAt = formData.get('termsAcceptedAt') as string
 
     // Validate form data
     if (!title || title.length < 5 || title.length > 200) {
@@ -174,6 +176,8 @@ export async function POST(request: NextRequest) {
         initial_price: initialPrice,
         status: 'open',
         file_urls: [],
+        terms_accepted: termsAccepted,
+        terms_accepted_at: termsAcceptedAt || new Date().toISOString(),
       })
       .select()
       .single()

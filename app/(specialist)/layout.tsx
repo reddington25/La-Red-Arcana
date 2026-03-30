@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import SpecialistNav from './SpecialistNav'
 
+export const dynamic = 'force-dynamic'
+
 export default async function SpecialistLayout({
   children,
 }: {

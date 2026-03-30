@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Upload, X, FileText, AlertCircle } from 'lucide-react'
+import { Upload, X, FileText, AlertCircle, Calendar } from 'lucide-react'
 import { createContract } from './actions'
 import { createClient } from '@/lib/supabase/client'
 import { validateFileType, formatFileSize } from '@/lib/supabase/storage'
@@ -20,6 +20,7 @@ export default function ContractForm() {
   const [serviceType, setServiceType] = useState<'full' | 'review'>('full')
   const [initialPrice, setInitialPrice] = useState('')
   const [deadline, setDeadline] = useState('')
+  const [acceptTerms, setAcceptTerms] = useState(false)
   const [files, setFiles] = useState<File[]>([])
 
   // Academic hierarchy state
@@ -163,6 +164,8 @@ export default function ContractForm() {
       formData.append('serviceType', serviceType)
       formData.append('initialPrice', initialPrice)
       formData.append('deadline', deadline)
+      formData.append('termsAccepted', acceptTerms ? 'true' : 'false')
+      formData.append('termsAcceptedAt', new Date().toISOString())
 
       // Add files
       files.forEach((file, index) => {
@@ -397,9 +400,9 @@ export default function ContractForm() {
                 : 'border-red-500/30 bg-black/50 hover:border-red-500/50'
               }`}
           >
-            <h3 className="font-semibold text-white mb-1">Realización del Trabajo Completo</h3>
+            <h3 className="font-semibold text-white mb-1">Desarrollo del Proyecto</h3>
             <p className="text-sm text-gray-400">
-              El especialista realizará todo el trabajo desde cero
+              El especialista realizará todo el proyecto desde cero
             </p>
           </button>
 
@@ -413,7 +416,7 @@ export default function ContractForm() {
           >
             <h3 className="font-semibold text-white mb-1">Revisión y Corrección</h3>
             <p className="text-sm text-gray-400">
-              El especialista revisará y corregirá tu trabajo existente
+              El especialista revisará, corregirá y optimizará tu proyecto existente.
             </p>
           </button>
         </div>
@@ -446,18 +449,46 @@ export default function ContractForm() {
         <label htmlFor="deadline" className="block text-sm font-medium text-gray-300 mb-2">
           Fecha y Hora Límite *
         </label>
-        <input
-          type="datetime-local"
-          id="deadline"
-          value={deadline}
-          onChange={(e) => setDeadline(e.target.value)}
-          min={new Date(new Date().getTime() + 12 * 60 * 60 * 1000).toISOString().slice(0, 16)}
-          className="w-full px-4 py-3 bg-black/50 border border-red-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-500 cursor-pointer"
-          required
-        />
+        <div className="relative">
+          <input
+            type="datetime-local"
+            id="deadline"
+            value={deadline}
+            onChange={(e) => setDeadline(e.target.value)}
+            min={new Date(new Date().getTime() + 12 * 60 * 60 * 1000).toISOString().slice(0, 16)}
+            className="w-full px-4 py-3 bg-black/50 border border-red-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-500 cursor-pointer appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+            required
+            onClick={(e) => {
+              try {
+                if ('showPicker' in HTMLInputElement.prototype) {
+                  e.currentTarget.showPicker();
+                }
+              } catch (err) {
+                // Ignore if showPicker is not supported or fails
+              }
+            }}
+          />
+          <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+        </div>
         <p className="text-xs text-gray-500 mt-1">
-          El tiempo máximo que tiene el especialista para entregar el trabajo (mínimo 12 horas desde ahora)
+          El tiempo máximo que tiene el especialista para entregar el proyecto (mínimo 12 horas desde ahora)
         </p>
+      </div>
+
+      {/* Terms and Conditions */}
+      <div>
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={acceptTerms}
+            onChange={(e) => setAcceptTerms(e.target.checked)}
+            className="mt-1 w-4 h-4 rounded border-red-500/30 bg-black/50 text-red-500 focus:ring-red-500 focus:ring-offset-gray-900"
+            required
+          />
+          <span className="text-sm text-gray-300">
+            Acepto los términos y condiciones DEL CONTRATO *
+          </span>
+        </label>
       </div>
 
       {/* Submit Button */}
@@ -472,7 +503,7 @@ export default function ContractForm() {
         </button>
         <button
           type="submit"
-          disabled={loading || !selectedDepartment || !selectedFaculty || !selectedCareer || !deadline}
+          disabled={loading || !selectedDepartment || !selectedFaculty || !selectedCareer || !deadline || !acceptTerms}
           className="flex-1 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
         >
           {loading ? <LoadingButton>Creando...</LoadingButton> : 'Publicar Contrato'}

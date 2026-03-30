@@ -3,7 +3,7 @@
 import { UserWithProfile } from '@/types/database'
 import { Award, Star, Briefcase, GraduationCap, TrendingUp } from 'lucide-react'
 import { useState } from 'react'
-import { grantBadge, revokeBadge } from './actions'
+import { grantBadge, revokeBadge, grantExcellence, revokeExcellence } from './actions'
 
 interface BadgeCardProps {
   specialist: UserWithProfile
@@ -14,6 +14,56 @@ export default function BadgeCard({ specialist, hasBadge }: BadgeCardProps) {
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+
+  const handleGrantExcellence = async () => {
+    setIsProcessing(true)
+    setError(null)
+    setSuccess(null)
+
+    try {
+      const result = await grantExcellence(specialist.id)
+      
+      if (result.error) {
+        setError(result.error)
+      } else {
+        setSuccess('Experto de Excelencia granted successfully!')
+        setTimeout(() => {
+          window.location.reload()
+        }, 1500)
+      }
+    } catch (err) {
+      setError('An unexpected error occurred')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const handleRevokeExcellence = async () => {
+    if (!confirm('Are you sure you want to revoke the Experto de Excelencia status?')) {
+      return
+    }
+
+    setIsProcessing(true)
+    setError(null)
+    setSuccess(null)
+
+    try {
+      const result = await revokeExcellence(specialist.id)
+      
+      if (result.error) {
+        setError(result.error)
+      } else {
+        setSuccess('Experto de Excelencia revoked successfully!')
+        setTimeout(() => {
+          window.location.reload()
+        }, 1500)
+      }
+    } catch (err) {
+      setError('An unexpected error occurred')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
 
   const profile = specialist.profile_details
 
@@ -87,6 +137,14 @@ export default function BadgeCard({ specialist, hasBadge }: BadgeCardProps) {
           </div>
           <div>
             <h3 className="text-lg font-bold text-white">{profile.real_name}</h3>
+            {specialist.excellence_badge && (
+              <div className="flex items-center gap-1 mt-1">
+                <Star className="w-4 h-4 text-purple-400 fill-purple-400" />
+                <span className="text-xs font-semibold text-purple-400">
+                  Experto de Excelencia (5.0)
+                </span>
+              </div>
+            )}
             {hasBadge && (
               <div className="flex items-center gap-1 mt-1">
                 <Award className="w-4 h-4 text-yellow-400" />
@@ -103,7 +161,7 @@ export default function BadgeCard({ specialist, hasBadge }: BadgeCardProps) {
           <div className="flex items-center gap-1 justify-end">
             <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
             <span className="text-lg font-bold text-white">
-              {specialist.average_rating.toFixed(1)}
+              {(specialist.manual_rating !== null ? specialist.manual_rating : specialist.average_rating).toFixed(1)}
             </span>
           </div>
           <p className="text-xs text-gray-400">
@@ -191,25 +249,47 @@ export default function BadgeCard({ specialist, hasBadge }: BadgeCardProps) {
       )}
 
       {/* Actions */}
-      {hasBadge ? (
-        <button
-          onClick={handleRevokeBadge}
-          disabled={isProcessing}
-          className="w-full flex items-center justify-center gap-2 bg-red-500/20 hover:bg-red-500/30 disabled:bg-gray-600 disabled:cursor-not-allowed text-red-400 font-semibold py-3 px-6 rounded-lg transition-colors border border-red-500/50"
-        >
-          <Award className="w-5 h-5" />
-          {isProcessing ? 'Revoking...' : 'Revoke Badge'}
-        </button>
-      ) : (
-        <button
-          onClick={handleGrantBadge}
-          disabled={isProcessing}
-          className="w-full flex items-center justify-center gap-2 bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-black font-semibold py-3 px-6 rounded-lg transition-colors"
-        >
-          <Award className="w-5 h-5" />
-          {isProcessing ? 'Granting...' : 'Grant Garantía Arcana Badge'}
-        </button>
-      )}
+      <div className="flex flex-col gap-2">
+        {hasBadge ? (
+          <button
+            onClick={handleRevokeBadge}
+            disabled={isProcessing}
+            className="w-full flex items-center justify-center gap-2 bg-red-500/20 hover:bg-red-500/30 disabled:bg-gray-600 disabled:cursor-not-allowed text-red-400 font-semibold py-3 px-6 rounded-lg transition-colors border border-red-500/50"
+          >
+            <Award className="w-5 h-5" />
+            {isProcessing ? 'Processing...' : 'Revoke Garantía Arcana'}
+          </button>
+        ) : (
+          <button
+            onClick={handleGrantBadge}
+            disabled={isProcessing}
+            className="w-full flex items-center justify-center gap-2 bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-black font-semibold py-3 px-6 rounded-lg transition-colors"
+          >
+            <Award className="w-5 h-5" />
+            {isProcessing ? 'Processing...' : 'Grant Garantía Arcana Badge'}
+          </button>
+        )}
+
+        {specialist.excellence_badge ? (
+          <button
+            onClick={handleRevokeExcellence}
+            disabled={isProcessing}
+            className="w-full flex items-center justify-center gap-2 bg-purple-500/20 hover:bg-purple-500/30 disabled:bg-gray-600 disabled:cursor-not-allowed text-purple-400 font-semibold py-3 px-6 rounded-lg transition-colors border border-purple-500/50"
+          >
+            <Star className="w-5 h-5 fill-purple-400" />
+            {isProcessing ? 'Processing...' : 'Revoke Experto de Excelencia'}
+          </button>
+        ) : (
+          <button
+            onClick={handleGrantExcellence}
+            disabled={isProcessing}
+            className="w-full flex items-center justify-center gap-2 bg-purple-500/20 hover:bg-purple-500/30 disabled:bg-gray-600 disabled:cursor-not-allowed text-purple-400 font-semibold py-3 px-6 rounded-lg transition-colors border border-purple-500/50"
+          >
+            <Star className="w-5 h-5" />
+            {isProcessing ? 'Processing...' : 'Grant Experto de Excelencia (Force 5⭐)'}
+          </button>
+        )}
+      </div>
     </div>
   )
 }
