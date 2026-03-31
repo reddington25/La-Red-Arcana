@@ -1,10 +1,10 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
-  // Skip middleware for Server Actions (POST requests to page routes)
+  // Skip proxy for Server Actions (POST requests to page routes)
   if (request.method === 'POST' && !pathname.startsWith('/api/')) {
     return NextResponse.next()
   }
