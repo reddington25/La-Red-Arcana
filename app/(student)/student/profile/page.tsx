@@ -30,7 +30,7 @@ export default async function StudentProfilePage() {
   // Get profile details
   const { data: profile } = await supabase
     .from('profile_details')
-    .select('real_name, alias, phone, pending_phone, pending_verification')
+    .select('real_name, alias, phone, pending_verification')
     .eq('user_id', user.id)
     .single()
   
@@ -82,8 +82,6 @@ export default async function StudentProfilePage() {
           <StudentProfileEditForm 
             userId={user.id}
             currentAlias={profile?.alias || ''}
-            currentPhone={profile?.phone || ''}
-            pendingPhone={profile?.pending_phone || null}
             pendingVerification={profile?.pending_verification || false}
           />
         </div>

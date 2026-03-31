@@ -29,6 +29,11 @@ export interface User {
   manual_rating: number | null
   total_reviews: number
   balance: number
+  // Ambassador fields
+  is_ambassador: boolean
+  ambassador_code: string | null
+  referred_by: string | null
+  ambassador_balance: number
   created_at: string
   updated_at: string
 }
@@ -171,6 +176,15 @@ export interface Notification {
   link: string | null
   read: boolean
 
+  created_at: string
+}
+
+export interface AmbassadorEarning {
+  id: string
+  ambassador_id: string
+  specialist_id: string
+  contract_id: string
+  amount: number
   created_at: string
 }
 

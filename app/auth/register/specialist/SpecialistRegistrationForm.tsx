@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
 import { completeSpecialistProfile } from './actions'
 import { DEPARTMENTS, FACULTIES, getCareersByFaculty, type Department, type Faculty } from '@/lib/constants/academic-hierarchy'
+import { createClient } from '@/lib/supabase/client'
 
 interface SpecialistRegistrationFormProps {
   user: User
@@ -22,6 +23,11 @@ export default function SpecialistRegistrationForm({ user }: SpecialistRegistrat
   const [selectedFaculty, setSelectedFaculty] = useState<Faculty | ''>('')
   const [selectedCareer, setSelectedCareer] = useState<string>('')
 
+  // Ambassador code state
+  const [ambassadorCode, setAmbassadorCode] = useState<string>('')
+  const [ambassadorStatus, setAmbassadorStatus] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle')
+  const [ambassadorName, setAmbassadorName] = useState<string>('')
+
   // Get available careers based on selected faculty
   const availableCareers = selectedFaculty ? getCareersByFaculty(selectedFaculty) : []
 
@@ -35,6 +41,36 @@ export default function SpecialistRegistrationForm({ user }: SpecialistRegistrat
   const handleFacultyChange = (fac: Faculty | '') => {
     setSelectedFaculty(fac)
     setSelectedCareer('')
+  }
+
+  // Validate ambassador code in real-time
+  const validateAmbassadorCode = async (code: string) => {
+    setAmbassadorCode(code)
+    if (!code.trim()) {
+      setAmbassadorStatus('idle')
+      setAmbassadorName('')
+      return
+    }
+    setAmbassadorStatus('checking')
+    try {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('users')
+        .select('id, is_ambassador, profile_details!inner(real_name)')
+        .eq('ambassador_code', code.trim().toUpperCase())
+        .eq('is_ambassador', true)
+        .single()
+      if (data) {
+        setAmbassadorStatus('valid')
+        setAmbassadorName((data as any).profile_details?.real_name || 'Embajador verificado')
+      } else {
+        setAmbassadorStatus('invalid')
+        setAmbassadorName('')
+      }
+    } catch {
+      setAmbassadorStatus('invalid')
+      setAmbassadorName('')
+    }
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -76,6 +112,9 @@ export default function SpecialistRegistrationForm({ user }: SpecialistRegistrat
     formData.append('department', selectedDepartment)
     formData.append('faculty', selectedFaculty)
     formData.append('career', selectedCareer)
+    if (ambassadorCode.trim() && ambassadorStatus === 'valid') {
+      formData.append('ambassador_code', ambassadorCode.trim().toUpperCase())
+    }
 
     try {
       const result = await completeSpecialistProfile(formData)
@@ -317,6 +356,43 @@ export default function SpecialistRegistrationForm({ user }: SpecialistRegistrat
             {!selectedFaculty && (
               <p className="mt-1 text-xs text-gray-500">Primero selecciona una facultad</p>
             )}
+          </div>
+
+          {/* Ambassador Code (Optional) */}
+          <div>
+            <label htmlFor="ambassador_code" className="block text-sm font-medium text-gray-300 mb-2">
+              Código de Embajador (Opcional)
+            </label>
+            <input
+              type="text"
+              id="ambassador_code"
+              value={ambassadorCode}
+              onChange={(e) => validateAmbassadorCode(e.target.value)}
+              maxLength={20}
+              className={`w-full px-4 py-2 bg-gray-900 border rounded-lg text-white focus:outline-none uppercase ${
+                ambassadorStatus === 'valid'
+                  ? 'border-green-500 focus:border-green-400'
+                  : ambassadorStatus === 'invalid'
+                  ? 'border-red-500 focus:border-red-400'
+                  : 'border-gray-700 focus:border-red-500'
+              }`}
+              placeholder="Ej: JUAN-A7X9"
+            />
+            {ambassadorStatus === 'checking' && (
+              <p className="mt-1 text-xs text-yellow-400 flex items-center gap-1">
+                <span className="inline-block w-3 h-3 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin" />
+                Verificando código...
+              </p>
+            )}
+            {ambassadorStatus === 'valid' && (
+              <p className="mt-1 text-xs text-green-400">✅ Código válido — Embajador: {ambassadorName}</p>
+            )}
+            {ambassadorStatus === 'invalid' && (
+              <p className="mt-1 text-xs text-red-400">❌ Código no encontrado o inválido</p>
+            )}
+            <p className="mt-1 text-xs text-gray-500">
+              Si un Embajador Arcana te invitó, ingresa su código aquí.
+            </p>
           </div>
 
           {/* Terms and Conditions */}

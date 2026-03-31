@@ -1,12 +1,10 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { updateSession } from './lib/supabase/middleware'
 import { createServerClient } from '@supabase/ssr'
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   // Skip middleware for Server Actions (POST requests to page routes)
-  // Server Actions handle their own auth via createClient()
   if (request.method === 'POST' && !pathname.startsWith('/api/')) {
     return NextResponse.next()
   }
@@ -14,21 +12,22 @@ export async function middleware(request: NextRequest) {
   // Public routes that don't require authentication
   const publicRoutes = ['/', '/auth/login', '/auth/callback', '/demo']
   const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith('/auth/register'))
-  
-  // DEMO MODE: Allow access to all routes without authentication
-  const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
-  const isSupabaseConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && 
-                                process.env.NEXT_PUBLIC_SUPABASE_URL !== 'https://demo.supabase.co'
-  
+
   // If demo mode OR Supabase not configured, allow all access
+  const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
+  const isSupabaseConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.NEXT_PUBLIC_SUPABASE_URL !== 'https://demo.supabase.co'
+
   if (isDemoMode || !isSupabaseConfigured) {
     return NextResponse.next()
   }
 
-  // Update session first
-  const response = await updateSession(request)
-  
-  // Create Supabase client for auth checks
+  // Build response object that carries updated cookies forward
+  let response = NextResponse.next({
+    request: { headers: request.headers },
+  })
+
+  // Create supabase client that can set/refresh cookies on the response
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -38,112 +37,101 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
+          // Set cookies on both request (for this request) and response (for client)
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          response = NextResponse.next({
+            request: { headers: request.headers },
+          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, {
+              ...options,
+              sameSite: 'lax',
+              secure: process.env.NODE_ENV === 'production',
+            })
+          )
         },
       },
     }
   )
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  // IMPORTANT: getUser() both validates the token AND refreshes/sets cookies via setAll above
+  const { data: { user } } = await supabase.auth.getUser()
 
-  // Debug logging
-  console.log('[MIDDLEWARE] Path:', pathname)
-  console.log('[MIDDLEWARE] Method:', request.method)
-  console.log('[MIDDLEWARE] Cookies:', request.cookies.getAll().map(c => ({ name: c.name, value: c.value.substring(0, 20) + '...' })))
-  console.log('[MIDDLEWARE] User:', user ? user.id : 'null')
-  
-  if (!user) {
-    console.log('[MIDDLEWARE] No user found for path:', pathname)
-    if (authError) {
-      console.log('[MIDDLEWARE] Auth error:', authError.message, authError.status)
-    }
-  }
-
-  // If user is not authenticated and trying to access protected route
+  // If user is not authenticated and trying to access a protected route, redirect to login
   if (!user && !isPublicRoute) {
     const redirectUrl = new URL('/auth/login', request.url)
     redirectUrl.searchParams.set('redirectTo', pathname)
     return NextResponse.redirect(redirectUrl)
   }
 
-  // If user is authenticated, check verification status and role-based access
+  // If user is authenticated, check role and verification status
   if (user) {
+    // Fetch user record from our DB
     const { data: userData, error: userError } = await supabase
       .from('users')
       .select('role, is_verified')
       .eq('id', user.id)
       .single()
 
-    // If there's an error fetching user data, log it but don't block
-    if (userError) {
-      console.error('[MIDDLEWARE] Error fetching user data:', userError)
-      // Allow the request to continue - the page will handle auth
+    if (userError || !userData) {
+      // User not found in our DB → needs to complete registration
+      if (!pathname.startsWith('/auth/register') && !pathname.startsWith('/auth/callback')) {
+        return NextResponse.redirect(new URL('/auth/register', request.url))
+      }
       return response
     }
 
-    // Check if user has profile_details separately
-    let hasCompleteProfile = false
-    if (userData) {
+    // Check profile completeness (only block if NOT on registration or callback)
+    if (!pathname.startsWith('/auth/register') && !pathname.startsWith('/auth/callback')) {
       const { data: profileData } = await supabase
         .from('profile_details')
         .select('id')
         .eq('user_id', user.id)
         .single()
-      
-      hasCompleteProfile = !!profileData
+
+      if (!profileData) {
+        return NextResponse.redirect(new URL('/auth/register', request.url))
+      }
     }
 
-    // If user is authenticated but NOT in database OR missing profile, redirect to registration
-    if ((!userData || !hasCompleteProfile) && !pathname.startsWith('/auth/register') && !pathname.startsWith('/auth/callback')) {
-      return NextResponse.redirect(new URL('/auth/register', request.url))
-    }
-
-    // Redirect unverified users to pending verification page (except for logout, pending, and registration pages)
-    if (userData && !userData.is_verified && pathname !== '/auth/pending' && pathname !== '/auth/logout' && !pathname.startsWith('/auth/register')) {
+    // Unverified users → send to pending (except logout/pending/register)
+    if (
+      !userData.is_verified &&
+      pathname !== '/auth/pending' &&
+      pathname !== '/auth/logout' &&
+      !pathname.startsWith('/auth/register')
+    ) {
       return NextResponse.redirect(new URL('/auth/pending', request.url))
     }
 
-    // Role-based route protection
-    if (userData?.is_verified) {
-      // Student routes
+    // Role-based protection for verified users
+    if (userData.is_verified) {
       if (pathname.startsWith('/student') && userData.role !== 'student') {
         return NextResponse.redirect(new URL('/', request.url))
       }
-
-      // Specialist routes
       if (pathname.startsWith('/specialist') && userData.role !== 'specialist') {
         return NextResponse.redirect(new URL('/', request.url))
       }
-
-      // Admin routes
       if (pathname.startsWith('/admin') && !['admin', 'super_admin'].includes(userData.role)) {
         return NextResponse.redirect(new URL('/', request.url))
       }
     }
 
-    // Redirect authenticated users away from login page ONLY
-    if (pathname === '/auth/login') {
-      // If user exists in DB
-      if (userData) {
-        // If verified, redirect to role-specific dashboard
-        if (userData.is_verified) {
-          const dashboardMap: Record<string, string> = {
-            student: '/student/dashboard',
-            specialist: '/specialist/dashboard',
-            admin: '/admin/dashboard',
-            super_admin: '/admin/dashboard'
-          }
-          return NextResponse.redirect(new URL(dashboardMap[userData.role] || '/', request.url))
-        }
-        // If not verified, redirect to pending page
-        return NextResponse.redirect(new URL('/auth/pending', request.url))
+    // Redirect authenticated + verified users away from login page
+    if (pathname === '/auth/login' && userData.is_verified) {
+      const dashboardMap: Record<string, string> = {
+        student: '/student/dashboard',
+        specialist: '/specialist/dashboard',
+        admin: '/admin/dashboard',
+        super_admin: '/admin/dashboard',
       }
-      // If user is authenticated but NOT in DB, allow them to go to register
-      // (This will be handled by the register page itself)
+      return NextResponse.redirect(new URL(dashboardMap[userData.role] || '/', request.url))
     }
-    
-    // Allow access to /auth/register pages even if authenticated
-    // (User needs to complete registration)
+
+    // Redirect authenticated but not-yet-verified users away from login
+    if (pathname === '/auth/login' && !userData.is_verified) {
+      return NextResponse.redirect(new URL('/auth/pending', request.url))
+    }
   }
 
   return response
@@ -151,14 +139,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public files (images, icons, manifest, etc.)
-     * - api routes (handled separately)
-     */
     '/((?!_next/static|_next/image|_next/data|favicon.ico|icon-.*\\.png|manifest\\..*|api/.*|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|json)$).*)',
   ],
 }

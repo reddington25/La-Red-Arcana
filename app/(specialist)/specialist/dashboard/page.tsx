@@ -14,7 +14,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import WithdrawalButton from './WithdrawalButton'
 import { PublicationsFeed } from '@/components/ui/PublicationsFeed'
-import { ArcanaCrystal } from '@/components/ui/ArcanaCrystal'
+import { ArcanaCrystal, ArcanasBadge } from '@/components/ui/ArcanaCrystal'
 import CreatePublicationForm from './CreatePublicationForm'
 
 export default async function SpecialistDashboardPage() {
@@ -36,7 +36,10 @@ export default async function SpecialistDashboardPage() {
       average_rating, 
       manual_rating,
       total_reviews,
-      arcanas
+      arcanas,
+      is_ambassador,
+      ambassador_code,
+      ambassador_balance
     `)
     .eq('id', user.id)
     .single()
@@ -95,7 +98,9 @@ export default async function SpecialistDashboardPage() {
   
   // Calculate balance after commission (15%)
   const balance = userData?.balance || 0
+  const ambassadorBalance = userData?.ambassador_balance || 0
   const balanceAfterCommission = balance * 0.85
+  const totalAvailableBalance = balanceAfterCommission + ambassadorBalance
   
   // Calculate total earnings
   const totalEarnings = completedContracts?.reduce((sum, contract) => 
@@ -136,12 +141,44 @@ export default async function SpecialistDashboardPage() {
             </span>
           )}
           {userData && (
-            <span className="bg-black/50 backdrop-blur border border-red-500/30 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
-              <ArcanaCrystal size={16} /> {userData.arcanas || 0}
+            <ArcanasBadge amount={userData.arcanas || 0} />
+          )}
+          {userData?.is_ambassador && (
+            <span className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/50 text-emerald-400 px-3 py-1 rounded-full text-sm font-semibold">
+              🌐 Embajador Arcana
             </span>
           )}
         </div>
       </div>
+
+      {/* Ambassador Mini-Card */}
+      {userData?.is_ambassador && userData.ambassador_code && (
+        <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 rounded-lg p-4 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🌐</span>
+              <div>
+                <p className="text-sm text-gray-400">Tu código de Embajador</p>
+                <p className="text-xl font-mono font-bold text-emerald-400 tracking-wider">{userData.ambassador_code}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              {ambassadorBalance > 0 && (
+                <div className="text-right">
+                  <p className="text-xs text-gray-400">Ganancias de Red</p>
+                  <p className="text-lg font-bold text-emerald-400">Bs. {ambassadorBalance.toFixed(2)}</p>
+                </div>
+              )}
+              <a
+                href="/specialist/referrals"
+                className="px-4 py-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 rounded-lg hover:bg-emerald-500/30 transition-colors text-sm font-medium"
+              >
+                Ver Referidos →
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Stats Cards */}
       <div className="grid md:grid-cols-4 gap-4 mb-8">
@@ -204,10 +241,13 @@ export default async function SpecialistDashboardPage() {
           <div>
             <div className="text-gray-400 text-sm mb-1">Saldo Disponible para Retiro</div>
             <div className="text-4xl font-bold text-white mb-2">
-              Bs. {balanceAfterCommission.toFixed(2)}
+              Bs. {totalAvailableBalance.toFixed(2)}
             </div>
             <div className="text-sm text-gray-400">
               Saldo bruto: Bs. {balance.toFixed(2)} - Comisión 15%: Bs. {(balance * 0.15).toFixed(2)}
+              {ambassadorBalance > 0 && (
+                <span> + Red: Bs. {ambassadorBalance.toFixed(2)}</span>
+              )}
             </div>
             <div className="text-xs text-gray-500 mt-1">
               💡 El saldo se acredita cuando el usuario confirma el proyecto completado
@@ -215,12 +255,12 @@ export default async function SpecialistDashboardPage() {
           </div>
           
           <WithdrawalButton 
-            balance={balanceAfterCommission}
-            disabled={balanceAfterCommission < 50}
+            balance={totalAvailableBalance}
+            disabled={totalAvailableBalance < 50}
           />
         </div>
         
-        {balanceAfterCommission < 50 && (
+        {totalAvailableBalance < 50 && (
           <div className="mt-4 text-sm text-yellow-400 flex items-center gap-2">
             <Clock className="w-4 h-4" />
             El monto mínimo para solicitar retiro es Bs. 50

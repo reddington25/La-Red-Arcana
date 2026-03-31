@@ -2,16 +2,43 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Briefcase, LayoutDashboard, User, LogOut } from 'lucide-react'
+import { Briefcase, LayoutDashboard, User, LogOut, Users, DollarSign } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 export default function SpecialistNav() {
   const pathname = usePathname()
+  const [isAmbassador, setIsAmbassador] = useState(false)
   
-  const navItems = [
+  useEffect(() => {
+    const checkAmbassador = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data } = await supabase
+          .from('users')
+          .select('is_ambassador')
+          .eq('id', user.id)
+          .single()
+        setIsAmbassador(data?.is_ambassador || false)
+      }
+    }
+    checkAmbassador()
+  }, [])
+
+  const baseNavItems = [
     { href: '/specialist/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/specialist/opportunities', label: 'Oportunidades', icon: Briefcase },
     { href: '/specialist/profile', label: 'Perfil', icon: User },
   ]
+  
+  // Ambassador-only tabs
+  const ambassadorNavItems = isAmbassador ? [
+    { href: '/specialist/referrals', label: 'Mis Referidos', icon: Users },
+    { href: '/specialist/network-earnings', label: 'Ganancias de Red', icon: DollarSign },
+  ] : []
+
+  const navItems = [...baseNavItems, ...ambassadorNavItems]
   
   return (
     <nav className="bg-black/50 backdrop-blur border-b border-red-500/30">
@@ -21,7 +48,7 @@ export default function SpecialistNav() {
             Red Arcana
           </Link>
           
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 overflow-x-auto">
             {navItems.map((item) => {
               const Icon = item.icon
               const isActive = pathname.startsWith(item.href)
@@ -30,14 +57,16 @@ export default function SpecialistNav() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-2 px-3 py-2 rounded transition-colors ${
+                  className={`flex items-center gap-2 px-3 py-2 rounded transition-colors whitespace-nowrap ${
                     isActive
-                      ? 'bg-red-500/20 text-red-400'
+                      ? item.href.startsWith('/specialist/referrals') || item.href.startsWith('/specialist/network-earnings')
+                        ? 'bg-emerald-500/20 text-emerald-400'
+                        : 'bg-red-500/20 text-red-400'
                       : 'text-gray-400 hover:text-red-400 hover:bg-red-500/10'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
-                  <span className="hidden sm:inline">{item.label}</span>
+                  <span className="hidden sm:inline text-sm">{item.label}</span>
                 </Link>
               )
             })}

@@ -27,7 +27,7 @@ export default async function SpecialistProfileEditPage() {
   // Get profile details
   const { data: profile } = await supabase
     .from('profile_details')
-    .select('real_name, alias, phone, cv_url, academic_status, subject_tags, pending_phone, pending_verification')
+    .select('real_name, alias, phone, cv_url, academic_status, subject_tags, pending_verification')
     .eq('user_id', user.id)
     .single()
   
@@ -64,11 +64,9 @@ export default async function SpecialistProfileEditPage() {
           <SpecialistProfileEditForm 
             userId={user.id}
             currentAlias={profile.alias || ''}
-            currentPhone={profile.phone}
             currentCvUrl={profile.cv_url}
             currentAcademicStatus={profile.academic_status || ''}
             currentSubjectTags={profile.subject_tags || []}
-            pendingPhone={profile.pending_phone}
             pendingVerification={profile.pending_verification || false}
             userCreatedAt={userData.created_at}
           />

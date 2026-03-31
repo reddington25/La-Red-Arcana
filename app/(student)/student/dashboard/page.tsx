@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { Plus, FileText, Clock, CheckCircle, AlertTriangle, XCircle } from 'lucide-react'
 import { ContractStatus } from '@/types/database'
 import { PublicationsFeed } from '@/components/ui/PublicationsFeed'
-import { ArcanaCrystal } from '@/components/ui/ArcanaCrystal'
+import { ArcanaCrystal, ArcanasBadge } from '@/components/ui/ArcanaCrystal'
 
 export const dynamic = 'force-dynamic'
 
@@ -86,9 +86,7 @@ export default async function StudentDashboard() {
           <div className="flex items-center gap-3 mb-2">
             <h1 className="text-3xl font-bold text-white">Dashboard de Usuario</h1>
             {userData && (
-              <span className="bg-black/50 backdrop-blur border border-red-500/30 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
-                <ArcanaCrystal size={16} /> {userData.arcanas || 0}
-              </span>
+              <ArcanasBadge amount={userData.arcanas || 0} />
             )}
           </div>
           <p className="text-gray-400">Gestiona tus contratos y revisa las ofertas de especialistas</p>

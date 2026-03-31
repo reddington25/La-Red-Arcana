@@ -1,17 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { Phone, GraduationCap, FileText, Tag, AlertCircle, CheckCircle, Upload } from 'lucide-react'
+import { GraduationCap, FileText, Tag, AlertCircle, CheckCircle, Upload } from 'lucide-react'
 import { updateSpecialistProfile } from './actions'
 
 interface SpecialistProfileEditFormProps {
   userId: string
   currentAlias: string
-  currentPhone: string
   currentCvUrl: string | null
   currentAcademicStatus: string
   currentSubjectTags: string[]
-  pendingPhone: string | null
   pendingVerification: boolean
   userCreatedAt: string
 }
@@ -63,16 +61,13 @@ const ACADEMIC_STATUS_OPTIONS = [
 export function SpecialistProfileEditForm({
   userId,
   currentAlias,
-  currentPhone,
   currentCvUrl,
   currentAcademicStatus,
   currentSubjectTags,
-  pendingPhone,
   pendingVerification,
   userCreatedAt
 }: SpecialistProfileEditFormProps) {
   const [alias, setAlias] = useState(currentAlias)
-  const [phone, setPhone] = useState(currentPhone)
   const [cvFile, setCvFile] = useState<File | null>(null)
   const [academicStatus, setAcademicStatus] = useState(currentAcademicStatus)
   const [subjectTags, setSubjectTags] = useState<string[]>(currentSubjectTags)
@@ -107,7 +102,6 @@ export function SpecialistProfileEditForm({
 
     const formData = new FormData()
     formData.append('alias', alias)
-    formData.append('phone', phone)
     formData.append('academicStatus', academicStatus)
     formData.append('subjectTags', JSON.stringify(subjectTags))
     
@@ -166,28 +160,6 @@ export function SpecialistProfileEditForm({
         />
         <p className="text-xs text-gray-500 mt-1">
           Este es el nombre que verán los clientes. Los cambios requieren verificación administrativa.
-        </p>
-      </div>
-
-      {/* Phone Field */}
-      <div>
-        <label htmlFor="phone" className="block text-sm font-medium text-gray-300 mb-2">
-          <div className="flex items-center gap-2">
-            <Phone className="w-4 h-4 text-red-400" />
-            Número de WhatsApp
-          </div>
-        </label>
-        <input
-          type="tel"
-          id="phone"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          className="w-full px-4 py-2 bg-black/50 border border-red-500/30 rounded-lg text-white focus:outline-none focus:border-red-500"
-          placeholder="+591 12345678"
-          required
-        />
-        <p className="text-xs text-gray-500 mt-1">
-          Los cambios en el número de WhatsApp requieren verificación administrativa.
         </p>
       </div>
 

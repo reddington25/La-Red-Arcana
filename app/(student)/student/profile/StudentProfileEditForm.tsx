@@ -1,26 +1,21 @@
 'use client'
 
 import { useState } from 'react'
-import { Phone, User, AlertCircle, CheckCircle } from 'lucide-react'
+import { User, AlertCircle, CheckCircle } from 'lucide-react'
 import { updateStudentProfile } from './actions'
 
 interface StudentProfileEditFormProps {
   userId: string
   currentAlias: string
-  currentPhone: string
-  pendingPhone: string | null
   pendingVerification: boolean
 }
 
 export function StudentProfileEditForm({
   userId,
   currentAlias,
-  currentPhone,
-  pendingPhone,
   pendingVerification
 }: StudentProfileEditFormProps) {
   const [alias, setAlias] = useState(currentAlias)
-  const [phone, setPhone] = useState(currentPhone)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
@@ -31,7 +26,6 @@ export function StudentProfileEditForm({
 
     const formData = new FormData()
     formData.append('alias', alias)
-    formData.append('phone', phone)
 
     const result = await updateStudentProfile(formData)
 
@@ -83,28 +77,6 @@ export function StudentProfileEditForm({
         />
         <p className="text-xs text-gray-500 mt-1">
           Este es el nombre que verán los especialistas. Los cambios requieren verificación administrativa.
-        </p>
-      </div>
-
-      {/* Phone Field */}
-      <div>
-        <label htmlFor="phone" className="block text-sm font-medium text-gray-300 mb-2">
-          <div className="flex items-center gap-2">
-            <Phone className="w-4 h-4 text-red-400" />
-            Número de WhatsApp
-          </div>
-        </label>
-        <input
-          type="tel"
-          id="phone"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          className="w-full px-4 py-2 bg-black/50 border border-red-500/30 rounded-lg text-white focus:outline-none focus:border-red-500"
-          placeholder="+591 12345678"
-          required
-        />
-        <p className="text-xs text-gray-500 mt-1">
-          Los cambios en el número de WhatsApp requieren verificación administrativa.
         </p>
       </div>
 

@@ -24,6 +24,7 @@ export async function completeSpecialistProfile(formData: FormData) {
   const career = formData.get('career') as string
   const ciFile = formData.get('ci_file') as File
   const cvFile = formData.get('cv_file') as File | null
+  const ambassadorCodeInput = formData.get('ambassador_code') as string | null
 
   // Add Bolivia country code (+591) automatically
   const phone = `+591${phoneInput}`
@@ -55,6 +56,23 @@ export async function completeSpecialistProfile(formData: FormData) {
       cvUrl = cvUploadResult.url
     }
 
+    // Validate ambassador code if provided
+    let referredByUserId: string | null = null
+    if (ambassadorCodeInput && ambassadorCodeInput.trim()) {
+      const { data: ambassadorData } = await supabase
+        .from('users')
+        .select('id, is_ambassador')
+        .eq('ambassador_code', ambassadorCodeInput.trim().toUpperCase())
+        .eq('is_ambassador', true)
+        .single()
+
+      if (!ambassadorData) {
+        return { error: 'El código de embajador no es válido' }
+      }
+      referredByUserId = ambassadorData.id
+    }
+
+
     // Create user record
     const { error: userError } = await supabase
       .from('users')
@@ -67,7 +85,8 @@ export async function completeSpecialistProfile(formData: FormData) {
         average_rating: 0,
         total_reviews: 0,
         balance: 0,
-        arcanas: 100
+        arcanas: 100,
+        referred_by: referredByUserId
       })
 
     if (userError) {
