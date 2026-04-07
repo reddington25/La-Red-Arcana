@@ -11,8 +11,7 @@ export default async function PendingVerificationPage() {
 
   // Must be authenticated
   if (!user) {
-    console.log('[PENDING PAGE] No user - redirecting to login')
-    redirect('/auth/login')
+    return null
   }
 
   // Get user data

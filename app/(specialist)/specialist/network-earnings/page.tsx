@@ -8,7 +8,7 @@ export default async function NetworkEarningsPage() {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/auth/login')
+  if (!user) return null
 
   // Check if user is an ambassador
   const { data: userData } = await supabase

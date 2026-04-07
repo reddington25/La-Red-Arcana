@@ -10,10 +10,12 @@ export const dynamic = 'force-dynamic'
 export default async function StudentProfilePage() {
   const supabase = await createClient()
   
+  // Auth is already verified by proxy - just get user for data access
   const { data: { user } } = await supabase.auth.getUser()
   
   if (!user) {
-    redirect('/auth/login')
+    // Proxy should have caught this, but defensive fallback
+    return null
   }
   
   // Get user data
@@ -24,7 +26,7 @@ export default async function StudentProfilePage() {
     .single()
   
   if (!userData) {
-    redirect('/auth/login')
+    return null
   }
   
   // Get profile details

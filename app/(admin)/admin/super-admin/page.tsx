@@ -18,7 +18,7 @@ export default async function SuperAdminPage() {
   // Check authentication
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
-    redirect('/auth/login')
+    return null
   }
 
   // Check if user is super admin

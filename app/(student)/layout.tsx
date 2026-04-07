@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import StudentNav from './StudentNav'
 
@@ -11,31 +10,14 @@ export default async function StudentLayout({
 }) {
   const supabase = await createClient()
 
+  // Auth is already verified by proxy - just get user for nav context
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/auth/login')
-  }
-
-  // Get user profile
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role, is_verified')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile) {
-    redirect('/auth/login')
-  }
-
-  if (profile.role !== 'student') {
-    redirect('/')
-  }
-
-  if (!profile.is_verified) {
-    redirect('/auth/pending')
+    // Proxy should have caught this, defensive fallback
+    return null
   }
 
   return (

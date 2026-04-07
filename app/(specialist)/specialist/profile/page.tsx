@@ -10,7 +10,7 @@ export default async function SpecialistProfilePage() {
   const { data: { user } } = await supabase.auth.getUser()
   
   if (!user) {
-    redirect('/auth/login')
+    return null
   }
   
   // Get user data
@@ -21,7 +21,7 @@ export default async function SpecialistProfilePage() {
     .single()
   
   if (!userData) {
-    redirect('/auth/login')
+    return null
   }
   
   // Get profile details separately

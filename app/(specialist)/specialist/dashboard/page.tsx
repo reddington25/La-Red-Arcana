@@ -23,7 +23,7 @@ export default async function SpecialistDashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   
   if (!user) {
-    redirect('/auth/login')
+    return null
   }
   
   // Get user data with balance

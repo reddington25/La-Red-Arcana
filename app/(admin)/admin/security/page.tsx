@@ -7,7 +7,7 @@ export default async function SecurityDashboardPage() {
 
   // Verify super_admin access
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/auth/login')
+  if (!user) return null
 
   const { data: userData } = await supabase
     .from('users')

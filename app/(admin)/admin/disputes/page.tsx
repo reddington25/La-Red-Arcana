@@ -11,7 +11,7 @@ export default async function DisputesPage() {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/auth/login')
+    return null
   }
 
   // Verify user is admin

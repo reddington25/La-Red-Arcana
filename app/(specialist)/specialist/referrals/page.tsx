@@ -9,7 +9,7 @@ export default async function ReferralsPage() {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/auth/login')
+  if (!user) return null
 
   // Check if user is an ambassador
   const { data: userData } = await supabase

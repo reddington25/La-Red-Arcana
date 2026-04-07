@@ -14,7 +14,7 @@ export default async function SpecialistContractPage({ params }: { params: Promi
   const { data: { user } } = await supabase.auth.getUser()
   
   if (!user) {
-    redirect('/auth/login')
+    return null
   }
   
   const { id } = await params

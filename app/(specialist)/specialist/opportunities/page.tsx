@@ -8,7 +8,7 @@ export default async function OpportunitiesPage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/auth/login')
+    return null
   }
 
   // Get specialist's academic hierarchy

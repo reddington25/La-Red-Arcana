@@ -9,7 +9,7 @@ export default async function EscrowManagementPage() {
   const { data: { user } } = await supabase.auth.getUser()
   
   if (!user) {
-    redirect('/auth/login')
+    return null
   }
 
   // Fetch pending deposit contracts

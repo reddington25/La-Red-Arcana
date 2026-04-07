@@ -11,14 +11,15 @@ export default async function AdminLayout({
 }) {
   const supabase = await createClient()
   
-  // Check authentication
+  // Auth is already verified by proxy - just get user for role context
   const { data: { user } } = await supabase.auth.getUser()
   
   if (!user) {
-    redirect('/auth/login')
+    // Proxy should have caught this, defensive fallback
+    return null
   }
 
-  // Check if user is admin or super_admin
+  // We still need role data for the AdminNav
   const { data: userData } = await supabase
     .from('users')
     .select('role, is_verified')
@@ -26,11 +27,8 @@ export default async function AdminLayout({
     .single()
 
   if (!userData || !['admin', 'super_admin'].includes(userData.role)) {
-    redirect('/')
-  }
-
-  if (!userData.is_verified) {
-    redirect('/auth/pending')
+    // Proxy should handle this too, but keep as safety
+    return null
   }
 
   return (
