@@ -62,23 +62,40 @@ export default function LoginForm({ redirectTo, error }: LoginFormProps) {
     try {
       setIsLoading(true)
       setErrorMessage(undefined)
-      const res = await fetch('/api/auth/login', {
+
+      // Step 1: Check rate limit server-side
+      const rateCheck = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email })
       })
 
-      const data = await res.json()
+      const rateData = await rateCheck.json()
 
-      if (!res.ok) {
-        const errorMsg = data.error || 'Error al iniciar sesión. Por favor intenta de nuevo.'
+      if (!rateCheck.ok) {
+        const errorMsg = rateData.error || 'Demasiados intentos fallidos. Intenta más tarde.'
         setErrorMessage(errorMsg)
         showErrorToast(errorMsg)
         setIsLoading(false)
-      } else {
-        // Redirect will happen automatically via middleware or window.location
-        window.location.href = redirectTo || '/auth/callback'
+        return
       }
+
+      // Step 2: Sign in client-side so Supabase sets session cookies in the browser
+      const supabase = createClient()
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+
+      if (error) {
+        const errorMsg = error.message === 'Invalid login credentials'
+          ? 'Email o contraseña incorrectos'
+          : 'Error al iniciar sesión. Por favor intenta de nuevo.'
+        setErrorMessage(errorMsg)
+        showErrorToast(errorMsg)
+        setIsLoading(false)
+        return
+      }
+
+      // Step 3: Navigate to protected route - proxy will now see the session cookie
+      window.location.href = redirectTo || '/student/dashboard'
     } catch (err) {
       const errorMsg = 'Error inesperado. Por favor intenta de nuevo.'
       setErrorMessage(errorMsg)

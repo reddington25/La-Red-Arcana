@@ -11,11 +11,14 @@ export async function proxy(request: NextRequest) {
 
   // Public routes that don't require authentication
   const publicRoutes = ['/', '/auth/login', '/auth/callback', '/demo']
-  const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith('/auth/register'))
+  const isPublicRoute = publicRoutes.some(
+    route => pathname === route || pathname.startsWith('/auth/register') || pathname.startsWith('/auth/pending') || pathname.startsWith('/auth/logout') || pathname.startsWith('/auth/forgot') || pathname.startsWith('/auth/reset')
+  )
 
   // If demo mode OR Supabase not configured, allow all access
   const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
-  const isSupabaseConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL &&
+  const isSupabaseConfigured =
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
     process.env.NEXT_PUBLIC_SUPABASE_URL !== 'https://demo.supabase.co'
 
   if (isDemoMode || !isSupabaseConfigured) {
@@ -54,8 +57,10 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  // IMPORTANT: getUser() both validates the token AND refreshes/sets cookies via setAll above
-  const { data: { user } } = await supabase.auth.getUser()
+  // Use getSession() in proxy/edge context - reads JWT from cookie without external HTTP call.
+  // getUser() requires a network call to Supabase which can fail in edge/proxy context.
+  const { data: { session } } = await supabase.auth.getSession()
+  const user = session?.user ?? null
 
   // If user is not authenticated and trying to access a protected route, redirect to login
   if (!user && !isPublicRoute) {

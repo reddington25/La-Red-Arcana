@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 
 const MAX_FAILED_ATTEMPTS = 5
@@ -7,7 +6,7 @@ const LOCKOUT_MINUTES = 15
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json()
+    const { email } = await request.json()
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
 
     // We must use the service role key to insert into security_events because anon user is not logged in yet
@@ -38,32 +37,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 2. Attempt Login
-    const supabase = await createClient()
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    if (error) {
-      // 3. Log Failed Attempt
-      await supabaseAdmin.from('security_events').insert({
-        event_type: 'failed_login',
-        ip_address: ip,
-        details: { email },
-      })
-
-      const errorMsg = error.message === 'Invalid login credentials'
-        ? 'Email o contraseña incorrectos'
-        : 'Error al iniciar sesión. Por favor intenta de nuevo.'
-
-      return NextResponse.json({ error: errorMsg }, { status: 401 })
-    }
-
-    // Login successful
-    return NextResponse.json({ success: true, user: data.user })
+    // NOTE: We only check rate limiting here. Actual sign-in happens client-side
+    // so that Supabase can properly set session cookies in the browser.
+    return NextResponse.json({ allowed: true })
   } catch (err) {
-    console.error('[AUTH API] Unexpected error during login:', err)
+    console.error('[AUTH API] Unexpected error during login check:', err)
     return NextResponse.json(
       { error: 'Error inesperado. Por favor intenta de nuevo.' },
       { status: 500 }
