@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { GraduationCap, FileText, Tag, AlertCircle, CheckCircle, Upload } from 'lucide-react'
+import { GraduationCap, FileText, Tag, AlertCircle, CheckCircle, Upload, Building2, CreditCard, User, QrCode } from 'lucide-react'
 import { updateSpecialistProfile } from './actions'
 
 interface SpecialistProfileEditFormProps {
@@ -12,6 +12,11 @@ interface SpecialistProfileEditFormProps {
   currentSubjectTags: string[]
   pendingVerification: boolean
   userCreatedAt: string
+  currentBankName?: string | null
+  currentAccountNumber?: string | null
+  currentAccountHolderName?: string | null
+  currentAccountHolderCi?: string | null
+  currentPaymentQrUrl?: string | null
 }
 
 const AVAILABLE_TAGS = [
@@ -58,6 +63,20 @@ const ACADEMIC_STATUS_OPTIONS = [
   'Titulado'
 ]
 
+const BOLIVIAN_BANKS = [
+  'Banco Unión',
+  'Banco Nacional de Bolivia (BNB)',
+  'Banco de Crédito de Bolivia (BCP)',
+  'Banco Mercantil Santa Cruz (BMSC)',
+  'Banco FIE',
+  'Banco BISA',
+  'Banco Ganadero',
+  'Banco Económico',
+  'Banco Fortaleza',
+  'Banco Sol',
+  'Otro banco / Cooperativa'
+]
+
 export function SpecialistProfileEditForm({
   userId,
   currentAlias,
@@ -65,12 +84,25 @@ export function SpecialistProfileEditForm({
   currentAcademicStatus,
   currentSubjectTags,
   pendingVerification,
-  userCreatedAt
+  userCreatedAt,
+  currentBankName,
+  currentAccountNumber,
+  currentAccountHolderName,
+  currentAccountHolderCi,
+  currentPaymentQrUrl,
 }: SpecialistProfileEditFormProps) {
   const [alias, setAlias] = useState(currentAlias)
   const [cvFile, setCvFile] = useState<File | null>(null)
   const [academicStatus, setAcademicStatus] = useState(currentAcademicStatus)
   const [subjectTags, setSubjectTags] = useState<string[]>(currentSubjectTags)
+
+  // Bank Coordinates & QR states
+  const [bankName, setBankName] = useState(currentBankName || '')
+  const [accountNumber, setAccountNumber] = useState(currentAccountNumber || '')
+  const [accountHolderName, setAccountHolderName] = useState(currentAccountHolderName || '')
+  const [accountHolderCi, setAccountHolderCi] = useState(currentAccountHolderCi || '')
+  const [qrFile, setQrFile] = useState<File | null>(null)
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
@@ -109,11 +141,21 @@ export function SpecialistProfileEditForm({
       formData.append('cvFile', cvFile)
     }
 
+    // Append Bank coordinates
+    formData.append('bankName', bankName)
+    formData.append('accountNumber', accountNumber)
+    formData.append('accountHolderName', accountHolderName)
+    formData.append('accountHolderCi', accountHolderCi)
+    if (qrFile) {
+      formData.append('qrFile', qrFile)
+    }
+
     const result = await updateSpecialistProfile(formData)
 
     if (result.success) {
       setMessage({ type: 'success', text: result.message || 'Perfil actualizado exitosamente' })
       setCvFile(null) // Reset file input
+      setQrFile(null) // Reset QR input
     } else {
       setMessage({ type: 'error', text: result.error || 'Error al actualizar el perfil' })
     }
@@ -129,15 +171,139 @@ export function SpecialistProfileEditForm({
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
             <div>
-              <h3 className="font-semibold text-yellow-400 mb-1">Cambios en Revisión Administrativa</h3>
+              <h3 className="font-semibold text-yellow-400 mb-1">Cambios Académicos en Revisión</h3>
               <p className="text-sm text-yellow-300">
-                Tienes modificaciones en tu perfil pendientes de aprobación. 
+                Tienes modificaciones académicas pendientes de aprobación. 
                 Mientras tanto visualizarás tus datos anteriores.
               </p>
             </div>
           </div>
         </div>
       )}
+
+      {/* P2P Bank Coordinates Section */}
+      <div className="p-5 bg-gradient-to-r from-emerald-950/30 to-black/60 border border-emerald-500/30 rounded-xl space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-emerald-500/20 rounded-lg border border-emerald-500/30 text-emerald-400">
+            <Building2 className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-white">Datos de Cobro Directo P2P</h3>
+            <p className="text-xs text-gray-300">
+              Configura tu cuenta bancaria y código QR Simple para recibir el <strong>85% del pago acordado directamente</strong> de los estudiantes.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+          {/* Bank Name */}
+          <div>
+            <label htmlFor="bankName" className="block text-xs font-medium text-gray-300 mb-1">
+              Nombre de la Entidad Bancaria
+            </label>
+            <input
+              type="text"
+              id="bankName"
+              list="bolivian-banks-list"
+              value={bankName}
+              onChange={(e) => setBankName(e.target.value)}
+              placeholder="Ej. Banco Unión, BNB, BCP"
+              className="w-full px-3 py-2 bg-black/50 border border-emerald-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-emerald-500"
+            />
+            <datalist id="bolivian-banks-list">
+              {BOLIVIAN_BANKS.map((b) => (
+                <option key={b} value={b} />
+              ))}
+            </datalist>
+          </div>
+
+          {/* Account Number */}
+          <div>
+            <label htmlFor="accountNumber" className="block text-xs font-medium text-gray-300 mb-1">
+              Número de Cuenta Bancaria
+            </label>
+            <input
+              type="text"
+              id="accountNumber"
+              value={accountNumber}
+              onChange={(e) => setAccountNumber(e.target.value)}
+              placeholder="Ej. 10000012345678"
+              className="w-full px-3 py-2 bg-black/50 border border-emerald-500/30 rounded-lg text-white font-mono text-sm focus:outline-none focus:border-emerald-500"
+            />
+          </div>
+
+          {/* Account Holder Name */}
+          <div>
+            <label htmlFor="accountHolderName" className="block text-xs font-medium text-gray-300 mb-1">
+              Nombre Completo del Titular
+            </label>
+            <input
+              type="text"
+              id="accountHolderName"
+              value={accountHolderName}
+              onChange={(e) => setAccountHolderName(e.target.value)}
+              placeholder="Nombre como figura en el banco"
+              className="w-full px-3 py-2 bg-black/50 border border-emerald-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-emerald-500"
+            />
+          </div>
+
+          {/* Account Holder CI */}
+          <div>
+            <label htmlFor="accountHolderCi" className="block text-xs font-medium text-gray-300 mb-1">
+              C.I. / Documento de Identidad del Titular
+            </label>
+            <input
+              type="text"
+              id="accountHolderCi"
+              value={accountHolderCi}
+              onChange={(e) => setAccountHolderCi(e.target.value)}
+              placeholder="Ej. 1234567 LP"
+              className="w-full px-3 py-2 bg-black/50 border border-emerald-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-emerald-500"
+            />
+          </div>
+        </div>
+
+        {/* QR Code Upload */}
+        <div className="pt-2">
+          <label className="block text-xs font-medium text-gray-300 mb-1 flex items-center gap-2">
+            <QrCode className="w-4 h-4 text-emerald-400" />
+            Código QR Simple de Cobro (Imagen)
+          </label>
+
+          {currentPaymentQrUrl && !qrFile && (
+            <div className="mb-2 flex items-center gap-2">
+              <a
+                href={currentPaymentQrUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-emerald-400 hover:text-emerald-300 underline flex items-center gap-1"
+              >
+                Ver código QR actual
+              </a>
+            </div>
+          )}
+
+          <div className="relative">
+            <input
+              type="file"
+              id="qrFile"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={(e) => setQrFile(e.target.files?.[0] || null)}
+              className="hidden"
+            />
+            <label
+              htmlFor="qrFile"
+              className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-black/50 border border-emerald-500/30 rounded-lg text-gray-300 hover:border-emerald-500 cursor-pointer transition-colors text-xs font-medium"
+            >
+              <Upload className="w-4 h-4 text-emerald-400" />
+              {qrFile ? qrFile.name : (currentPaymentQrUrl ? 'Subir nuevo QR Simple' : 'Subir imagen de QR Simple (PNG, JPG, WEBP)')}
+            </label>
+          </div>
+          <p className="text-[11px] text-gray-500 mt-1">
+            Los estudiantes podrán escanear este QR directamente para transferirte el dinero de tus trabajos.
+          </p>
+        </div>
+      </div>
 
       {/* Alias Field */}
       <div>

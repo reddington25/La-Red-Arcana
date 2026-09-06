@@ -7,10 +7,16 @@ export type ContractStatus =
   | 'open'
   | 'assigned'
   | 'pending_deposit'
+  | 'pending_payment'
+  | 'payment_review'
   | 'in_progress'
   | 'completed'
   | 'disputed'
   | 'cancelled'
+
+export type SpecialistPaymentStatus = 'pending' | 'submitted' | 'confirmed' | 'rejected'
+
+export type PlatformFeeStatus = 'pending' | 'submitted' | 'confirmed' | 'waived'
 
 export type ServiceType = 'full' | 'review'
 
@@ -61,9 +67,26 @@ export interface ProfileDetails {
   pending_phone: string | null
   pending_verification: boolean | null
 
+  // Specialist bank coordinates & QR (P2P direct payment)
+  bank_name: string | null
+  account_number: string | null
+  account_holder_name: string | null
+  account_holder_ci: string | null
+  payment_qr_url: string | null
+
   created_at: string
   updated_at: string
+
+  // Array index compatibility for PostgREST 1-element array responses
+  0?: ProfileDetails
+  [index: number]: any
 }
+
+/**
+ * Type representing profile_details relation from PostgREST,
+ * supporting both single object access and 1-element array indexing.
+ */
+export type ProfileDetailsRelation = ProfileDetails
 
 export interface Contract {
   id: string
@@ -85,6 +108,16 @@ export interface Contract {
 
   initial_price: number
   final_price: number | null
+
+  // Financial Model P2P & Platform Fee fields
+  specialist_price: number | null
+  platform_fee: number | null
+  payment_proof_specialist_url: string | null
+  payment_proof_platform_url: string | null
+  specialist_payment_status: SpecialistPaymentStatus | null
+  platform_fee_status: PlatformFeeStatus | null
+  specialist_payment_confirmed_at: string | null
+  platform_fee_confirmed_at: string | null
 
   deadline: string | null
 
@@ -201,6 +234,30 @@ export interface VerificationRequest {
   reviewed_at: string | null
 }
 
+export interface PlatformTransaction {
+  id: string
+  contract_id: string
+  student_id: string
+  specialist_id: string
+  total_contract_price: number
+  specialist_direct_amount: number
+  platform_service_fee: number
+  platform_fee_status: PlatformFeeStatus
+  specialist_payment_status: SpecialistPaymentStatus
+  platform_proof_url: string | null
+  specialist_proof_url: string | null
+  invoice_number: string | null
+  created_at: string
+  confirmed_at: string | null
+  confirmed_by: string | null
+}
+
+export interface PlatformTransactionWithRelations extends PlatformTransaction {
+  contract?: Contract
+  student?: User & { profile_details?: ProfileDetailsRelation }
+  specialist?: User & { profile_details?: ProfileDetailsRelation }
+}
+
 // Extended types with relations
 export interface ContractWithRelations extends Contract {
   student?: User
@@ -211,7 +268,7 @@ export interface ContractWithRelations extends Contract {
 
 export interface OfferWithSpecialist extends Offer {
   specialist: User & {
-    profile_details: ProfileDetails
+    profile_details: ProfileDetailsRelation
   }
 }
 
@@ -221,7 +278,7 @@ export interface ReviewWithUsers extends Review {
 }
 
 export interface UserWithProfile extends User {
-  profile_details: ProfileDetails
+  profile_details: ProfileDetailsRelation
 }
 
 // Database response types

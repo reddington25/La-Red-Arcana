@@ -12,6 +12,16 @@ export interface Dispute {
   resolved_at: string | null
 }
 
+export interface DisputeProfileDetails {
+  alias?: string | null
+  real_name: string
+  0?: DisputeProfileDetails
+  [key: string]: any
+  [index: number]: any
+}
+
+export type DisputeProfileRelation = DisputeProfileDetails
+
 export interface DisputeWithDetails extends Dispute {
   contract: {
     id: string
@@ -25,25 +35,16 @@ export interface DisputeWithDetails extends Dispute {
     created_at: string
     student: {
       id: string
-      profile_details: {
-        alias?: string
-        real_name: string
-      }[]
+      profile_details: DisputeProfileRelation
     }
     specialist: {
       id: string
-      profile_details: {
-        alias?: string
-        real_name: string
-      }[]
+      profile_details: DisputeProfileRelation
     }
   }
   initiator: {
     id: string
     role: string
-    profile_details: {
-      alias?: string
-      real_name: string
-    }[]
+    profile_details: DisputeProfileRelation
   }
 }

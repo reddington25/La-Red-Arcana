@@ -7,6 +7,7 @@ import ContractChat from '@/components/chat/ContractChat'
 import WorkDelivery from './WorkDelivery'
 import { ReviewModalWrapper } from '@/components/reviews/ReviewModalWrapper'
 import InitiateDisputeButton from '@/components/disputes/InitiateDisputeButton'
+import SpecialistPaymentConfirmationCard from './SpecialistPaymentConfirmationCard'
 
 export default async function SpecialistContractPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient()
@@ -30,6 +31,14 @@ export default async function SpecialistContractPage({ params }: { params: Promi
       service_type,
       status,
       final_price,
+      specialist_price,
+      platform_fee,
+      payment_proof_specialist_url,
+      payment_proof_platform_url,
+      specialist_payment_status,
+      platform_fee_status,
+      specialist_payment_confirmed_at,
+      platform_fee_confirmed_at,
       file_urls,
       created_at,
       updated_at,
@@ -56,7 +65,7 @@ export default async function SpecialistContractPage({ params }: { params: Promi
         <div className="flex items-center gap-4 text-gray-400 text-sm">
           <div className="flex items-center gap-1">
             <User className="w-4 h-4" />
-            {(contract.student as any).profile_details?.[0]?.alias || 'N/A'}
+            {(contract.student as any).profile_details?.[0]?.alias || (contract.student as any).profile_details?.alias || 'N/A'}
           </div>
           <div className="flex items-center gap-1">
             <Clock className="w-4 h-4" />
@@ -70,27 +79,23 @@ export default async function SpecialistContractPage({ params }: { params: Promi
       </div>
       
       <div className="space-y-6">
-        {/* Status Message */}
-        {contract.status === 'assigned' && (
-          <div className="bg-blue-500/20 border border-blue-500/50 rounded-lg p-4">
-            <p className="text-blue-400">
-              El estudiante ha aceptado tu oferta. Esperando que el estudiante realice el depósito.
-            </p>
-          </div>
-        )}
-        
-        {contract.status === 'pending_deposit' && (
-          <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-4">
-            <p className="text-yellow-400">
-              El estudiante está coordinando el pago con el equipo administrativo. Te notificaremos cuando puedas comenzar.
-            </p>
-          </div>
-        )}
+        {/* Direct Payment Confirmation & Voucher Review */}
+        <SpecialistPaymentConfirmationCard
+          contractId={contract.id}
+          contractTitle={contract.title}
+          finalPrice={contract.final_price}
+          specialistPrice={contract.specialist_price}
+          platformFee={contract.platform_fee}
+          specialistPaymentStatus={contract.specialist_payment_status}
+          platformFeeStatus={contract.platform_fee_status}
+          paymentProofSpecialistUrl={contract.payment_proof_specialist_url}
+          specialistPaymentConfirmedAt={contract.specialist_payment_confirmed_at}
+        />
         
         {contract.status === 'in_progress' && (
           <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-4">
             <p className="text-green-400">
-              El pago ha sido confirmado. Puedes comenzar a trabajar en el proyecto.
+              El proyecto está en progreso. Comunícate mediante el chat del contrato y entrega tus avances o archivos finales.
             </p>
           </div>
         )}
@@ -222,6 +227,8 @@ function StatusBadge({ status }: { status: string }) {
   const statusConfig = {
     assigned: { label: 'Asignado', color: 'bg-blue-500/20 text-blue-400 border-blue-500/50' },
     pending_deposit: { label: 'Esperando Pago', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50' },
+    pending_payment: { label: 'Esperando Pago Directo', color: 'bg-amber-500/20 text-amber-400 border-amber-500/50' },
+    payment_review: { label: 'Pago en Revisión', color: 'bg-indigo-500/20 text-indigo-400 border-indigo-500/50' },
     in_progress: { label: 'En Progreso', color: 'bg-green-500/20 text-green-400 border-green-500/50' },
     completed: { label: 'Completado', color: 'bg-green-500/20 text-green-400 border-green-500/50' },
     disputed: { label: 'En Disputa', color: 'bg-red-500/20 text-red-400 border-red-500/50' },

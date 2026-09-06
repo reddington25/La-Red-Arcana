@@ -4,6 +4,106 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { uploadContractFiles } from '@/lib/supabase/storage'
 
+export async function confirmSpecialistPayment(contractId: string) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'No autenticado' }
+  }
+
+  // Verify user is the assigned specialist
+  const { data: contract, error: contractError } = await supabase
+    .from('contracts')
+    .select('id, student_id, specialist_id, status, title, platform_fee_status, specialist_payment_status')
+    .eq('id', contractId)
+    .single()
+
+  if (contractError || !contract) {
+    return { error: 'Contrato no encontrado' }
+  }
+
+  if (contract.specialist_id !== user.id) {
+    return { error: 'No autorizado como especialista de este contrato' }
+  }
+
+  if (contract.specialist_payment_status === 'confirmed') {
+    return { success: true, message: 'El pago directo ya estaba confirmado' }
+  }
+
+  const now = new Date().toISOString()
+  const contractUpdates: Record<string, any> = {
+    specialist_payment_status: 'confirmed',
+    specialist_payment_confirmed_at: now,
+    updated_at: now,
+  }
+
+  // If platform fee is also confirmed or waived, advance contract to in_progress
+  const isPlatformConfirmed = contract.platform_fee_status === 'confirmed' || contract.platform_fee_status === 'waived'
+  if (isPlatformConfirmed) {
+    contractUpdates.status = 'in_progress'
+  }
+
+  const { error: updateError } = await supabase
+    .from('contracts')
+    .update(contractUpdates)
+    .eq('id', contractId)
+
+  if (updateError) {
+    console.error('Error confirming specialist payment:', updateError)
+    return { error: 'Error al confirmar la recepción del pago' }
+  }
+
+  // Update platform_transactions ledger
+  await supabase
+    .from('platform_transactions')
+    .update({
+      specialist_payment_status: 'confirmed',
+    })
+    .eq('contract_id', contractId)
+
+  // Notify student about payment confirmation
+  await supabase.from('notifications').insert({
+    user_id: contract.student_id,
+    type: 'payment_confirmed',
+    title: 'Pago directo confirmado',
+    message: `El especialista confirmó la recepción de tu pago directo para "${contract.title}".`,
+    link: `/student/contracts/${contractId}`,
+    read: false,
+  })
+
+  // If contract moved to in_progress, notify both
+  if (isPlatformConfirmed) {
+    await supabase.from('notifications').insert([
+      {
+        user_id: contract.student_id,
+        type: 'contract_started',
+        title: 'Contrato en progreso',
+        message: `Todos los pagos de "${contract.title}" fueron verificados. El especialista ya puede comenzar a trabajar.`,
+        link: `/student/contracts/${contractId}`,
+        read: false,
+      },
+      {
+        user_id: contract.specialist_id,
+        type: 'contract_started',
+        title: '¡A trabajar en el contrato!',
+        message: `Todos los pagos de "${contract.title}" están confirmados. Ya puedes comenzar a trabajar.`,
+        link: `/specialist/contracts/${contractId}`,
+        read: false,
+      },
+    ])
+  }
+
+  revalidatePath(`/specialist/contracts/${contractId}`)
+  revalidatePath(`/specialist/dashboard`)
+  revalidatePath(`/student/contracts/${contractId}`)
+
+  return { success: true }
+}
+
 export async function uploadDeliveryFiles(formData: FormData) {
   const supabase = await createClient()
 
@@ -43,7 +143,7 @@ export async function uploadDeliveryFiles(formData: FormData) {
 
   try {
     // Upload files to Supabase Storage
-    const uploadResults = await uploadContractFiles(contractId, files, 'delivery')
+    const uploadResults = await uploadContractFiles(contractId, files, 'delivery', supabase)
 
     // Check for upload errors
     const errors = uploadResults.filter(r => r.error)

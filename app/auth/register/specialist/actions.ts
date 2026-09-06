@@ -41,7 +41,7 @@ export async function completeSpecialistProfile(formData: FormData) {
 
   try {
     // Upload CI file
-    const ciUploadResult = await uploadUserDocument(user.id, ciFile, 'ci')
+    const ciUploadResult = await uploadUserDocument(user.id, ciFile, 'ci', supabase)
     if (ciUploadResult.error) {
       return { error: `Error al subir CI: ${ciUploadResult.error}` }
     }
@@ -49,7 +49,7 @@ export async function completeSpecialistProfile(formData: FormData) {
     // Upload CV file if provided
     let cvUrl: string | null = null
     if (cvFile && cvFile.size > 0) {
-      const cvUploadResult = await uploadUserDocument(user.id, cvFile, 'cv')
+      const cvUploadResult = await uploadUserDocument(user.id, cvFile, 'cv', supabase)
       if (cvUploadResult.error) {
         return { error: `Error al subir CV: ${cvUploadResult.error}` }
       }

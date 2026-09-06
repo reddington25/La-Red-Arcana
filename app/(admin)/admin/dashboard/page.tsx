@@ -30,7 +30,7 @@ export default async function AdminDashboard() {
 
   const [
     { count: pendingVerifications },
-    { count: pendingDeposits },
+    { count: pendingCommissions },
     { count: activeDisputes },
     { count: pendingWithdrawals },
   ] = await Promise.all([
@@ -41,7 +41,7 @@ export default async function AdminDashboard() {
     adminClient
       .from('contracts')
       .select('*', { count: 'exact', head: true })
-      .eq('status', 'pending_deposit'),
+      .in('status', ['pending_payment', 'payment_review', 'pending_deposit']),
     adminClient
       .from('disputes')
       .select('*', { count: 'exact', head: true })
@@ -64,9 +64,9 @@ export default async function AdminDashboard() {
       href: '/admin/verifications',
     },
     {
-      title: 'Depósitos Pendientes',
-      description: 'Pagos esperando confirmación',
-      value: pendingDeposits || 0,
+      title: 'Comisiones Pendientes',
+      description: 'Pagos y comisiones en revisión',
+      value: pendingCommissions || 0,
       icon: Clock,
       color: 'text-yellow-400',
       bgColor: 'bg-yellow-500/20',
@@ -152,10 +152,10 @@ export default async function AdminDashboard() {
           >
             <DollarSign className="w-6 h-6 text-green-400 mx-auto mb-2" />
             <span className="text-white text-sm font-medium block mb-1">
-              Gestionar Pagos
+              Gestionar Comisiones
             </span>
             <span className="text-gray-500 text-xs">
-              Depósitos y retiros
+              Comisiones de plataforma y retiros
             </span>
           </Link>
           <Link

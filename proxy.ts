@@ -86,19 +86,6 @@ export async function proxy(request: NextRequest) {
       return response
     }
 
-    // Check profile completeness (only block if NOT on registration or callback)
-    if (!pathname.startsWith('/auth/register') && !pathname.startsWith('/auth/callback')) {
-      const { data: profileData } = await supabase
-        .from('profile_details')
-        .select('id')
-        .eq('user_id', user.id)
-        .single()
-
-      if (!profileData) {
-        return NextResponse.redirect(new URL('/auth/register', request.url))
-      }
-    }
-
     // Unverified users → send to pending (except logout/pending/register)
     if (
       !userData.is_verified &&
@@ -119,6 +106,35 @@ export async function proxy(request: NextRequest) {
       }
       if (pathname.startsWith('/admin') && !['admin', 'super_admin'].includes(userData.role)) {
         return NextResponse.redirect(new URL('/', request.url))
+      }
+    }
+
+    // Profile completeness check:
+    // 1. admin and super_admin bypass the profile_details requirement completely.
+    // 2. For student and specialist roles, handle missing profiles gracefully without triggering
+    //    an infinite redirect loop with /auth/register (which redirects existing DB users back to dashboard).
+    const isAdmin = ['admin', 'super_admin'].includes(userData.role)
+
+    if (!isAdmin && userData.is_verified) {
+      const isPublicOrAuthPath =
+        isPublicRoute ||
+        pathname.startsWith('/auth/') ||
+        pathname === '/' ||
+        pathname === '/demo'
+
+      if (!isPublicOrAuthPath) {
+        const { data: profileData } = await supabase
+          .from('profile_details')
+          .select('id')
+          .eq('user_id', user.id)
+          .single()
+
+        if (!profileData) {
+          const profilePath = userData.role === 'specialist' ? '/specialist/profile' : '/student/profile'
+          if (pathname !== profilePath && !pathname.startsWith(`${profilePath}/`)) {
+            return NextResponse.redirect(new URL(profilePath, request.url))
+          }
+        }
       }
     }
 

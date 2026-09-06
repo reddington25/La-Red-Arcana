@@ -51,7 +51,7 @@ export default async function SpecialistDashboardPage() {
     .eq('user_id', user.id)
     .single()
   
-  // Get active contracts (assigned, pending_deposit, in_progress)
+  // Get active contracts (assigned, pending_deposit, pending_payment, payment_review, in_progress)
   const { data: activeContracts } = await supabase
     .from('contracts')
     .select(`
@@ -59,6 +59,8 @@ export default async function SpecialistDashboardPage() {
       title,
       status,
       final_price,
+      specialist_price,
+      platform_fee,
       created_at,
       updated_at,
       student:users!student_id (
@@ -68,7 +70,7 @@ export default async function SpecialistDashboardPage() {
       )
     `)
     .eq('specialist_id', user.id)
-    .in('status', ['assigned', 'pending_deposit', 'in_progress'])
+    .in('status', ['assigned', 'pending_deposit', 'pending_payment', 'payment_review', 'in_progress'])
     .order('updated_at', { ascending: false })
   
   // Get completed contracts
@@ -78,6 +80,7 @@ export default async function SpecialistDashboardPage() {
       id,
       title,
       final_price,
+      specialist_price,
       completed_at,
       student:users!student_id (
         profile_details (
@@ -96,17 +99,15 @@ export default async function SpecialistDashboardPage() {
     .select('id', { count: 'exact', head: true })
     .eq('specialist_id', user.id)
   
-  // Calculate balance after commission (15%)
+  // Available platform balance (ambassador earnings & legacy balance - no double discount)
   const balance = userData?.balance || 0
   const ambassadorBalance = userData?.ambassador_balance || 0
-  const balanceAfterCommission = balance * 0.85
-  const totalAvailableBalance = balanceAfterCommission + ambassadorBalance
+  const totalAvailableBalance = balance + ambassadorBalance
   
-  // Calculate total earnings
+  // Calculate total earnings from completed contracts (specialist direct 85% share)
   const totalEarnings = completedContracts?.reduce((sum, contract) => 
-    sum + (contract.final_price || 0), 0
+    sum + (contract.specialist_price || ((contract.final_price || 0) * 0.85)), 0
   ) || 0
-  const totalEarningsAfterCommission = totalEarnings * 0.85
   
   return (
     <div className="max-w-7xl mx-auto">
@@ -221,16 +222,16 @@ export default async function SpecialistDashboardPage() {
           </div>
         </div>
         
-        <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg p-6" title="Total ganado en contratos completados">
+        <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg p-6" title="Total ganado en contratos completados mediante pago directo P2P">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-gray-400 text-sm">Ganancias Totales</div>
+            <div className="text-gray-400 text-sm">Ganancias en Contratos</div>
             <TrendingUp className="w-5 h-5 text-green-400" />
           </div>
           <div className="text-3xl font-bold text-white">
-            Bs. {totalEarningsAfterCommission.toFixed(2)}
+            Bs. {totalEarnings.toFixed(2)}
           </div>
           <div className="text-xs text-gray-500 mt-1">
-            Después de comisión (15%)
+            Pago directo P2P (85% neto acordado)
           </div>
         </div>
       </div>
@@ -239,18 +240,19 @@ export default async function SpecialistDashboardPage() {
       <div className="bg-gradient-to-br from-red-500/20 to-black/50 backdrop-blur border border-red-500/50 rounded-lg p-6 mb-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <div className="text-gray-400 text-sm mb-1">Saldo Disponible para Retiro</div>
+            <div className="text-gray-400 text-sm mb-1">Saldo en Plataforma para Retiro</div>
             <div className="text-4xl font-bold text-white mb-2">
               Bs. {totalAvailableBalance.toFixed(2)}
             </div>
             <div className="text-sm text-gray-400">
-              Saldo bruto: Bs. {balance.toFixed(2)} - Comisión 15%: Bs. {(balance * 0.15).toFixed(2)}
+              Saldo acumulado: Bs. {balance.toFixed(2)}
               {ambassadorBalance > 0 && (
-                <span> + Red: Bs. {ambassadorBalance.toFixed(2)}</span>
+                <span> + Ganancias de Red: Bs. {ambassadorBalance.toFixed(2)}</span>
               )}
             </div>
-            <div className="text-xs text-gray-500 mt-1">
-              💡 El saldo se acredita cuando el usuario confirma el proyecto completado
+            <div className="text-xs text-emerald-400 mt-2 flex items-start gap-1.5 max-w-2xl">
+              <span className="flex-shrink-0">💡</span>
+              <span><strong>Modelo P2P Directo:</strong> Los contratos se pagan directamente a tu cuenta bancaria o QR. Este saldo para retiro corresponde a recompensas del programa de embajadores o saldo previo en plataforma.</span>
             </div>
           </div>
           
@@ -263,7 +265,7 @@ export default async function SpecialistDashboardPage() {
         {totalAvailableBalance < 50 && (
           <div className="mt-4 text-sm text-yellow-400 flex items-center gap-2">
             <Clock className="w-4 h-4" />
-            El monto mínimo para solicitar retiro es Bs. 50
+            El monto mínimo para solicitar retiro de saldo es Bs. 50
           </div>
         )}
       </div>
@@ -328,7 +330,7 @@ export default async function SpecialistDashboardPage() {
                       Bs. {contract.final_price?.toFixed(2)}
                     </div>
                     <div className="text-sm text-gray-400">
-                      Tu ganancia: Bs. {((contract.final_price || 0) * 0.85).toFixed(2)}
+                      Tu ganancia: Bs. {(contract.specialist_price || ((contract.final_price || 0) * 0.85)).toFixed(2)}
                     </div>
                   </div>
                 </div>
@@ -364,7 +366,7 @@ export default async function SpecialistDashboardPage() {
                     <div className="text-sm text-gray-400 mt-1">
                       Usuario: {(contract.student as any).profile_details?.[0]?.alias || 'N/A'} • 
                       Completado {formatDistanceToNow(new Date(contract.completed_at!), { 
-                        addSuffix: true,
+                        addSuffix: true, 
                         locale: es 
                       })}
                     </div>
@@ -372,7 +374,7 @@ export default async function SpecialistDashboardPage() {
                   
                   <div className="text-right">
                     <div className="text-lg font-semibold text-green-400">
-                      +Bs. {((contract.final_price || 0) * 0.85).toFixed(2)}
+                      +Bs. {(contract.specialist_price || ((contract.final_price || 0) * 0.85)).toFixed(2)}
                     </div>
                   </div>
                 </div>
@@ -394,6 +396,8 @@ function StatusBadge({ status }: { status: string }) {
   const statusConfig = {
     assigned: { label: 'Asignado', color: 'bg-blue-500/20 text-blue-400 border-blue-500/50' },
     pending_deposit: { label: 'Esperando Pago', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50' },
+    pending_payment: { label: 'Esperando Pago Directo', color: 'bg-amber-500/20 text-amber-400 border-amber-500/50' },
+    payment_review: { label: 'Pago en Revisión', color: 'bg-indigo-500/20 text-indigo-400 border-indigo-500/50' },
     in_progress: { label: 'En Progreso', color: 'bg-green-500/20 text-green-400 border-green-500/50' },
   }
   

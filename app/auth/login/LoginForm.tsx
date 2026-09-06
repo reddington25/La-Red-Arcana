@@ -17,6 +17,13 @@ export default function LoginForm({ redirectTo, error }: LoginFormProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
+  // Validate redirectTo to prevent open redirect vulnerabilities:
+  // Only accept safe relative paths starting with a single '/'
+  const safeRedirect =
+    typeof redirectTo === 'string' && redirectTo.startsWith('/') && !redirectTo.startsWith('//')
+      ? redirectTo
+      : undefined
+
   async function handleGoogleSignIn() {
     try {
       setIsLoading(true)
@@ -26,8 +33,8 @@ export default function LoginForm({ redirectTo, error }: LoginFormProps) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectTo 
-            ? `${window.location.origin}/auth/callback?redirectTo=${redirectTo}` 
+          redirectTo: safeRedirect 
+            ? `${window.location.origin}/auth/callback?redirectTo=${safeRedirect}` 
             : `${window.location.origin}/auth/callback`,
           queryParams: {
             access_type: 'offline',
@@ -82,7 +89,7 @@ export default function LoginForm({ redirectTo, error }: LoginFormProps) {
 
       // Step 2: Sign in client-side so Supabase sets session cookies in the browser
       const supabase = createClient()
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password })
 
       if (error) {
         const errorMsg = error.message === 'Invalid login credentials'
@@ -94,8 +101,30 @@ export default function LoginForm({ redirectTo, error }: LoginFormProps) {
         return
       }
 
-      // Step 3: Navigate to protected route - proxy will now see the session cookie
-      window.location.href = redirectTo || '/student/dashboard'
+      // Step 3: Navigate to protected route with role awareness
+      let destination = safeRedirect
+
+      // If no redirectTo is supplied or if it points to default student dashboard, query role
+      if (authData?.user && (!destination || destination === '/student/dashboard')) {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', authData.user.id)
+          .single()
+
+        const dashboardMap: Record<string, string> = {
+          specialist: '/specialist/dashboard',
+          admin: '/admin/dashboard',
+          super_admin: '/admin/dashboard',
+          student: '/student/dashboard',
+        }
+
+        if (userData?.role && dashboardMap[userData.role]) {
+          destination = dashboardMap[userData.role]
+        }
+      }
+
+      window.location.href = destination || '/student/dashboard'
     } catch (err) {
       const errorMsg = 'Error inesperado. Por favor intenta de nuevo.'
       setErrorMessage(errorMsg)

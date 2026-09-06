@@ -1,6 +1,10 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+/**
+ * @deprecated This middleware is orphaned and superseded by proxy.ts at the project root.
+ * Edge routing, session management, and role protection are handled by proxy.ts.
+ */
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({
     request: {

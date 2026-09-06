@@ -7,13 +7,20 @@ export interface Message {
   created_at: string
 }
 
+export interface MessageProfileDetails {
+  alias?: string | null
+  real_name: string
+  0?: MessageProfileDetails
+  [key: string]: any
+  [index: number]: any
+}
+
+export type MessageProfileRelation = MessageProfileDetails
+
 export interface MessageWithSender extends Message {
   sender: {
     id: string
     role: string
-    profile_details: {
-      alias?: string
-      real_name: string
-    }[]
+    profile_details: MessageProfileRelation
   }
 }

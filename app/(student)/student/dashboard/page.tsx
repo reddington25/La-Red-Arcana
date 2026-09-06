@@ -23,6 +23,16 @@ const STATUS_CONFIG: Record<ContractStatus, { label: string; icon: any; color: s
     icon: Clock,
     color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/30',
   },
+  pending_payment: {
+    label: 'Pendiente de Pago Directo',
+    icon: Clock,
+    color: 'text-amber-400 bg-amber-500/10 border-amber-500/30',
+  },
+  payment_review: {
+    label: 'Pago en Revisión',
+    icon: Clock,
+    color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/30',
+  },
   in_progress: {
     label: 'En Progreso',
     icon: Clock,

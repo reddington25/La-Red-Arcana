@@ -13,6 +13,10 @@ export interface CreateContractFormData {
   initialPrice: number
 }
 
+/**
+ * @deprecated ContractForm directly posts to the /api/contracts Route Handler to prevent cookie/session
+ * dropouts during multipart file uploads. This Server Action is preserved for backward compatibility.
+ */
 export async function createContract(formData: CreateContractFormData, files: File[]) {
   console.log('[CREATE CONTRACT] Starting...')
   
@@ -96,7 +100,7 @@ export async function createContract(formData: CreateContractFormData, files: Fi
   // Upload files if any
   let fileUrls: string[] = []
   if (files && files.length > 0) {
-    const uploadResults = await uploadContractFiles(contract.id, files)
+    const uploadResults = await uploadContractFiles(contract.id, files, undefined, supabase)
     
     // Check for upload errors
     const uploadErrors = uploadResults.filter(r => r.error)

@@ -1,4 +1,5 @@
-import { createClient } from './client'
+import { createClient as createBrowserClient } from './client'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
@@ -11,14 +12,28 @@ export interface UploadResult {
 }
 
 /**
+ * Resolves a Supabase client for storage operations:
+ * - If an explicit client is provided, uses it directly.
+ * - Otherwise returns createBrowserClient() from './client'.
+ */
+export function resolveStorageClient(client?: SupabaseClient | any): SupabaseClient | any {
+  if (client) {
+    return client
+  }
+  return createBrowserClient()
+}
+
+
+/**
  * Upload a file to Supabase Storage
  */
 export async function uploadFile(
   bucket: StorageBucket,
   path: string,
-  file: File
+  file: File,
+  client?: SupabaseClient | any
 ): Promise<UploadResult> {
-  const supabase = createClient()
+  const supabase = await resolveStorageClient(client)
 
   // Validate file size
   if (file.size > MAX_FILE_SIZE) {
@@ -62,15 +77,17 @@ export async function uploadFile(
 export async function uploadContractFiles(
   contractId: string,
   files: File[],
-  subfolder?: string
+  subfolder?: string,
+  client?: SupabaseClient | any
 ): Promise<UploadResult[]> {
+  const supabase = await resolveStorageClient(client)
   const results: UploadResult[] = []
 
   for (const file of files) {
     const timestamp = Date.now()
     const folder = subfolder ? `${contractId}/${subfolder}` : contractId
     const fileName = `${folder}/${timestamp}-${file.name}`
-    const result = await uploadFile('contract-files', fileName, file)
+    const result = await uploadFile('contract-files', fileName, file, supabase)
     results.push(result)
   }
 
@@ -83,11 +100,12 @@ export async function uploadContractFiles(
 export async function uploadUserDocument(
   userId: string,
   file: File,
-  documentType: 'ci' | 'cv'
+  documentType: 'ci' | 'cv',
+  client?: SupabaseClient | any
 ): Promise<UploadResult> {
   const extension = file.name.split('.').pop()
   const fileName = `${userId}/${documentType}.${extension}`
-  return uploadFile('user-documents', fileName, file)
+  return uploadFile('user-documents', fileName, file, client)
 }
 
 /**
@@ -95,11 +113,12 @@ export async function uploadUserDocument(
  */
 export async function uploadPaymentQR(
   contractId: string,
-  file: File
+  file: File,
+  client?: SupabaseClient | any
 ): Promise<UploadResult> {
   const timestamp = Date.now()
   const fileName = `${contractId}/${timestamp}-qr.png`
-  return uploadFile('payment-qrs', fileName, file)
+  return uploadFile('payment-qrs', fileName, file, client)
 }
 
 /**
@@ -107,9 +126,10 @@ export async function uploadPaymentQR(
  */
 export async function downloadFile(
   bucket: StorageBucket,
-  path: string
+  path: string,
+  client?: SupabaseClient | any
 ): Promise<Blob | null> {
-  const supabase = createClient()
+  const supabase = await resolveStorageClient(client)
 
   const { data, error } = await supabase.storage
     .from(bucket)
@@ -128,9 +148,10 @@ export async function downloadFile(
  */
 export async function deleteFile(
   bucket: StorageBucket,
-  path: string
+  path: string,
+  client?: SupabaseClient | any
 ): Promise<boolean> {
-  const supabase = createClient()
+  const supabase = await resolveStorageClient(client)
 
   const { error } = await supabase.storage
     .from(bucket)
@@ -150,9 +171,10 @@ export async function deleteFile(
 export async function getSignedUrl(
   bucket: StorageBucket,
   path: string,
-  expiresIn: number = 3600 // 1 hour default
+  expiresIn: number = 3600, // 1 hour default
+  client?: SupabaseClient | any
 ): Promise<string | null> {
-  const supabase = createClient()
+  const supabase = await resolveStorageClient(client)
 
   const { data, error } = await supabase.storage
     .from(bucket)

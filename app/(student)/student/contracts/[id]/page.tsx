@@ -9,11 +9,14 @@ import ContractChat from '@/components/chat/ContractChat'
 import WorkDelivery from './WorkDelivery'
 import { ReviewModalWrapper } from '@/components/reviews/ReviewModalWrapper'
 import InitiateDisputeButton from '@/components/disputes/InitiateDisputeButton'
+import DirectPaymentHub from './DirectPaymentHub'
 
 const STATUS_CONFIG = {
   open: { label: 'Abierto', color: 'text-blue-400 bg-blue-500/10 border-blue-500/30' },
   assigned: { label: 'Asignado', color: 'text-green-400 bg-green-500/10 border-green-500/30' },
   pending_deposit: { label: 'Pendiente de Pago', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/30' },
+  pending_payment: { label: 'Pendiente de Pago Directo', color: 'text-amber-400 bg-amber-500/10 border-amber-500/30' },
+  payment_review: { label: 'Pago en Revisión', color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/30' },
   in_progress: { label: 'En Progreso', color: 'text-purple-400 bg-purple-500/10 border-purple-500/30' },
   completed: { label: 'Completado', color: 'text-green-400 bg-green-500/10 border-green-500/30' },
   disputed: { label: 'En Disputa', color: 'text-red-400 bg-red-500/10 border-red-500/30' },
@@ -50,7 +53,13 @@ export default async function ContractDetailPage({
         total_reviews,
         profile_details (
           alias,
-          real_name
+          real_name,
+          phone,
+          bank_name,
+          account_number,
+          account_holder_name,
+          account_holder_ci,
+          payment_qr_url
         )
       )
     `)
@@ -292,29 +301,20 @@ export default async function ContractDetailPage({
             </div>
           )}
 
-          {/* Status Help */}
-          {contract.status === 'pending_deposit' && (
-            <>
-              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-                <h3 className="text-yellow-400 font-semibold mb-2">Siguiente Paso</h3>
-                <p className="text-sm text-gray-300">
-                  Un administrador te contactará pronto para coordinar el pago del depósito.
-                </p>
-              </div>
-
-              {/* Admin Communication */}
-              <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <MessageCircle className="w-5 h-5" />
-                  Comunicación con Admin
-                </h3>
-                
-                <div className="space-y-4">
-                  <AdminMessagesList userId={user.id} contractId={contract.id} />
-                  <SendMessageToAdmin userId={user.id} contractId={contract.id} />
-                </div>
-              </div>
-            </>
+          {/* Direct Payment Hub */}
+          {(contract.status === 'pending_payment' || contract.status === 'payment_review' || contract.status === 'pending_deposit') && (
+            <DirectPaymentHub
+              contractId={contract.id}
+              contractTitle={contract.title}
+              finalPrice={contract.final_price}
+              specialistPrice={contract.specialist_price}
+              platformFee={contract.platform_fee}
+              paymentProofSpecialistUrl={contract.payment_proof_specialist_url}
+              paymentProofPlatformUrl={contract.payment_proof_platform_url}
+              specialistPaymentStatus={contract.specialist_payment_status}
+              platformFeeStatus={contract.platform_fee_status}
+              specialist={contract.specialist as any}
+            />
           )}
 
           {contract.status === 'in_progress' && (
@@ -379,7 +379,13 @@ export default async function ContractDetailPage({
           currentUserId={user.id}
           contractStatus={contract.status}
           otherUserId={contract.specialist.id}
-          otherUserName={contract.specialist.profile_details.alias || contract.specialist.profile_details.real_name}
+          otherUserName={
+            (contract.specialist.profile_details as any)?.alias || 
+            (contract.specialist.profile_details as any)?.real_name || 
+            (contract.specialist.profile_details as any)?.[0]?.alias || 
+            (contract.specialist.profile_details as any)?.[0]?.real_name || 
+            'Especialista'
+          }
         />
       )}
     </div>

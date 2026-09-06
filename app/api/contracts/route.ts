@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
     // Upload files if any
     let fileUrls: string[] = []
     if (files && files.length > 0) {
-      const uploadResults = await uploadContractFiles(contract.id, files)
+      const uploadResults = await uploadContractFiles(contract.id, files, undefined, supabase)
 
       // Check for upload errors
       const uploadErrors = uploadResults.filter(r => r.error)
