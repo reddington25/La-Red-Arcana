@@ -14,6 +14,8 @@ interface LoginFormProps {
 export default function LoginForm({ redirectTo, error }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState(error)
+  const [successMessage, setSuccessMessage] = useState<string>()
+  const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
@@ -23,6 +25,54 @@ export default function LoginForm({ redirectTo, error }: LoginFormProps) {
     typeof redirectTo === 'string' && redirectTo.startsWith('/') && !redirectTo.startsWith('//')
       ? redirectTo
       : undefined
+
+  async function handleEmailSignUp(e: React.FormEvent) {
+    e.preventDefault()
+
+    if (!email || !password) {
+      setErrorMessage('Por favor ingresa tu email y contraseña')
+      return
+    }
+
+    if (password.length < 6) {
+      setErrorMessage('La contraseña debe tener al menos 6 caracteres')
+      return
+    }
+
+    try {
+      setIsLoading(true)
+      setErrorMessage(undefined)
+      setSuccessMessage(undefined)
+
+      const supabase = createClient()
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?redirectTo=${safeRedirect || '/auth/register'}`
+        }
+      })
+
+      if (signUpError) {
+        setErrorMessage(signUpError.message)
+        showErrorToast(signUpError.message)
+        setIsLoading(false)
+        return
+      }
+
+      if (data.session) {
+        window.location.href = safeRedirect || '/auth/register'
+      } else {
+        setSuccessMessage('¡Cuenta creada exitosamente! Revisa tu correo para confirmar tu registro o inicia sesión.')
+        setIsLoading(false)
+      }
+    } catch (err) {
+      const errorMsg = 'Error inesperado al crear la cuenta. Por favor intenta de nuevo.'
+      setErrorMessage(errorMsg)
+      showErrorToast(errorMsg)
+      setIsLoading(false)
+    }
+  }
 
   async function handleGoogleSignIn() {
     try {
@@ -141,12 +191,46 @@ export default function LoginForm({ redirectTo, error }: LoginFormProps) {
           Red Arcana
         </h1>
         <p className="text-gray-400">
-          Inicia sesión para continuar
+          {isSignUp ? 'Crea tu cuenta para comenzar' : 'Inicia sesión para continuar'}
         </p>
       </div>
 
       {/* Login Card */}
       <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg p-8">
+        {/* Tab Switcher */}
+        <div className="flex border-b border-gray-700 mb-6">
+          <button
+            type="button"
+            onClick={() => {
+              setIsSignUp(false)
+              setErrorMessage(undefined)
+              setSuccessMessage(undefined)
+            }}
+            className={`flex-1 py-3 text-center font-semibold text-sm transition-colors border-b-2 ${
+              !isSignUp
+                ? 'border-red-500 text-white'
+                : 'border-transparent text-gray-400 hover:text-gray-200'
+            }`}
+          >
+            Iniciar Sesión
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setIsSignUp(true)
+              setErrorMessage(undefined)
+              setSuccessMessage(undefined)
+            }}
+            className={`flex-1 py-3 text-center font-semibold text-sm transition-colors border-b-2 ${
+              isSignUp
+                ? 'border-red-500 text-white'
+                : 'border-transparent text-gray-400 hover:text-gray-200'
+            }`}
+          >
+            Crear Cuenta
+          </button>
+        </div>
+
         {/* Error Message */}
         {errorMessage && (
           <div className="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-lg">
@@ -156,6 +240,15 @@ export default function LoginForm({ redirectTo, error }: LoginFormProps) {
                 : errorMessage === 'incomplete_registration'
                 ? 'Tu registro no se completó correctamente. Por favor regístrate de nuevo.'
                 : errorMessage}
+            </p>
+          </div>
+        )}
+
+        {/* Success Message */}
+        {successMessage && (
+          <div className="mb-6 p-4 bg-green-500/10 border border-green-500/50 rounded-lg">
+            <p className="text-green-400 text-sm">
+              {successMessage}
             </p>
           </div>
         )}
@@ -170,7 +263,7 @@ export default function LoginForm({ redirectTo, error }: LoginFormProps) {
           {isLoading ? (
             <>
               <LoadingSpinner size="sm" className="text-gray-900" />
-              <span>Iniciando sesión...</span>
+              <span>Cargando...</span>
             </>
           ) : (
             <>
@@ -192,7 +285,7 @@ export default function LoginForm({ redirectTo, error }: LoginFormProps) {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              <span>Continuar con Google</span>
+              <span>{isSignUp ? 'Registrarse con Google' : 'Continuar con Google'}</span>
             </>
           )}
         </button>
@@ -205,7 +298,7 @@ export default function LoginForm({ redirectTo, error }: LoginFormProps) {
         </div>
 
         {/* Email/Password Form */}
-        <form onSubmit={handleEmailSignIn} className="space-y-4">
+        <form onSubmit={isSignUp ? handleEmailSignUp : handleEmailSignIn} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
               Email
@@ -231,21 +324,23 @@ export default function LoginForm({ redirectTo, error }: LoginFormProps) {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder="Mínimo 6 caracteres"
               disabled={isLoading}
               className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-500 disabled:opacity-50"
               required
             />
           </div>
 
-          <div className="flex items-center justify-end">
-            <Link
-              href="/auth/forgot-password"
-              className="text-sm text-red-400 hover:text-red-300 transition-colors"
-            >
-              ¿Olvidaste tu contraseña?
-            </Link>
-          </div>
+          {!isSignUp && (
+            <div className="flex items-center justify-end">
+              <Link
+                href="/auth/forgot-password"
+                className="text-sm text-red-400 hover:text-red-300 transition-colors"
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
+          )}
 
           <button
             type="submit"
@@ -255,10 +350,10 @@ export default function LoginForm({ redirectTo, error }: LoginFormProps) {
             {isLoading ? (
               <div className="flex items-center justify-center gap-2">
                 <LoadingSpinner size="sm" />
-                <span>Iniciando sesión...</span>
+                <span>{isSignUp ? 'Creando cuenta...' : 'Iniciando sesión...'}</span>
               </div>
             ) : (
-              'Iniciar Sesión'
+              isSignUp ? 'Crear Cuenta' : 'Iniciar Sesión'
             )}
           </button>
         </form>
@@ -271,20 +366,20 @@ export default function LoginForm({ redirectTo, error }: LoginFormProps) {
         {/* Register Links */}
         <div className="space-y-3">
           <p className="text-center text-sm text-gray-400">
-            ¿No tienes una cuenta?
+            {isSignUp ? '¿Prefieres seleccionar tu rol primero?' : '¿No tienes una cuenta?'}
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
               href="/auth/register?role=student"
-              className="flex-1 text-center bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+              className="flex-1 text-center bg-red-600/30 border border-red-500/50 hover:bg-red-600 hover:text-white text-red-300 font-semibold py-2 px-4 rounded-lg transition-colors"
             >
-              Registrarse como Usuario
+              Registro Estudiante
             </Link>
             <Link
               href="/auth/register?role=specialist"
-              className="flex-1 text-center bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+              className="flex-1 text-center bg-gray-800 border border-gray-700 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
             >
-              Aplicar como Especialista
+              Registro Especialista
             </Link>
           </div>
         </div>
