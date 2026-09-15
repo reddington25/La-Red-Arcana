@@ -1,0 +1,10 @@
+# Vercel ignore
+.codegraph/
+.agents/
+.git/
+.next/
+node_modules/
+*.tsbuildinfo
+.env*.local
+docs/
+scripts/
