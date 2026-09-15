@@ -1,0 +1,1 @@
+docs/architecture/ARQUITECTURA_TECNICA.md

@@ -1,0 +1,1 @@
+docs/architecture/MODELO_DE_NEGOCIO.md
