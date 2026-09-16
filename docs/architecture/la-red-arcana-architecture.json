@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "La Red Arcana — Arquitectura Técnica del Sistema",
+    "quality_profile": "showcase",
+    "animation": "trace",
+    "viewBox": [1200, 640],
+    "views": [
+      {
+        "id": "full-ecosystem",
+        "label": "1. Ecosistema General",
+        "focus": ["clients", "vercel_edge", "app_router", "server_actions", "postgres_db", "specialist_bank", "platform_fee"],
+        "note": "Flujo de tráfico desde usuarios y clientes hacia la plataforma Vercel, Supabase y el modelo de liquidación P2P."
+      },
+      {
+        "id": "security-and-rls",
+        "label": "2. Seguridad y RLS",
+        "focus": ["app_router", "server_actions", "auth_service", "postgres_db", "storage_buckets"],
+        "note": "Validación de sesión con Supabase Auth y persistencia segura con políticas Row Level Security (RLS) anti-recursión."
+      },
+      {
+        "id": "p2p-financial-split",
+        "label": "3. Liquidación P2P y Comisiones",
+        "focus": ["clients", "specialist_bank", "server_actions", "platform_fee", "storage_buckets"],
+        "note": "85% transferido directamente al especialista y 15% facturado por la plataforma como servicio tecnológico, sin custodia."
+      }
+    ]
+  },
+  "components": [
+    { "id": "clients", "type": "external", "label": "Usuarios / Clientes", "sublabel": "Estudiante, Auxiliar y Admin", "pos": [40, 240], "size": [165, 68] },
+    { "id": "specialist_bank", "type": "external", "label": "Cobro Especialista", "sublabel": "85% QR / Banco Directo", "tag": "Sin Custodia", "pos": [40, 450], "size": [165, 68] },
+    
+    { "id": "vercel_edge", "type": "cloud", "label": "Vercel Edge Network", "sublabel": "proxy.ts & Enrutamiento", "brand": "vercel", "pos": [265, 240], "size": [165, 68] },
+    
+    { "id": "app_router", "type": "frontend", "label": "Next.js 16 App Router", "sublabel": "Server Components (RSC)", "brand": "next-js", "pos": [490, 145], "size": [165, 68] },
+    { "id": "server_actions", "type": "backend", "label": "Server Actions & API", "sublabel": "Mutaciones y Handlers SSR", "brand": "next-js", "pos": [490, 345], "size": [165, 68] },
+    
+    { "id": "auth_service", "type": "security", "label": "Supabase Auth", "sublabel": "GoTrue PKCE & Cookies", "brand": "supabase", "pos": [720, 70], "size": [165, 68] },
+    { "id": "postgres_db", "type": "database", "label": "PostgreSQL 15+", "sublabel": "Políticas RLS y Triggers", "brand": "postgresql", "pos": [720, 240], "size": [165, 68] },
+    { "id": "storage_buckets", "type": "cloud", "label": "Supabase Storage", "sublabel": "Comprobantes y Credenciales", "brand": "supabase", "pos": [720, 430], "size": [165, 68] },
+    
+    { "id": "realtime_engine", "type": "messagebus", "label": "Realtime WebSockets", "sublabel": "Canales de Chat y Alertas", "brand": "supabase", "pos": [950, 145], "size": [165, 68] },
+    { "id": "platform_fee", "type": "external", "label": "Comisión Plataforma", "sublabel": "15% Tarifa Intermediación", "tag": "Ingreso Tech", "pos": [950, 345], "size": [165, 68] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Vercel Cloud Platform (Hosting & Edge)", "wraps": ["vercel_edge", "app_router", "server_actions"] },
+    { "kind": "region", "label": "Supabase Managed Platform (Backend & Data)", "wraps": ["auth_service", "postgres_db", "storage_buckets", "realtime_engine"] }
+  ],
+  "connections": [
+    { "id": "clients-to-edge", "from": "clients", "to": "vercel_edge", "label": "HTTPS", "variant": "emphasis" },
+    { "id": "p2p-direct-transfer", "from": "clients", "to": "specialist_bank", "label": "pago 85% QR", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "labelDy": 45 },
+    { "id": "edge-to-router", "from": "vercel_edge", "to": "app_router", "label": "render RSC", "route": "orthogonal-h" },
+    { "id": "edge-to-actions", "from": "vercel_edge", "to": "server_actions", "label": "mutaciones", "route": "orthogonal-h" },
+    { "id": "router-to-auth", "from": "app_router", "to": "auth_service", "label": "sesión", "variant": "security", "route": "orthogonal-h" },
+    { "id": "router-to-db", "from": "app_router", "to": "postgres_db", "label": "lectura", "route": "orthogonal-h" },
+    { "id": "actions-to-db", "from": "server_actions", "to": "postgres_db", "label": "escritura SQL", "route": "orthogonal-h", "labelDy": 24 },
+    { "id": "actions-to-storage", "from": "server_actions", "to": "storage_buckets", "label": "vouchers", "route": "orthogonal-h" },
+    { "id": "db-to-realtime", "from": "postgres_db", "to": "realtime_engine", "label": "eventos", "variant": "dashed", "route": "orthogonal-h" },
+    { "id": "actions-to-platform", "from": "server_actions", "to": "platform_fee", "label": "comisión 15%", "variant": "emphasis", "route": "straight" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Perímetro y Edge", "items": ["Next.js 16 App Router con Turbopack desplegado en Vercel", "Middleware proxy.ts intercepta rutas por rol de usuario", "Cookies HTTP-only seguras mediante @supabase/ssr"] },
+    { "dot": "emerald", "title": "Seguridad y RLS", "items": ["Base de datos PostgreSQL con Row Level Security activo", "Funciones SECURITY DEFINER para evitar recursión infinita", "Storage con buckets privados para comprobantes de pago"] },
+    { "dot": "amber", "title": "Modelo de Liquidación P2P", "items": ["85% del importe abonado directamente al auxiliar (sin custodia)", "15% de comisión tecnológica facturada por la plataforma", "Eliminación de retención tributaria sobre honorarios ajenos"] }
+  ]
+}

@@ -19,7 +19,16 @@
 
 ---
 
-## 2. Stack Tecnológico
+## 2. Diagramas Interactivos (Archify)
+
+El repositorio incluye diagramas técnicos interactivos auto-contenidos generados con [Archify](https://github.com/tt-a1i/archify) que ofrecen vistas guiadas, trazado de rutas animadas y soporte de temas claro/oscuro:
+
+* 📊 **[Arquitectura del Sistema (HTML Interactivo)](./la-red-arcana-architecture.html)**: Mapeo de clientes, Edge Proxy en Vercel, Server Actions en Next.js 16, persistencia y RLS en Supabase, y el desacoplamiento de cobro directo P2P (85%) y comisión técnica (15%). (Definición JSON: [`la-red-arcana-architecture.json`](./la-red-arcana-architecture.json)).
+* 🔄 **[Ciclo de Vida del Contrato y Pagos P2P (HTML Interactivo)](./la-red-arcana-workflow.html)**: Diagrama de flujo operativo y contractual con carriles de responsabilidad (Estudiante, Especialista y Plataforma). (Definición JSON: [`la-red-arcana-workflow.json`](./la-red-arcana-workflow.json)).
+
+---
+
+## 3. Stack Tecnológico
 
 ```mermaid
 flowchart TD

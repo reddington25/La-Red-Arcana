@@ -1,0 +1,65 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "La Red Arcana — Ciclo de Vida del Contrato y Pagos P2P",
+    "quality_profile": "showcase",
+    "animation": "trace",
+    "views": [
+      {
+        "id": "bidding-phase",
+        "label": "1. Publicación y Contraoferta",
+        "focus": ["publish_req", "send_bid", "accept_bid"],
+        "note": "El estudiante publica el requerimiento académico y los auxiliares compiten con sus propuestas y plazos."
+      },
+      {
+        "id": "dual-settlement",
+        "label": "2. Hub de Pago Dual (85% + 15%)",
+        "focus": ["accept_bid", "dual_payment_hub", "execute_work"],
+        "note": "Abono directo del 85% al auxiliar por QR y 15% de comisión tecnológica a la plataforma, sin custodia fiscal."
+      },
+      {
+        "id": "delivery-phase",
+        "label": "3. Desarrollo y Calificación",
+        "focus": ["execute_work", "approve_and_rate"],
+        "note": "Desarrollo del entregable con chat en tiempo real, entrega de archivos y cierre de reputación."
+      }
+    ]
+  },
+  "lanes": [
+    { "id": "student", "label": "Estudiante (Alias Público)" },
+    { "id": "specialist", "label": "Especialista / Auxiliar Verificado" },
+    { "id": "platform", "label": "Plataforma (Next.js 16 + Supabase)" }
+  ],
+  "phases": [
+    { "id": "matching", "label": "Publicación y Negociación", "fromCol": 0, "toCol": 1 },
+    { "id": "activation", "label": "Activación y Pago Dual", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "completion", "label": "Ejecución y Cierre", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "groups": [
+    { "id": "marketplace", "label": "Mercado Académico", "lane": "student", "fromCol": 0, "toCol": 2 },
+    { "id": "financial_split", "label": "Desacoplamiento Financiero", "lane": "platform", "fromCol": 2, "toCol": 4, "variant": "emphasis" },
+    { "id": "delivery_stage", "label": "Garantía de Entrega", "lane": "specialist", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "mainPath": ["publish_req", "send_bid", "accept_bid", "dual_payment_hub", "execute_work", "approve_and_rate"],
+  "nodes": [
+    { "id": "publish_req", "lane": "student", "col": 0, "type": "frontend", "label": "Publicar Solicitud", "sublabel": "presupuesto orientativo", "width": 140 },
+    { "id": "send_bid", "lane": "specialist", "col": 1, "type": "frontend", "label": "Enviar Contraoferta", "sublabel": "tarifa y plazo propuesto", "width": 140 },
+    { "id": "accept_bid", "lane": "student", "col": 2, "type": "frontend", "label": "Aceptar Oferta", "sublabel": "selecciona auxiliar", "width": 140 },
+    { "id": "dual_payment_hub", "lane": "platform", "col": 3, "type": "backend", "label": "Hub de Pago Dual", "sublabel": "85% QR P2P + 15% Tech", "tag": "cero custodia", "width": 140 },
+    { "id": "execute_work", "lane": "specialist", "col": 4, "type": "backend", "label": "Desarrollo y Entrega", "sublabel": "chat, avances y final", "width": 140 },
+    { "id": "approve_and_rate", "lane": "student", "col": 5, "type": "frontend", "label": "Aprobar y Calificar", "sublabel": "liberación y reputación", "width": 140 }
+  ],
+  "edges": [
+    { "from": "publish_req", "to": "send_bid", "label": "postulación" },
+    { "from": "send_bid", "to": "accept_bid", "label": "selección", "variant": "emphasis" },
+    { "from": "accept_bid", "to": "dual_payment_hub", "label": "desglose P2P", "variant": "emphasis" },
+    { "from": "dual_payment_hub", "to": "execute_work", "label": "pago validado", "variant": "emphasis" },
+    { "from": "execute_work", "to": "approve_and_rate", "label": "entregable", "variant": "emphasis" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Modelo de Contraoferta", "items": ["El estudiante define la necesidad académica con un presupuesto orientativo", "Los auxiliares verificados compiten transparentemente con tarifa y fecha", "El estudiante decide en base a precio, facultad y calificación previa"] },
+    { "dot": "amber", "title": "Liquidación P2P Desacoplada", "items": ["85% transferido directamente al banco o QR del auxiliar sin intermediación financiera", "15% facturado por la plataforma como comisión de servicio tecnológico", "Exención de retenciones impositivas al eliminar la custodia de fondos de terceros"] },
+    { "dot": "emerald", "title": "Garantía y Reputación", "items": ["Entrega de archivos protegidos en Supabase Storage", "Calificación mutua obligatoria para el cálculo del rating y medallas arcanas", "Intervención de administradores únicamente ante controversias formales"] }
+  ]
+}
