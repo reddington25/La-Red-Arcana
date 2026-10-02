@@ -18,7 +18,7 @@ export async function createClient() {
               cookieStore.set(name, value, {
                 ...options,
                 sameSite: 'lax',
-                secure: process.env.NODE_ENV === 'production',
+                secure: process.env.NODE_ENV === 'production' && Boolean(process.env.NEXT_PUBLIC_SITE_URL?.startsWith('https://')),
               })
             )
           } catch {

@@ -86,7 +86,8 @@ export async function uploadContractFiles(
   for (const file of files) {
     const timestamp = Date.now()
     const folder = subfolder ? `${contractId}/${subfolder}` : contractId
-    const fileName = `${folder}/${timestamp}-${file.name}`
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+    const fileName = `${folder}/${timestamp}-${safeName}`
     const result = await uploadFile('contract-files', fileName, file, supabase)
     results.push(result)
   }

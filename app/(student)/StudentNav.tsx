@@ -43,6 +43,7 @@ export default function StudentNav() {
 
             <Link
               href="/auth/logout"
+              prefetch={false}
               className="flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-red-400 transition-colors"
             >
               <LogOut className="w-4 h-4" />

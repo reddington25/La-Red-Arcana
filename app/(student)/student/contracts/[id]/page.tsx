@@ -134,7 +134,14 @@ export default async function ContractDetailPage({
               </h2>
               <div className="space-y-2">
                 {contract.file_urls.map((url: string, index: number) => {
-                  const fileName = url.split('/').pop() || `Archivo ${index + 1}`
+                  const rawFileName = url.split('/').pop() || `Archivo ${index + 1}`
+                  let displayFileName = rawFileName
+                  try {
+                    displayFileName = decodeURIComponent(rawFileName)
+                  } catch {
+                    displayFileName = rawFileName
+                  }
+                  const displayName = displayFileName.replace(/^\d+[-_]/, '')
                   return (
                     <a
                       key={index}
@@ -145,7 +152,7 @@ export default async function ContractDetailPage({
                     >
                       <div className="flex items-center gap-3">
                         <FileText className="w-5 h-5 text-red-400" />
-                        <span className="text-white">{decodeURIComponent(fileName)}</span>
+                        <span className="text-white">{displayName}</span>
                       </div>
                       <Download className="w-5 h-5 text-gray-400" />
                     </a>

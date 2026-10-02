@@ -59,7 +59,9 @@ export default function DirectPaymentHub({
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [showQrModal, setShowQrModal] = useState<string | null>(null)
 
-  const profile = specialist?.profile_details
+  const profile = Array.isArray(specialist?.profile_details)
+    ? (specialist.profile_details as any)[0]
+    : specialist?.profile_details
 
   // Effective amounts (fallback to 85% / 15% of finalPrice if columns were null)
   const effectiveSpecialistPrice = specialistPrice ?? ((finalPrice || 0) * 0.85)

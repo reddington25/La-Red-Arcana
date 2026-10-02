@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Star, Shield, CheckCircle, AlertCircle } from 'lucide-react'
 import { acceptOffer } from './actions'
 
@@ -19,7 +20,10 @@ interface Offer {
     profile_details: {
       alias: string | null
       real_name: string
-    }
+    } | {
+      alias: string | null
+      real_name: string
+    }[] | null
   }
 }
 
@@ -30,6 +34,7 @@ interface OfferCardProps {
 }
 
 export default function OfferCard({ offer, contractId, contractStatus }: OfferCardProps) {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -49,10 +54,14 @@ export default function OfferCard({ offer, contractId, contractStatus }: OfferCa
       setLoading(false)
     } else {
       setSuccess(true)
+      router.refresh()
     }
   }
 
-  const displayName = offer.specialist.profile_details.alias || offer.specialist.profile_details.real_name
+  const profileDetails = Array.isArray(offer.specialist?.profile_details)
+    ? (offer.specialist.profile_details as any)[0]
+    : offer.specialist?.profile_details
+  const displayName = profileDetails?.alias || profileDetails?.real_name || 'Especialista'
 
   return (
     <div className="bg-black/50 border border-red-500/30 rounded-lg p-6">
@@ -60,13 +69,13 @@ export default function OfferCard({ offer, contractId, contractStatus }: OfferCa
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
             <h3 className="text-lg font-semibold text-white">{displayName}</h3>
-            {offer.specialist.excellence_badge && (
+            {offer.specialist?.excellence_badge && (
               <div className="flex items-center gap-1 px-2 py-1 bg-purple-500/20 text-purple-400 rounded-full text-xs font-semibold">
                 <Star className="w-3 h-3 fill-purple-400" />
                 Experto de Excelencia
               </div>
             )}
-            {offer.specialist.has_arcana_badge && (
+            {offer.specialist?.has_arcana_badge && (
               <div className="flex items-center gap-1 px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs font-semibold">
                 <Shield className="w-3 h-3" />
                 Garantía Arcana
@@ -75,7 +84,7 @@ export default function OfferCard({ offer, contractId, contractStatus }: OfferCa
           </div>
 
           <div className="flex items-center gap-4 text-sm text-gray-400">
-            {offer.specialist.total_reviews < 3 ? (
+            {(offer.specialist?.total_reviews ?? 0) < 3 ? (
               <div className="flex items-center gap-1 px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs font-semibold">
                 <span>🌱 Perfil Nuevo</span>
               </div>
@@ -83,9 +92,12 @@ export default function OfferCard({ offer, contractId, contractStatus }: OfferCa
               <div className="flex items-center gap-1">
                 <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                 <span className="font-medium text-white">
-                  {(offer.specialist.manual_rating !== null ? offer.specialist.manual_rating : offer.specialist.average_rating).toFixed(1)}
+                  {(offer.specialist?.manual_rating !== null && offer.specialist?.manual_rating !== undefined
+                    ? offer.specialist.manual_rating
+                    : (offer.specialist?.average_rating ?? 0)
+                  ).toFixed(1)}
                 </span>
-                <span>({offer.specialist.total_reviews} reseñas)</span>
+                <span>({offer.specialist?.total_reviews ?? 0} reseñas)</span>
               </div>
             )}
           </div>

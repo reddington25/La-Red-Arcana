@@ -73,6 +73,7 @@ export default function SpecialistNav() {
             
             <Link
               href="/auth/logout"
+              prefetch={false}
               className="flex items-center gap-2 px-3 py-2 rounded text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
             >
               <LogOut className="w-4 h-4" />

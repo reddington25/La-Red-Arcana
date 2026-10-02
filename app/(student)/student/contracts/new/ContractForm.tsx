@@ -2,13 +2,59 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Upload, X, FileText, AlertCircle, Calendar } from 'lucide-react'
-import { createContract } from './actions'
+import { Upload, X, FileText, AlertCircle, Calendar, Clock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { validateFileType, formatFileSize } from '@/lib/supabase/storage'
 import { validateFileUpload, showErrorToast, showSuccessToast } from '@/lib/utils/error-handler'
 import { LoadingButton } from '@/components/ui/loading-spinner'
 import { DEPARTMENTS, FACULTIES, getCareersByFaculty, type Department, type Faculty } from '@/lib/constants/academic-hierarchy'
+
+function getMinDeadline(): string {
+  // Al menos 12 horas + 5 minutos para evitar condiciones de carrera entre cliente y servidor
+  const d = new Date(Date.now() + (12 * 60 + 5) * 60 * 1000)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function getPresetDeadline(hours: number): string {
+  // Añadir 30 minutos de margen al preset de 12 horas para que el usuario tenga tiempo
+  // suficiente de redactar y enviar sin caer por debajo del umbral mínimo de 12h si permanece inactivo
+  const extraMinutes = hours === 12 ? 30 : 0
+  const d = new Date(Date.now() + (hours * 60 + extraMinutes) * 60 * 1000)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function isDeadlineValid(deadlineStr: string): boolean {
+  if (!deadlineStr) return false
+  const d = new Date(deadlineStr)
+  if (isNaN(d.getTime())) return false
+  // Margen de tolerancia de 10 minutos (alineado con la tolerancia del servidor)
+  const minTime = Date.now() + (12 * 60 - 10) * 60 * 1000
+  return d.getTime() >= minTime
+}
+
+function formatDeadlineInSpanish(deadlineStr: string): string {
+  try {
+    const d = new Date(deadlineStr)
+    if (isNaN(d.getTime())) return deadlineStr
+    const formattedDate = d.toLocaleString('es-BO', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+    const diffHours = Math.round((d.getTime() - Date.now()) / (1000 * 60 * 60))
+    const relativeTime = diffHours >= 24
+      ? `(~${Math.round(diffHours / 24)} días)`
+      : `(~${diffHours} horas)`
+    return `${formattedDate} ${relativeTime}`
+  } catch {
+    return deadlineStr
+  }
+}
 
 export default function ContractForm() {
   const router = useRouter()
@@ -22,6 +68,7 @@ export default function ContractForm() {
   const [deadline, setDeadline] = useState('')
   const [acceptTerms, setAcceptTerms] = useState(false)
   const [files, setFiles] = useState<File[]>([])
+  const [draftLoaded, setDraftLoaded] = useState(false)
 
   // Academic hierarchy state
   const [selectedDepartment, setSelectedDepartment] = useState<Department | ''>('')
@@ -49,14 +96,14 @@ export default function ContractForm() {
     if (draft) {
       try {
         const data = JSON.parse(draft)
-        setTitle(data.title || '')
-        setDescription(data.description || '')
-        setServiceType(data.serviceType || 'full')
-        setInitialPrice(data.initialPrice || '')
-        setDeadline(data.deadline || '')
-        setSelectedDepartment(data.department || '')
-        setSelectedFaculty(data.faculty || '')
-        setSelectedCareer(data.career || '')
+        if (data.title) setTitle(data.title)
+        if (data.description) setDescription(data.description)
+        if (data.serviceType) setServiceType(data.serviceType)
+        if (data.initialPrice) setInitialPrice(data.initialPrice)
+        if (data.deadline) setDeadline(data.deadline)
+        if (data.department) setSelectedDepartment(data.department)
+        if (data.faculty) setSelectedFaculty(data.faculty)
+        if (data.career) setSelectedCareer(data.career)
 
         // Mostrar mensaje
         showSuccessToast('Se recuperó tu borrador anterior')
@@ -64,7 +111,25 @@ export default function ContractForm() {
         console.error('[FORM] Error loading draft:', error)
       }
     }
+    setDraftLoaded(true)
   }, [])
+
+  // Auto-guardar borrador sin interferir con la sesión
+  useEffect(() => {
+    if (!draftLoaded) return
+    if (title || description || initialPrice || deadline || selectedDepartment || selectedFaculty || selectedCareer) {
+      localStorage.setItem('draft_contract', JSON.stringify({
+        title,
+        description,
+        serviceType,
+        initialPrice,
+        deadline,
+        department: selectedDepartment,
+        faculty: selectedFaculty,
+        career: selectedCareer,
+      }))
+    }
+  }, [title, description, serviceType, initialPrice, deadline, selectedDepartment, selectedFaculty, selectedCareer, draftLoaded])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return
@@ -94,6 +159,9 @@ export default function ContractForm() {
     }
 
     setFiles(prev => [...prev, ...validFiles])
+    if (e.target) {
+      e.target.value = ''
+    }
   }
 
   const removeFile = (index: number) => {
@@ -106,30 +174,56 @@ export default function ContractForm() {
     setLoading(true)
 
     try {
-      // Verificar y refrescar sesión
-      const supabase = createClient()
-
-      // Primero intentar refrescar la sesión
-      console.log('[FORM] Refreshing session...')
-      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
-
-      if (refreshError) {
-        console.error('[FORM] Error refreshing session:', refreshError)
-      } else {
-        console.log('[FORM] Session refreshed successfully')
+      // Validar plazo mínimo de 12 horas en cliente
+      if (!deadline || !isDeadlineValid(deadline)) {
+        const errorMsg = 'La fecha y hora límite debe ser de al menos 12 horas en el futuro.'
+        setError(errorMsg)
+        showErrorToast(errorMsg)
+        setLoading(false)
+        return
       }
 
-      // Luego verificar que existe
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      // Obtener sesión sin refresh destructivo del cliente
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
 
-      console.log('[FORM] Session check:', {
-        hasSession: !!session,
-        error: sessionError,
-        expiresAt: session?.expires_at,
-        userId: session?.user?.id
+      // Crear FormData para API request
+      const formData = new FormData()
+      formData.append('title', title)
+      formData.append('description', description)
+      formData.append('department', selectedDepartment)
+      formData.append('faculty', selectedFaculty)
+      formData.append('career', selectedCareer)
+      formData.append('serviceType', serviceType)
+      formData.append('initialPrice', initialPrice)
+      formData.append('deadline', new Date(deadline).toISOString())
+      formData.append('termsAccepted', acceptTerms ? 'true' : 'false')
+      formData.append('termsAcceptedAt', new Date().toISOString())
+
+      // Add files
+      files.forEach((file, index) => {
+        formData.append(`file_${index}`, file)
       })
 
-      if (sessionError || !session) {
+      console.log('[FORM] Sending request to API...')
+
+      const headers: Record<string, string> = {}
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`
+      }
+
+      // Send to API route con Authorization header si está presente y cookies SSR incluidas
+      const response = await fetch('/api/contracts', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include', // Important: include cookies
+        headers,
+      })
+
+      console.log('[FORM] Response status:', response.status)
+
+      // Manejar expiración real de sesión dictada por el servidor
+      if (response.status === 401) {
         const errorMsg = 'Tu sesión ha expirado. Redirigiendo al login...'
         setError(errorMsg)
         showErrorToast(errorMsg)
@@ -154,39 +248,6 @@ export default function ContractForm() {
         return
       }
 
-      // Crear FormData para API request
-      const formData = new FormData()
-      formData.append('title', title)
-      formData.append('description', description)
-      formData.append('department', selectedDepartment)
-      formData.append('faculty', selectedFaculty)
-      formData.append('career', selectedCareer)
-      formData.append('serviceType', serviceType)
-      formData.append('initialPrice', initialPrice)
-      formData.append('deadline', deadline)
-      formData.append('termsAccepted', acceptTerms ? 'true' : 'false')
-      formData.append('termsAcceptedAt', new Date().toISOString())
-
-      // Add files
-      files.forEach((file, index) => {
-        formData.append(`file_${index}`, file)
-      })
-
-      console.log('[FORM] Sending request to API...')
-
-      // Send to API route con Authorization header como backup
-      const response = await fetch('/api/contracts', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include', // Important: include cookies
-        headers: {
-          // Incluir el access token explícitamente como backup
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-      })
-
-      console.log('[FORM] Response status:', response.status)
-
       const result = await response.json()
 
       if (!response.ok || result.error) {
@@ -198,7 +259,7 @@ export default function ContractForm() {
         console.log('[FORM] Contract created successfully:', result.contractId)
         showSuccessToast('Contrato creado exitosamente. Los especialistas serán notificados.')
 
-        // Limpiar draft
+        // Limpiar draft tras publicación exitosa
         localStorage.removeItem('draft_contract')
 
         // Redirect to contract page
@@ -447,7 +508,7 @@ export default function ContractForm() {
       {/* Deadline */}
       <div>
         <label htmlFor="deadline" className="block text-sm font-medium text-gray-300 mb-2">
-          Fecha y Hora Límite *
+          Fecha y Hora Límite de Entrega *
         </label>
         <div className="relative">
           <input
@@ -455,8 +516,8 @@ export default function ContractForm() {
             id="deadline"
             value={deadline}
             onChange={(e) => setDeadline(e.target.value)}
-            min={new Date(new Date().getTime() + 12 * 60 * 60 * 1000).toISOString().slice(0, 16)}
-            className="w-full px-4 py-3 bg-black/50 border border-red-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-500 cursor-pointer appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+            min={getMinDeadline()}
+            className="w-full px-4 py-3 bg-black/50 border border-red-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-500 cursor-pointer"
             required
             onClick={(e) => {
               try {
@@ -471,8 +532,70 @@ export default function ContractForm() {
           <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
         </div>
         <p className="text-xs text-gray-500 mt-1">
-          El tiempo máximo que tiene el especialista para entregar el proyecto (mínimo 12 horas desde ahora)
+          Plazo máximo de entrega del trabajo (mínimo 12 horas a partir de ahora)
         </p>
+
+        {/* Botones de sugerencias rápidas */}
+        <div className="flex flex-wrap items-center gap-2 mt-2">
+          <span className="text-xs text-gray-400">Atajos rápidos:</span>
+          <button
+            type="button"
+            onClick={() => setDeadline(getPresetDeadline(12))}
+            className="px-2.5 py-1 text-xs rounded-md bg-white/5 border border-red-500/20 hover:border-red-500/50 text-gray-300 hover:text-white transition-colors"
+          >
+            +12 horas (urgente)
+          </button>
+          <button
+            type="button"
+            onClick={() => setDeadline(getPresetDeadline(24))}
+            className="px-2.5 py-1 text-xs rounded-md bg-white/5 border border-red-500/20 hover:border-red-500/50 text-gray-300 hover:text-white transition-colors"
+          >
+            +24 horas (1 día)
+          </button>
+          <button
+            type="button"
+            onClick={() => setDeadline(getPresetDeadline(72))}
+            className="px-2.5 py-1 text-xs rounded-md bg-white/5 border border-red-500/20 hover:border-red-500/50 text-gray-300 hover:text-white transition-colors"
+          >
+            +3 días
+          </button>
+          <button
+            type="button"
+            onClick={() => setDeadline(getPresetDeadline(168))}
+            className="px-2.5 py-1 text-xs rounded-md bg-white/5 border border-red-500/20 hover:border-red-500/50 text-gray-300 hover:text-white transition-colors"
+          >
+            +1 semana
+          </button>
+        </div>
+
+        {/* Ayuda contextual en español con validación y recuperación de plazo */}
+        {deadline && (
+          <div
+            className={`mt-2 p-2.5 rounded-lg border text-xs flex items-center justify-between gap-2 ${
+              isDeadlineValid(deadline)
+                ? 'bg-blue-500/10 border-blue-500/30 text-blue-300'
+                : 'bg-red-500/10 border-red-500/30 text-red-300'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 flex-shrink-0" />
+              <span>
+                {isDeadlineValid(deadline)
+                  ? `Plazo seleccionado: ${formatDeadlineInSpanish(deadline)}`
+                  : 'La fecha y hora límite debe ser de al menos 12 horas en el futuro.'}
+              </span>
+            </div>
+            {!isDeadlineValid(deadline) && (
+              <button
+                type="button"
+                onClick={() => setDeadline(getPresetDeadline(12))}
+                className="px-2 py-0.5 text-xs rounded bg-red-500/20 hover:bg-red-500/30 text-red-200 border border-red-500/40 transition-colors font-medium cursor-pointer whitespace-nowrap"
+              >
+                Actualizar a +12 horas
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Terms and Conditions */}
@@ -503,7 +626,7 @@ export default function ContractForm() {
         </button>
         <button
           type="submit"
-          disabled={loading || !selectedDepartment || !selectedFaculty || !selectedCareer || !deadline || !acceptTerms}
+          disabled={loading || !selectedDepartment || !selectedFaculty || !selectedCareer || !deadline || !isDeadlineValid(deadline) || !acceptTerms}
           className="flex-1 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
         >
           {loading ? <LoadingButton>Creando...</LoadingButton> : 'Publicar Contrato'}

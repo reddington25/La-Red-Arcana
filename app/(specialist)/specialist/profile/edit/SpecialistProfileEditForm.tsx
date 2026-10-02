@@ -16,7 +16,7 @@ interface SpecialistProfileEditFormProps {
   currentAccountNumber?: string | null
   currentAccountHolderName?: string | null
   currentAccountHolderCi?: string | null
-  currentPaymentQrUrl?: string | null
+  currentPaymentQrUrl?: string | null // Maps to profile_details.payment_qr_url
 }
 
 const AVAILABLE_TAGS = [

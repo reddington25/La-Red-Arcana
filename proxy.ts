@@ -27,8 +27,14 @@ export async function proxy(request: NextRequest) {
 
   // Build response object that carries updated cookies forward
   let response = NextResponse.next({
-    request: { headers: request.headers },
+    request,
   })
+
+  const isSecure =
+    process.env.NODE_ENV === 'production' &&
+    (request.nextUrl.protocol === 'https:' ||
+      request.headers.get('x-forwarded-proto') === 'https' ||
+      Boolean(process.env.NEXT_PUBLIC_SITE_URL?.startsWith('https://')))
 
   // Create supabase client that can set/refresh cookies on the response
   const supabase = createServerClient(
@@ -43,13 +49,13 @@ export async function proxy(request: NextRequest) {
           // Set cookies on both request (for this request) and response (for client)
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           response = NextResponse.next({
-            request: { headers: request.headers },
+            request,
           })
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, {
               ...options,
               sameSite: 'lax',
-              secure: process.env.NODE_ENV === 'production',
+              secure: isSecure,
             })
           )
         },
@@ -57,16 +63,31 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  // Use getSession() in proxy/edge context - reads JWT from cookie without external HTTP call.
-  // getUser() requires a network call to Supabase which can fail in edge/proxy context.
-  const { data: { session } } = await supabase.auth.getSession()
-  const user = session?.user ?? null
+  // Use getUser() to validate and refresh expired JWT tokens transparently
+  const { data: { user } } = await supabase.auth.getUser()
+
+  // Helper to redirect while preserving any refreshed cookies
+  const redirectWithCookies = (url: URL | string) => {
+    const redirectResponse = NextResponse.redirect(new URL(url, request.url))
+    response.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value, {
+        path: cookie.path,
+        domain: cookie.domain,
+        maxAge: cookie.maxAge,
+        expires: cookie.expires,
+        sameSite: cookie.sameSite,
+        httpOnly: cookie.httpOnly,
+        secure: isSecure,
+      })
+    })
+    return redirectResponse
+  }
 
   // If user is not authenticated and trying to access a protected route, redirect to login
   if (!user && !isPublicRoute) {
     const redirectUrl = new URL('/auth/login', request.url)
     redirectUrl.searchParams.set('redirectTo', pathname)
-    return NextResponse.redirect(redirectUrl)
+    return redirectWithCookies(redirectUrl)
   }
 
   // If user is authenticated, check role and verification status
@@ -80,8 +101,8 @@ export async function proxy(request: NextRequest) {
 
     if (userError || !userData) {
       // User not found in our DB → needs to complete registration
-      if (!pathname.startsWith('/auth/register') && !pathname.startsWith('/auth/callback')) {
-        return NextResponse.redirect(new URL('/auth/register', request.url))
+      if (!pathname.startsWith('/auth/register') && !pathname.startsWith('/auth/callback') && pathname !== '/auth/logout') {
+        return redirectWithCookies('/auth/register')
       }
       return response
     }
@@ -93,19 +114,19 @@ export async function proxy(request: NextRequest) {
       pathname !== '/auth/logout' &&
       !pathname.startsWith('/auth/register')
     ) {
-      return NextResponse.redirect(new URL('/auth/pending', request.url))
+      return redirectWithCookies('/auth/pending')
     }
 
     // Role-based protection for verified users
     if (userData.is_verified) {
       if (pathname.startsWith('/student') && userData.role !== 'student') {
-        return NextResponse.redirect(new URL('/', request.url))
+        return redirectWithCookies('/')
       }
       if (pathname.startsWith('/specialist') && userData.role !== 'specialist') {
-        return NextResponse.redirect(new URL('/', request.url))
+        return redirectWithCookies('/')
       }
       if (pathname.startsWith('/admin') && !['admin', 'super_admin'].includes(userData.role)) {
-        return NextResponse.redirect(new URL('/', request.url))
+        return redirectWithCookies('/')
       }
     }
 
@@ -132,7 +153,7 @@ export async function proxy(request: NextRequest) {
         if (!profileData) {
           const profilePath = userData.role === 'specialist' ? '/specialist/profile' : '/student/profile'
           if (pathname !== profilePath && !pathname.startsWith(`${profilePath}/`)) {
-            return NextResponse.redirect(new URL(profilePath, request.url))
+            return redirectWithCookies(profilePath)
           }
         }
       }
@@ -146,12 +167,12 @@ export async function proxy(request: NextRequest) {
         admin: '/admin/dashboard',
         super_admin: '/admin/dashboard',
       }
-      return NextResponse.redirect(new URL(dashboardMap[userData.role] || '/', request.url))
+      return redirectWithCookies(dashboardMap[userData.role] || '/')
     }
 
     // Redirect authenticated but not-yet-verified users away from login
     if (pathname === '/auth/login' && !userData.is_verified) {
-      return NextResponse.redirect(new URL('/auth/pending', request.url))
+      return redirectWithCookies('/auth/pending')
     }
   }
 

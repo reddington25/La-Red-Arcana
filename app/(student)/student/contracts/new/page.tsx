@@ -1,20 +1,10 @@
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
 import ContractForm from './ContractForm'
 
 export const dynamic = 'force-dynamic'
 
-export default async function NewContractPage() {
-  // Auth is already verified by proxy - just get user for data access
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
-    // Proxy should have caught this, but defensive fallback
-    return null
-  }
+export default function NewContractPage() {
 
   return (
     <div className="max-w-4xl mx-auto">
