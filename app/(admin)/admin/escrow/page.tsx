@@ -48,6 +48,7 @@ export default async function EscrowManagementPage() {
         id,
         email,
         balance,
+        ambassador_balance,
         profile_details (
           real_name,
           phone

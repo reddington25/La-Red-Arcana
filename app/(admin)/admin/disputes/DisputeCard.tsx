@@ -6,6 +6,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import Link from 'next/link'
 import DisputeResolutionForm from './DisputeResolutionForm'
+import { getRelatedUserDisplayName } from '@/lib/utils/profile'
 
 interface DisputeCardProps {
   dispute: any
@@ -17,12 +18,12 @@ export default function DisputeCard({ dispute, adminId }: DisputeCardProps) {
 
   const contract = dispute.contract
   const initiator = dispute.initiator
-  const student = contract.student
-  const specialist = contract.specialist
+  const student = contract?.student
+  const specialist = contract?.specialist
 
-  const studentName = student.profile_details?.[0]?.alias || student.profile_details?.[0]?.real_name || 'N/A'
-  const specialistName = specialist.profile_details?.[0]?.alias || specialist.profile_details?.[0]?.real_name || 'N/A'
-  const initiatorName = initiator.profile_details?.[0]?.alias || initiator.profile_details?.[0]?.real_name || 'N/A'
+  const studentName = getRelatedUserDisplayName(student, 'N/A')
+  const specialistName = getRelatedUserDisplayName(specialist, 'N/A')
+  const initiatorName = getRelatedUserDisplayName(initiator, 'N/A')
 
   return (
     <div className={`bg-black/50 backdrop-blur border rounded-lg overflow-hidden ${

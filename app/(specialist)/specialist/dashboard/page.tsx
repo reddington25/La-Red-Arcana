@@ -16,6 +16,7 @@ import WithdrawalButton from './WithdrawalButton'
 import { PublicationsFeed } from '@/components/ui/PublicationsFeed'
 import { ArcanaCrystal, ArcanasBadge } from '@/components/ui/ArcanaCrystal'
 import CreatePublicationForm from './CreatePublicationForm'
+import { getRelatedUserDisplayName } from '@/lib/utils/profile'
 
 export default async function SpecialistDashboardPage() {
   const supabase = await createClient()
@@ -49,7 +50,7 @@ export default async function SpecialistDashboardPage() {
     .from('profile_details')
     .select('real_name')
     .eq('user_id', user.id)
-    .single()
+    .maybeSingle()
   
   // Get active contracts (assigned, pending_deposit, pending_payment, payment_review, in_progress)
   const { data: activeContracts } = await supabase
@@ -103,6 +104,16 @@ export default async function SpecialistDashboardPage() {
   const balance = userData?.balance || 0
   const ambassadorBalance = userData?.ambassador_balance || 0
   const totalAvailableBalance = balance + ambassadorBalance
+
+  // Check pending withdrawal requests
+  const { data: pendingWithdrawals } = await supabase
+    .from('withdrawal_requests')
+    .select('amount')
+    .eq('specialist_id', user.id)
+    .eq('status', 'pending')
+
+  const pendingWithdrawalTotal = (pendingWithdrawals || []).reduce((sum, w) => sum + (w.amount || 0), 0)
+  const remainingWithdrawable = Math.max(0, totalAvailableBalance - pendingWithdrawalTotal)
   
   // Calculate total earnings from completed contracts (specialist direct 85% share)
   const totalEarnings = completedContracts?.reduce((sum, contract) => 
@@ -119,7 +130,7 @@ export default async function SpecialistDashboardPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-white mb-2">
-          Bienvenido, {profileData?.real_name}
+          Bienvenido, {profileData?.real_name || 'Especialista'}
         </h1>
         <div className="flex items-center gap-4">
           {userData?.excellence_badge && (
@@ -134,10 +145,10 @@ export default async function SpecialistDashboardPage() {
           )}
           {userData && (
             <span className="text-gray-400">
-              {userData.total_reviews < 3 ? (
+              {(userData.total_reviews ?? 0) < 3 ? (
                  <span className="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full text-sm font-semibold border-blue-500/50 border">🌱 Perfil Nuevo</span>
               ) : (
-                 `⭐ ${(userData.manual_rating !== null ? userData.manual_rating : userData.average_rating).toFixed(1)} (${userData.total_reviews} reseñas)`
+                 `⭐ ${(userData.manual_rating ?? userData.average_rating ?? 0).toFixed(1)} (${userData.total_reviews} reseñas)`
               )}
             </span>
           )}
@@ -249,6 +260,11 @@ export default async function SpecialistDashboardPage() {
               {ambassadorBalance > 0 && (
                 <span> + Ganancias de Red: Bs. {ambassadorBalance.toFixed(2)}</span>
               )}
+              {pendingWithdrawalTotal > 0 && (
+                <span className="block text-amber-400 text-xs mt-1">
+                  ⏳ En proceso de retiro: Bs. {pendingWithdrawalTotal.toFixed(2)} (Disponible para nuevo retiro: Bs. {remainingWithdrawable.toFixed(2)})
+                </span>
+              )}
             </div>
             <div className="text-xs text-emerald-400 mt-2 flex items-start gap-1.5 max-w-2xl">
               <span className="flex-shrink-0">💡</span>
@@ -257,15 +273,19 @@ export default async function SpecialistDashboardPage() {
           </div>
           
           <WithdrawalButton 
-            balance={totalAvailableBalance}
-            disabled={totalAvailableBalance < 50}
+            balance={remainingWithdrawable}
+            arcanas={userData?.arcanas || 0}
+            disabled={remainingWithdrawable < 50}
           />
         </div>
+
         
-        {totalAvailableBalance < 50 && (
+        {remainingWithdrawable < 50 && (
           <div className="mt-4 text-sm text-yellow-400 flex items-center gap-2">
             <Clock className="w-4 h-4" />
-            El monto mínimo para solicitar retiro de saldo es Bs. 50
+            {pendingWithdrawalTotal > 0
+              ? `El saldo disponible para nuevo retiro (Bs. ${remainingWithdrawable.toFixed(2)}) es menor al monto mínimo de Bs. 50`
+              : 'El monto mínimo para solicitar retiro de saldo es Bs. 50'}
           </div>
         )}
       </div>
@@ -315,19 +335,19 @@ export default async function SpecialistDashboardPage() {
                       <StatusBadge status={contract.status} />
                     </div>
                     <div className="flex items-center gap-4 text-sm text-gray-400">
-                      <span>Usuario: {(contract.student as any).profile_details?.[0]?.alias || 'N/A'}</span>
+                      <span>Usuario: {getRelatedUserDisplayName(contract.student, 'N/A')}</span>
                       <span>
-                        {formatDistanceToNow(new Date(contract.updated_at), { 
+                        {contract.updated_at ? formatDistanceToNow(new Date(contract.updated_at), { 
                           addSuffix: true,
                           locale: es 
-                        })}
+                        }) : 'recientemente'}
                       </span>
                     </div>
                   </div>
                   
                   <div className="text-right">
                     <div className="text-2xl font-bold text-red-400">
-                      Bs. {contract.final_price?.toFixed(2)}
+                      Bs. {(contract.final_price || 0).toFixed(2)}
                     </div>
                     <div className="text-sm text-gray-400">
                       Tu ganancia: Bs. {(contract.specialist_price || ((contract.final_price || 0) * 0.85)).toFixed(2)}
@@ -364,13 +384,14 @@ export default async function SpecialistDashboardPage() {
                   <div className="flex-1">
                     <h3 className="text-white font-medium">{contract.title}</h3>
                     <div className="text-sm text-gray-400 mt-1">
-                      Usuario: {(contract.student as any).profile_details?.[0]?.alias || 'N/A'} • 
-                      Completado {formatDistanceToNow(new Date(contract.completed_at!), { 
+                      Usuario: {getRelatedUserDisplayName(contract.student, 'N/A')} • 
+                      Completado {contract.completed_at ? formatDistanceToNow(new Date(contract.completed_at), { 
                         addSuffix: true, 
                         locale: es 
-                      })}
+                      }) : 'recientemente'}
                     </div>
                   </div>
+
                   
                   <div className="text-right">
                     <div className="text-lg font-semibold text-green-400">

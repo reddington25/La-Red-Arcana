@@ -1,8 +1,42 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { uploadUserDocument } from '@/lib/supabase/storage'
 import { revalidatePath } from 'next/cache'
+
+export async function validateAmbassadorCodeAction(code: string) {
+  if (!code || !code.trim()) {
+    return { valid: false, message: 'Código vacío' }
+  }
+
+  try {
+    const adminClient = createAdminClient()
+    const { data: ambassadorData, error } = await adminClient
+      .from('users')
+      .select('id, is_ambassador, profile_details ( real_name )')
+      .eq('ambassador_code', code.trim().toUpperCase())
+      .eq('is_ambassador', true)
+      .maybeSingle()
+
+    if (error || !ambassadorData) {
+      return { valid: false, message: 'Código inválido o embajador inactivo' }
+    }
+
+    const profile = Array.isArray(ambassadorData.profile_details)
+      ? ambassadorData.profile_details[0]
+      : ambassadorData.profile_details
+
+    return {
+      valid: true,
+      ambassadorId: ambassadorData.id,
+      realName: profile?.real_name || 'Embajador verificado',
+    }
+  } catch (err) {
+    console.error('Error validating ambassador code:', err)
+    return { valid: false, message: 'Error al validar código' }
+  }
+}
 
 export async function completeSpecialistProfile(formData: FormData) {
   const supabase = await createClient()
@@ -56,15 +90,16 @@ export async function completeSpecialistProfile(formData: FormData) {
       cvUrl = cvUploadResult.url
     }
 
-    // Validate ambassador code if provided
+    // Validate ambassador code if provided using admin client (bypasses RLS on other users' records)
     let referredByUserId: string | null = null
     if (ambassadorCodeInput && ambassadorCodeInput.trim()) {
-      const { data: ambassadorData } = await supabase
+      const adminClient = createAdminClient()
+      const { data: ambassadorData } = await adminClient
         .from('users')
         .select('id, is_ambassador')
         .eq('ambassador_code', ambassadorCodeInput.trim().toUpperCase())
         .eq('is_ambassador', true)
-        .single()
+        .maybeSingle()
 
       if (!ambassadorData) {
         return { error: 'El código de embajador no es válido' }

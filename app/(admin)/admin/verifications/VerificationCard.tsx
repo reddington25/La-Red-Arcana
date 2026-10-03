@@ -1,9 +1,10 @@
 'use client'
 
-import { UserWithProfile } from '@/types/database'
+import { UserWithProfile, ProfileDetails } from '@/types/database'
 import { User, Phone, Mail, GraduationCap, FileText, CheckCircle, XCircle, ExternalLink } from 'lucide-react'
 import { useState } from 'react'
 import { verifyUser } from './actions'
+import { normalizeProfileDetails } from '@/lib/utils/profile'
 
 interface VerificationCardProps {
   user: UserWithProfile
@@ -15,7 +16,7 @@ export default function VerificationCard({ user }: VerificationCardProps) {
   const [success, setSuccess] = useState(false)
 
   const isStudent = user.role === 'student'
-  const profile = user.profile_details
+  const profile = (normalizeProfileDetails(user.profile_details) || {}) as Partial<ProfileDetails>
 
   const handleVerify = async () => {
     setIsVerifying(true)
@@ -150,7 +151,7 @@ export default function VerificationCard({ user }: VerificationCardProps) {
         <div className="mb-6">
           <p className="text-xs text-gray-400 mb-2">Subject Specializations</p>
           <div className="flex flex-wrap gap-2">
-            {profile.subject_tags.map((tag, index) => (
+            {profile.subject_tags.map((tag: string, index: number) => (
               <span
                 key={index}
                 className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-xs font-medium"
@@ -224,7 +225,7 @@ export default function VerificationCard({ user }: VerificationCardProps) {
         </button>
         
         <a
-          href={`https://wa.me/${profile.phone.replace(/\D/g, '')}`}
+          href={`https://wa.me/${(profile.phone || '').replace(/\D/g, '')}`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold py-3 px-6 rounded-lg transition-colors"

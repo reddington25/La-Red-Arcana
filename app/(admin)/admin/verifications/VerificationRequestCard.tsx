@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Phone, User, Mail, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import { approveVerificationRequest, rejectVerificationRequest } from './verification-actions'
+import { getRelatedUserDisplayName } from '@/lib/utils/profile'
 
 interface VerificationRequestCardProps {
   request: {
@@ -57,7 +58,7 @@ export default function VerificationRequestCard({ request }: VerificationRequest
   }
 
   const fieldLabel = request.field_name === 'phone' ? 'WhatsApp' : request.field_name
-  const displayName = request.user.profile_details.alias || request.user.profile_details.real_name
+  const displayName = getRelatedUserDisplayName(request.user, 'Usuario')
 
   return (
     <div className="bg-black/50 backdrop-blur border border-yellow-500/30 rounded-lg p-6">

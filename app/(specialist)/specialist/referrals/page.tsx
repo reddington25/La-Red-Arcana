@@ -1,9 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { Users, UserCheck, Clock, Copy } from 'lucide-react'
+import { Users, UserCheck, Clock, Copy, DollarSign } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
+import Link from 'next/link'
 import CopyCodeButton from './CopyCodeButton'
+import { normalizeProfileDetails } from '@/lib/utils/profile'
 
 export default async function ReferralsPage() {
   const supabase = await createClient()
@@ -14,7 +16,7 @@ export default async function ReferralsPage() {
   // Check if user is an ambassador
   const { data: userData } = await supabase
     .from('users')
-    .select('is_ambassador, ambassador_code')
+    .select('is_ambassador, ambassador_code, ambassador_balance')
     .eq('id', user.id)
     .single()
 
@@ -84,7 +86,7 @@ export default async function ReferralsPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid md:grid-cols-3 gap-4 mb-8">
+      <div className="grid md:grid-cols-4 gap-4 mb-8">
         <div className="bg-black/50 backdrop-blur border border-emerald-500/30 rounded-lg p-6">
           <div className="flex items-center justify-between mb-2">
             <p className="text-gray-400 text-sm">Total Referidos</p>
@@ -106,6 +108,16 @@ export default async function ReferralsPage() {
           </div>
           <p className="text-3xl font-bold text-yellow-400">{totalReferrals - verifiedReferrals}</p>
         </div>
+        <div className="bg-emerald-500/10 backdrop-blur border border-emerald-500/30 rounded-lg p-6">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-gray-400 text-sm">Ganancias de Red</p>
+            <DollarSign className="w-5 h-5 text-emerald-400" />
+          </div>
+          <p className="text-2xl font-bold text-emerald-400">Bs. {(userData.ambassador_balance || 0).toFixed(2)}</p>
+          <Link href="/specialist/network-earnings" className="text-xs text-emerald-400 hover:underline mt-1 inline-block">
+            Ver historial →
+          </Link>
+        </div>
       </div>
 
       {/* Referrals List */}
@@ -121,7 +133,7 @@ export default async function ReferralsPage() {
         ) : (
           <div className="bg-black/50 backdrop-blur border border-red-500/30 rounded-lg divide-y divide-red-500/20">
             {referrals.map(referral => {
-              const profile = (referral as any).profile_details?.[0] || (referral as any).profile_details
+              const profile = normalizeProfileDetails((referral as any).profile_details)
               return (
                 <div key={referral.id} className="p-4 hover:bg-red-500/5 transition-colors">
                   <div className="flex items-center justify-between">
@@ -150,7 +162,7 @@ export default async function ReferralsPage() {
                         {contractCounts[referral.id] || 0} contratos completados
                       </p>
                       <p className="text-xs text-gray-500">
-                        {formatDistanceToNow(new Date(referral.created_at), { addSuffix: true, locale: es })}
+                        {referral.created_at ? formatDistanceToNow(new Date(referral.created_at), { addSuffix: true, locale: es }) : 'recientemente'}
                       </p>
                     </div>
                   </div>

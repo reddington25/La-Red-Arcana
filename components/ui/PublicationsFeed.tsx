@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Image as ImageIcon } from 'lucide-react';
+import { normalizeProfileDetails, getRelatedUserDisplayName } from '@/lib/utils/profile';
 
 export async function PublicationsFeed() {
   const supabase = await createClient();
@@ -44,8 +45,8 @@ export async function PublicationsFeed() {
       </h2>
       <div className="grid gap-6">
         {publications.map((pub) => {
-          const profile = (pub.users as any)?.profile_details?.[0] || {};
-          const specialistName = profile.alias || profile.real_name || 'Especialista';
+          const profile = normalizeProfileDetails((pub.users as any)?.profile_details) || ({} as any);
+          const specialistName = getRelatedUserDisplayName(pub.users, 'Especialista');
           const facultyInfo = [profile.career, profile.faculty].filter(Boolean).join(' - ');
 
           return (
@@ -57,7 +58,7 @@ export async function PublicationsFeed() {
                   {facultyInfo && <p className="text-xs text-gray-400">{facultyInfo}</p>}
                 </div>
                 <div className="text-xs text-gray-500">
-                  {formatDistanceToNow(new Date(pub.created_at), { addSuffix: true, locale: es })}
+                  {pub.created_at ? formatDistanceToNow(new Date(pub.created_at), { addSuffix: true, locale: es }) : 'recientemente'}
                 </div>
               </div>
 

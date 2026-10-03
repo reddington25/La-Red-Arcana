@@ -6,6 +6,7 @@ import { Send, Loader2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import type { MessageWithSender } from '@/types/message'
+import { normalizeProfileDetails } from '@/lib/utils/profile'
 
 interface ContractChatProps {
   contractId: string
@@ -131,7 +132,7 @@ export default function ContractChat({
   }
 
   function getSenderName(message: MessageWithSender): string {
-    const profileDetails = message.sender.profile_details?.[0]
+    const profileDetails = normalizeProfileDetails(message.sender.profile_details)
     
     if (message.sender.role === 'student') {
       return profileDetails?.alias || 'Estudiante'

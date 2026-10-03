@@ -104,11 +104,12 @@ export default async function StudentDashboard() {
 
         <Link
           href="/student/contracts/new"
-          className="flex items-center gap-2 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold group"
+          className="flex items-center gap-2 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold group shrink-0"
           title="Crea un nuevo contrato para recibir ofertas de especialistas"
+          data-testid="create-contract-btn"
         >
           <Plus className="w-5 h-5" />
-          <span>Nuevo Contrato</span>
+          <span>Crear Contrato</span>
         </Link>
       </div>
 
@@ -158,11 +159,12 @@ export default async function StudentDashboard() {
             </p>
             <Link
               href="/student/contracts/new"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold shrink-0"
               title="Crear tu primer contrato para recibir ofertas"
+              data-testid="create-first-contract-btn"
             >
               <Plus className="w-5 h-5" />
-              Crear Primer Contrato
+              <span>Crear Contrato</span>
             </Link>
           </div>
         ) : (
@@ -213,7 +215,7 @@ export default async function StudentDashboard() {
                       </div>
                     )}
 
-                    <div className="ml-auto text-gray-500 text-xs">
+                    <div className="ml-auto text-gray-500 text-xs" suppressHydrationWarning>
                       {new Date(contract.created_at).toLocaleDateString('es-ES', {
                         year: 'numeric',
                         month: 'short',

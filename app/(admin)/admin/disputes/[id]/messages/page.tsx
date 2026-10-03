@@ -4,6 +4,7 @@ import { ArrowLeft, MessageCircle, User } from 'lucide-react'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { getRelatedUserDisplayName } from '@/lib/utils/profile'
 
 export default async function DisputeMessagesPage({
   params,
@@ -83,8 +84,8 @@ export default async function DisputeMessagesPage({
     .order('created_at', { ascending: true })
 
   const contract = dispute.contract as any
-  const studentName = contract.student.profile_details?.[0]?.alias || contract.student.profile_details?.[0]?.real_name || 'Student'
-  const specialistName = contract.specialist.profile_details?.[0]?.alias || contract.specialist.profile_details?.[0]?.real_name || 'Specialist'
+  const studentName = getRelatedUserDisplayName(contract?.student, 'Student')
+  const specialistName = getRelatedUserDisplayName(contract?.specialist, 'Specialist')
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -120,7 +121,7 @@ export default async function DisputeMessagesPage({
           <div className="space-y-4">
             {messages.map((message: any) => {
               const sender = message.sender
-              const senderName = sender.profile_details?.[0]?.alias || sender.profile_details?.[0]?.real_name || 'Unknown'
+              const senderName = getRelatedUserDisplayName(sender, 'Unknown')
               const isStudent = sender.id === contract.student_id
               const isSpecialist = sender.id === contract.specialist_id
 

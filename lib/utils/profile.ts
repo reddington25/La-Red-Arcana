@@ -50,3 +50,21 @@ export function getProfileRealName(
   const profile = normalizeProfileDetails(profileDetails)
   return profile?.real_name || fallback
 }
+
+/**
+ * Safely extracts a display name or alias from a PostgREST user relation object
+ * which may have profile_details as an object, array, or null,
+ * or where the user relation itself is null/undefined or an array.
+ */
+export function getRelatedUserDisplayName(
+  userRelation: any,
+  fallback = 'N/A'
+): string {
+  if (!userRelation) return fallback
+  const user = Array.isArray(userRelation) ? userRelation[0] : userRelation
+  if (!user) return fallback
+
+  const profile = normalizeProfileDetails(user.profile_details)
+  return profile?.alias || profile?.real_name || user.alias || user.real_name || fallback
+}
+

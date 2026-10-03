@@ -10,6 +10,7 @@ import WorkDelivery from './WorkDelivery'
 import { ReviewModalWrapper } from '@/components/reviews/ReviewModalWrapper'
 import InitiateDisputeButton from '@/components/disputes/InitiateDisputeButton'
 import DirectPaymentHub from './DirectPaymentHub'
+import { getRelatedUserDisplayName } from '@/lib/utils/profile'
 
 const STATUS_CONFIG = {
   open: { label: 'Abierto', color: 'text-blue-400 bg-blue-500/10 border-blue-500/30' },
@@ -283,7 +284,7 @@ export default async function ContractDetailPage({
               <h3 className="text-lg font-semibold text-white mb-4">Especialista Asignado</h3>
               <div>
                 <p className="text-white font-semibold mb-1">
-                  {contract.specialist.profile_details.alias || contract.specialist.profile_details.real_name}
+                  {getRelatedUserDisplayName(contract.specialist, 'Especialista')}
                 </p>
                 <div className="flex items-center gap-2 text-sm text-gray-400">
                   {contract.specialist.total_reviews < 3 ? (
@@ -291,7 +292,7 @@ export default async function ContractDetailPage({
                       🌱 Perfil Nuevo
                     </span>
                   ) : (
-                    <span>⭐ {contract.specialist.manual_rating !== null ? contract.specialist.manual_rating.toFixed(1) : contract.specialist.average_rating.toFixed(1)}</span>
+                    <span>⭐ {Number(contract.specialist.manual_rating ?? contract.specialist.average_rating ?? 0).toFixed(1)}</span>
                   )}
                   {contract.specialist.excellence_badge && (
                     <span className="text-purple-400 text-xs px-2 py-0.5 bg-purple-500/10 rounded-full border border-purple-500/30">
@@ -386,13 +387,7 @@ export default async function ContractDetailPage({
           currentUserId={user.id}
           contractStatus={contract.status}
           otherUserId={contract.specialist.id}
-          otherUserName={
-            (contract.specialist.profile_details as any)?.alias || 
-            (contract.specialist.profile_details as any)?.real_name || 
-            (contract.specialist.profile_details as any)?.[0]?.alias || 
-            (contract.specialist.profile_details as any)?.[0]?.real_name || 
-            'Especialista'
-          }
+          otherUserName={getRelatedUserDisplayName(contract.specialist, 'Especialista')}
         />
       )}
     </div>

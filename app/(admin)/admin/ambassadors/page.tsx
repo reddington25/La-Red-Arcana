@@ -110,8 +110,8 @@ export default async function AmbassadorsPage() {
         <p className="text-emerald-400 text-sm">
           <strong>Cómo funciona:</strong> Los Embajadores reciben un código único basado en su nombre. 
           Los especialistas que se registren con ese código serán vinculados permanentemente. 
-          Por cada contrato completado de un referido, el embajador recibe el <strong>10%</strong> del valor 
-          (85% especialista, 10% embajador, 5% plataforma).
+          Por cada contrato completado de un referido, el embajador recibe el <strong>5%</strong> del valor 
+          (85% especialista, 5% embajador, 10% plataforma).
         </p>
       </div>
 

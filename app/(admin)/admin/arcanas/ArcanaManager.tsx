@@ -5,6 +5,7 @@ import { Loader2, Upload, CheckCircle, AlertCircle } from 'lucide-react'
 import { ArcanaCrystal } from '@/components/ui/ArcanaCrystal'
 import { addArcanas } from './actions'
 import { uploadFile } from '@/lib/supabase/storage'
+import { normalizeProfileDetails, getRelatedUserDisplayName } from '@/lib/utils/profile'
 
 interface UserRow {
   id: string
@@ -34,8 +35,9 @@ export function ArcanaManager({ users, transactions }: { users: UserRow[]; trans
   const [searchTerm, setSearchTerm] = useState('')
 
   const filteredUsers = users.filter(u => {
-    const name = u.profile_details?.[0]?.real_name?.toLowerCase() || ''
-    const alias = u.profile_details?.[0]?.alias?.toLowerCase() || ''
+    const profile = normalizeProfileDetails(u.profile_details)
+    const name = profile?.real_name?.toLowerCase() || ''
+    const alias = profile?.alias?.toLowerCase() || ''
     const email = u.email.toLowerCase()
     const search = searchTerm.toLowerCase()
     return name.includes(search) || alias.includes(search) || email.includes(search)
@@ -117,11 +119,15 @@ export function ArcanaManager({ users, transactions }: { users: UserRow[]; trans
               className="w-full px-4 py-2 bg-black/50 border border-red-500/30 rounded-lg text-white focus:outline-none focus:border-red-500"
             >
               <option value="">-- Selecciona un usuario --</option>
-              {filteredUsers.map(u => (
-                <option key={u.id} value={u.id}>
-                  {u.profile_details?.[0]?.real_name || u.profile_details?.[0]?.alias || u.email} ({u.role}) - {u.arcanas || 0} Arcanas
-                </option>
-              ))}
+              {filteredUsers.map(u => {
+                const profile = normalizeProfileDetails(u.profile_details)
+                const displayName = profile?.real_name || profile?.alias || u.email
+                return (
+                  <option key={u.id} value={u.id}>
+                    {displayName} ({u.role}) - {u.arcanas || 0} Arcanas
+                  </option>
+                )
+              })}
             </select>
           </div>
 
@@ -211,10 +217,10 @@ export function ArcanaManager({ users, transactions }: { users: UserRow[]; trans
                       <span className="text-green-400 font-bold">+{txn.amount} Arcanas</span>
                     </div>
                     <p className="text-sm text-gray-300">
-                      Para: {(txn.target_user as any)?.profile_details?.[0]?.real_name || (txn.target_user as any)?.profile_details?.[0]?.alias || (txn.target_user as any)?.email || 'N/A'}
+                      Para: {getRelatedUserDisplayName(txn.target_user, (txn.target_user as any)?.email || 'N/A')}
                     </p>
                     <p className="text-xs text-gray-500">
-                      Por: {(txn.admin as any)?.profile_details?.[0]?.real_name || 'Admin'}
+                      Por: {getRelatedUserDisplayName(txn.admin, 'Admin')}
                     </p>
                     {txn.description && (
                       <p className="text-xs text-gray-400 mt-1 italic">{txn.description}</p>

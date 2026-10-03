@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
-import { completeSpecialistProfile } from './actions'
+import { completeSpecialistProfile, validateAmbassadorCodeAction } from './actions'
 import { DEPARTMENTS, FACULTIES, getCareersByFaculty, type Department, type Faculty } from '@/lib/constants/academic-hierarchy'
 import { createClient } from '@/lib/supabase/client'
 
@@ -53,16 +53,10 @@ export default function SpecialistRegistrationForm({ user }: SpecialistRegistrat
     }
     setAmbassadorStatus('checking')
     try {
-      const supabase = createClient()
-      const { data } = await supabase
-        .from('users')
-        .select('id, is_ambassador, profile_details!inner(real_name)')
-        .eq('ambassador_code', code.trim().toUpperCase())
-        .eq('is_ambassador', true)
-        .single()
-      if (data) {
+      const result = await validateAmbassadorCodeAction(code)
+      if (result.valid) {
         setAmbassadorStatus('valid')
-        setAmbassadorName((data as any).profile_details?.real_name || 'Embajador verificado')
+        setAmbassadorName(result.realName || 'Embajador verificado')
       } else {
         setAmbassadorStatus('invalid')
         setAmbassadorName('')

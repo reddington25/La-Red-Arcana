@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { UserWithProfile } from '@/types/database'
 import { grantAmbassador, revokeAmbassador, regenerateCode } from './actions'
 import { User, Users, RefreshCw, Copy, Check } from 'lucide-react'
+import { normalizeProfileDetails } from '@/lib/utils/profile'
 
 interface AmbassadorCardProps {
   specialist: UserWithProfile & { 
@@ -24,7 +25,7 @@ export default function AmbassadorCard({
 }: AmbassadorCardProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [copied, setCopied] = useState(false)
-  const profile = specialist.profile_details
+  const profile = normalizeProfileDetails(specialist.profile_details)
 
   const handleGrant = async () => {
     setIsLoading(true)

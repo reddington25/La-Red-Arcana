@@ -9,7 +9,7 @@ export default function StudentNav() {
 
   const navItems = [
     { href: '/student/dashboard', label: 'Dashboard', icon: Home },
-    { href: '/student/contracts/new', label: 'Nuevo Contrato', icon: FileText },
+    { href: '/student/contracts/new', label: 'Crear Contrato', icon: FileText },
     { href: '/student/profile', label: 'Perfil', icon: User },
   ]
 

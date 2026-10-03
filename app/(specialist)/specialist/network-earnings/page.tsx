@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { DollarSign, TrendingUp, Users, FileText } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { getRelatedUserDisplayName } from '@/lib/utils/profile'
 
 export default async function NetworkEarningsPage() {
   const supabase = await createClient()
@@ -49,10 +50,11 @@ export default async function NetworkEarningsPage() {
     .select('id', { count: 'exact', head: true })
     .eq('referred_by', user.id)
 
-  const totalEarnings = userData?.ambassador_balance || 0
+  const currentBalance = userData?.ambassador_balance || 0
   const earningsList = earnings || []
+  const totalEarnedHistorical = earningsList.reduce((sum, e) => sum + (e.amount || 0), 0)
   const averagePerContract = earningsList.length > 0 
-    ? totalEarnings / earningsList.length 
+    ? totalEarnedHistorical / earningsList.length 
     : 0
 
   return (
@@ -67,20 +69,20 @@ export default async function NetworkEarningsPage() {
       <div className="bg-gradient-to-br from-emerald-500/20 to-black/50 backdrop-blur border border-emerald-500/50 rounded-lg p-6 mb-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <p className="text-gray-400 text-sm mb-1">Saldo Acumulado de Red</p>
+            <p className="text-gray-400 text-sm mb-1">Saldo Disponible de Red</p>
             <p className="text-4xl font-bold text-emerald-400">
-              Bs. {totalEarnings.toFixed(2)}
+              Bs. {currentBalance.toFixed(2)}
             </p>
             <p className="text-sm text-gray-400 mt-2">
-              💡 Estas ganancias provienen del 10% de comisión de los contratos de tus referidos
+              💡 Estas ganancias provienen del 5% del valor total de los contratos de tus referidos (de la comisión del 15% de plataforma)
             </p>
           </div>
           <div className="text-right">
             <div className="px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
               <p className="text-xs text-gray-400">Distribución por contrato</p>
               <p className="text-sm text-white mt-1">85% Especialista</p>
-              <p className="text-sm text-emerald-400 font-semibold">10% Tú (Embajador)</p>
-              <p className="text-sm text-gray-400">5% Plataforma</p>
+              <p className="text-sm text-emerald-400 font-semibold">5% Tú (Embajador)</p>
+              <p className="text-sm text-gray-400">10% Plataforma</p>
             </div>
           </div>
         </div>
@@ -90,10 +92,10 @@ export default async function NetworkEarningsPage() {
       <div className="grid md:grid-cols-3 gap-4 mb-8">
         <div className="bg-black/50 backdrop-blur border border-emerald-500/30 rounded-lg p-6">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-gray-400 text-sm">Total Ganado</p>
+            <p className="text-gray-400 text-sm">Total Histórico Ganado</p>
             <DollarSign className="w-5 h-5 text-emerald-400" />
           </div>
-          <p className="text-3xl font-bold text-emerald-400">Bs. {totalEarnings.toFixed(2)}</p>
+          <p className="text-3xl font-bold text-emerald-400">Bs. {totalEarnedHistorical.toFixed(2)}</p>
         </div>
         <div className="bg-black/50 backdrop-blur border border-emerald-500/30 rounded-lg p-6">
           <div className="flex items-center justify-between mb-2">
@@ -133,7 +135,7 @@ export default async function NetworkEarningsPage() {
             {earningsList.map(earning => {
               const specialist = (earning as any).specialist
               const contract = (earning as any).contract
-              const specialistName = specialist?.profile_details?.[0]?.real_name || specialist?.profile_details?.real_name || 'Especialista'
+              const specialistName = getRelatedUserDisplayName(specialist, 'Especialista')
               
               return (
                 <div key={earning.id} className="p-4 hover:bg-red-500/5 transition-colors">
@@ -151,7 +153,7 @@ export default async function NetworkEarningsPage() {
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-gray-500">
-                        {formatDistanceToNow(new Date(earning.created_at), { addSuffix: true, locale: es })}
+                        {earning.created_at ? formatDistanceToNow(new Date(earning.created_at), { addSuffix: true, locale: es }) : 'recientemente'}
                       </p>
                     </div>
                   </div>

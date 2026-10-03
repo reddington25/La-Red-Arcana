@@ -8,6 +8,7 @@ import WorkDelivery from './WorkDelivery'
 import { ReviewModalWrapper } from '@/components/reviews/ReviewModalWrapper'
 import InitiateDisputeButton from '@/components/disputes/InitiateDisputeButton'
 import SpecialistPaymentConfirmationCard from './SpecialistPaymentConfirmationCard'
+import { getRelatedUserDisplayName } from '@/lib/utils/profile'
 
 export default async function SpecialistContractPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient()
@@ -43,6 +44,7 @@ export default async function SpecialistContractPage({ params }: { params: Promi
       created_at,
       updated_at,
       completed_at,
+      student_id,
       student:users!student_id (
         id,
         profile_details (
@@ -65,7 +67,7 @@ export default async function SpecialistContractPage({ params }: { params: Promi
         <div className="flex items-center gap-4 text-gray-400 text-sm">
           <div className="flex items-center gap-1">
             <User className="w-4 h-4" />
-            {(contract.student as any).profile_details?.[0]?.alias || (contract.student as any).profile_details?.alias || 'N/A'}
+            {getRelatedUserDisplayName(contract.student, 'N/A')}
           </div>
           <div className="flex items-center gap-1">
             <Clock className="w-4 h-4" />
@@ -216,8 +218,8 @@ export default async function SpecialistContractPage({ params }: { params: Promi
         contractId={contract.id}
         currentUserId={user.id}
         contractStatus={contract.status}
-        otherUserId={(contract.student as any).id}
-        otherUserName={(contract.student as any).profile_details?.[0]?.alias || 'Estudiante'}
+        otherUserId={(contract.student as any)?.id || contract.student_id}
+        otherUserName={getRelatedUserDisplayName(contract.student, 'Estudiante')}
       />
     </div>
   )

@@ -5,10 +5,11 @@ import { WithdrawalRequest, User, ProfileDetails } from '@/types/database'
 import { DollarSign, User as UserIcon, Phone, CheckCircle, X } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { processWithdrawal } from './actions'
+import { normalizeProfileDetails } from '@/lib/utils/profile'
 
 interface WithdrawalWithSpecialist extends WithdrawalRequest {
   specialist: User & {
-    profile_details: ProfileDetails
+    profile_details: ProfileDetails | ProfileDetails[]
   }
 }
 
@@ -51,6 +52,12 @@ export default function WithdrawalRequestCard({
     }
   }
 
+  const specialist = (Array.isArray(request.specialist) ? request.specialist[0] : request.specialist) as any
+  const specialistProfile = normalizeProfileDetails(specialist?.profile_details)
+  const specialistBalance = specialist?.balance || 0
+  const specialistAmbassadorBalance = specialist?.ambassador_balance || 0
+  const totalAvailableBalance = specialistBalance + specialistAmbassadorBalance
+
   return (
     <div className="bg-black/50 backdrop-blur border border-green-500/50 rounded-lg p-6">
       {/* Header */}
@@ -84,35 +91,48 @@ export default function WithdrawalRequestCard({
           <div>
             <p className="text-gray-400">Name</p>
             <p className="text-white font-medium">
-              {request.specialist.profile_details?.real_name || 'N/A'}
+              {specialistProfile?.real_name || 'N/A'}
             </p>
           </div>
           <div>
             <p className="text-gray-400">WhatsApp</p>
             <p className="text-white font-medium">
-              {request.specialist.profile_details?.phone || 'N/A'}
+              {specialistProfile?.phone || 'N/A'}
             </p>
           </div>
           <div>
             <p className="text-gray-400">Email</p>
             <p className="text-white font-medium text-xs">
-              {request.specialist.email}
+              {specialist?.email || 'N/A'}
             </p>
           </div>
           <div>
-            <p className="text-gray-400">Current Balance</p>
+            <p className="text-gray-400">Saldo Disponible</p>
             <p className="text-white font-medium">
-              Bs. {request.specialist.balance.toFixed(2)}
+              Bs. {totalAvailableBalance.toFixed(2)}
             </p>
+            {specialistAmbassadorBalance > 0 && (
+              <p className="text-xs text-emerald-400">
+                (Reg: Bs. {specialistBalance.toFixed(2)} + Red: Bs. {specialistAmbassadorBalance.toFixed(2)})
+              </p>
+            )}
           </div>
         </div>
       </div>
 
+      {/* Specialist Request Notes */}
+      {request.notes && (
+        <div className="bg-black/30 border border-gray-700/50 rounded-lg p-3 mb-4 text-xs text-gray-300">
+          <span className="text-gray-400 font-medium">Detalle de la solicitud: </span>
+          <span>{request.notes}</span>
+        </div>
+      )}
+
       {/* Balance Check */}
-      {request.amount > request.specialist.balance && (
+      {request.amount > totalAvailableBalance && (
         <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 mb-4">
           <p className="text-red-400 text-sm font-medium">
-            ⚠️ Warning: Requested amount exceeds current balance!
+            ⚠️ Warning: Requested amount exceeds available balance!
           </p>
         </div>
       )}
@@ -136,7 +156,7 @@ export default function WithdrawalRequestCard({
       <div className="flex gap-3">
         <button
           onClick={() => handleProcess('completed')}
-          disabled={processing || request.amount > request.specialist.balance}
+          disabled={processing || request.amount > totalAvailableBalance}
           className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
         >
           <CheckCircle className="w-5 h-5" />

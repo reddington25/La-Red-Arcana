@@ -1,32 +1,21 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
-export async function confirmPlatformFee(contractId: string) {
+export async function confirmPlatformFeeWithClient(
+  contractId: string,
+  adminId: string,
+  client?: any
+) {
   try {
-    const supabase = await createClient()
-
-    // Verify admin authentication
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      return { success: false, error: 'No autenticado' }
-    }
-
-    const { data: userData } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (!userData || !['admin', 'super_admin'].includes(userData.role)) {
-      return { success: false, error: 'No autorizado' }
-    }
+    const supabase = client || createAdminClient()
 
     // Get contract details
     const { data: contract, error: contractFetchError } = await supabase
       .from('contracts')
-      .select('id, student_id, specialist_id, title, status, specialist_payment_status, platform_fee_status')
+      .select('id, student_id, specialist_id, title, status, specialist_payment_status, platform_fee_status, final_price, platform_fee')
       .eq('id', contractId)
       .single()
 
@@ -63,9 +52,65 @@ export async function confirmPlatformFee(contractId: string) {
       .update({
         platform_fee_status: 'confirmed',
         confirmed_at: now,
-        confirmed_by: user.id,
+        confirmed_by: adminId,
       })
       .eq('contract_id', contractId)
+
+    // Settle ambassador commission if specialist was referred by an ambassador (5% Ambassador / 10% Platform)
+    if (contract.specialist_id) {
+      const { data: specialistUser } = await supabase
+        .from('users')
+        .select('id, referred_by')
+        .eq('id', contract.specialist_id)
+        .single()
+
+      if (specialistUser?.referred_by) {
+        const { data: ambassadorUser } = await supabase
+          .from('users')
+          .select('id, is_ambassador, ambassador_balance')
+          .eq('id', specialistUser.referred_by)
+          .single()
+
+        if (ambassadorUser && ambassadorUser.is_ambassador) {
+          const finalPrice = contract.final_price || 0
+          const ambassadorShare = Number((finalPrice * 0.05).toFixed(2))
+
+          if (ambassadorShare > 0) {
+            // Check if already credited for this contract to ensure idempotency
+            const { data: existingEarning } = await supabase
+              .from('ambassador_earnings')
+              .select('id')
+              .eq('contract_id', contractId)
+              .maybeSingle()
+
+            if (!existingEarning) {
+              await supabase.from('ambassador_earnings').insert({
+                ambassador_id: ambassadorUser.id,
+                specialist_id: contract.specialist_id,
+                contract_id: contractId,
+                amount: ambassadorShare,
+              })
+
+              await supabase
+                .from('users')
+                .update({
+                  ambassador_balance: (ambassadorUser.ambassador_balance || 0) + ambassadorShare,
+                })
+                .eq('id', ambassadorUser.id)
+
+              await supabase.from('notifications').insert({
+                user_id: ambassadorUser.id,
+                type: 'ambassador_commission',
+                title: 'Comisión de Embajador Acreditada',
+                message: `Recibiste Bs. ${ambassadorShare.toFixed(2)} (5%) por el contrato "${contract.title}" de tu especialista referido.`,
+                link: '/specialist/network-earnings',
+                read: false,
+              })
+            }
+          }
+        }
+      }
+    }
 
     // Notify student
     await supabase.from('notifications').insert({
@@ -104,27 +149,21 @@ export async function confirmPlatformFee(contractId: string) {
       await supabase.from('notifications').insert(notifications)
     }
 
-    revalidatePath('/admin/escrow')
-    revalidatePath('/admin/dashboard')
+    try {
+      revalidatePath('/admin/escrow')
+      revalidatePath('/admin/dashboard')
+    } catch {
+      // Ignore if revalidatePath is called outside a Next.js request context
+    }
 
     return { success: true }
   } catch (error) {
-    console.error('Error in confirmPlatformFee:', error)
+    console.error('Error in confirmPlatformFeeWithClient:', error)
     return { success: false, error: 'Ocurrió un error inesperado al confirmar la comisión' }
   }
 }
 
-// Backward-compatible wrapper
-export async function confirmPayment(contractId: string) {
-  return confirmPlatformFee(contractId)
-}
-
-export async function processWithdrawal(
-  requestId: string,
-  status: 'completed' | 'rejected',
-  notes: string,
-  adminId: string
-) {
+export async function confirmPlatformFee(contractId: string) {
   try {
     const supabase = await createClient()
 
@@ -144,42 +183,126 @@ export async function processWithdrawal(
       return { success: false, error: 'No autorizado' }
     }
 
+    return await confirmPlatformFeeWithClient(contractId, user.id, supabase)
+  } catch (error) {
+    console.error('Error in confirmPlatformFee:', error)
+    return { success: false, error: 'Ocurrió un error inesperado al confirmar la comisión' }
+  }
+}
+
+// Backward-compatible wrapper
+export async function confirmPayment(contractId: string) {
+  return confirmPlatformFee(contractId)
+}
+
+export async function processWithdrawalWithClient(
+  requestId: string,
+  status: 'completed' | 'rejected',
+  notes: string,
+  adminId: string,
+  client?: any
+) {
+  try {
+    const supabase = client || createAdminClient()
+
     // Get withdrawal request details
-    const { data: request } = await supabase
+    const { data: request, error: requestError } = await supabase
       .from('withdrawal_requests')
-      .select('specialist_id, amount')
+      .select('specialist_id, amount, status, notes')
       .eq('id', requestId)
       .single()
 
-    if (!request) {
+    if (requestError || !request) {
       return { success: false, error: 'Solicitud de retiro no encontrada' }
     }
 
-    // If completing, deduct from specialist balance
-    if (status === 'completed') {
-      const { error: balanceError } = await supabase.rpc('deduct_balance', {
-        user_id: request.specialist_id,
-        amount: request.amount
-      })
+    // Prevent double processing / race conditions
+    if (request.status !== 'pending') {
+      return { success: false, error: 'Esta solicitud de retiro ya fue procesada' }
+    }
 
-      // If RPC doesn't exist, do it manually
-      if (balanceError) {
-        const { data: specialist } = await supabase
+    let currentBalance = 0
+    let currentAmbassadorBalance = 0
+    let wasExtraordinary = false
+
+    // If completing, deduct from specialist balance and/or ambassador balance
+    if (status === 'completed') {
+      const { data: specialist, error: specError } = await supabase
+        .from('users')
+        .select('balance, ambassador_balance')
+        .eq('id', request.specialist_id)
+        .single()
+
+      if (specError || !specialist) {
+        return { success: false, error: 'Especialista no encontrado' }
+      }
+
+      currentBalance = specialist.balance || 0
+      currentAmbassadorBalance = specialist.ambassador_balance || 0
+      const totalAvailable = currentBalance + currentAmbassadorBalance
+
+      if (totalAvailable < request.amount) {
+        return { success: false, error: 'Saldo insuficiente' }
+      }
+
+      // Deduct from regular balance first, then ambassador balance
+      let newBalance = currentBalance
+      let newAmbassadorBalance = currentAmbassadorBalance
+
+      if (newBalance >= request.amount) {
+        newBalance -= request.amount
+      } else {
+        const remaining = request.amount - newBalance
+        newBalance = 0
+        newAmbassadorBalance -= remaining
+      }
+
+      const { error: updateBalanceErr } = await supabase
+        .from('users')
+        .update({
+          balance: Number(newBalance.toFixed(2)),
+          ambassador_balance: Number(newAmbassadorBalance.toFixed(2)),
+        })
+        .eq('id', request.specialist_id)
+
+      if (updateBalanceErr) {
+        console.error('Error updating balances:', updateBalanceErr)
+        return { success: false, error: 'Error al actualizar el saldo del especialista' }
+      }
+    } else if (status === 'rejected') {
+      // If extraordinary withdrawal was rejected, refund the 50 Arcanas
+      wasExtraordinary = Boolean(request.notes && (
+        request.notes.includes('Retiro extraordinario') || 
+        request.notes.includes('-50 Arcanas')
+      ))
+
+      if (wasExtraordinary) {
+        const adminClient = createAdminClient()
+        const { data: spec } = await adminClient
           .from('users')
-          .select('balance')
+          .select('arcanas')
           .eq('id', request.specialist_id)
           .single()
 
-        if (specialist && specialist.balance >= request.amount) {
-          await supabase
+        if (spec) {
+          await adminClient
             .from('users')
-            .update({ balance: specialist.balance - request.amount })
+            .update({ arcanas: (spec.arcanas || 0) + 50 })
             .eq('id', request.specialist_id)
-        } else {
-          return { success: false, error: 'Saldo insuficiente' }
+
+          await adminClient.from('arcana_transactions').insert({
+            user_id: request.specialist_id,
+            amount: 50,
+            description: 'Reembolso de 50 Arcanas por solicitud de retiro rechazada por administración',
+          })
         }
       }
     }
+
+    // Preserve original request note and append admin note if provided
+    const combinedNotes = notes
+      ? (request.notes ? `${request.notes} | Admin: ${notes}` : notes)
+      : request.notes || null
 
     // Update withdrawal request
     const { error: updateError } = await supabase
@@ -187,13 +310,36 @@ export async function processWithdrawal(
       .update({
         status: status,
         processed_by: adminId,
-        notes: notes || null,
+        notes: combinedNotes,
         processed_at: new Date().toISOString()
       })
       .eq('id', requestId)
 
     if (updateError) {
       console.error('Error updating withdrawal request:', updateError)
+      // Rollback previous state if request status update fails
+      if (status === 'completed') {
+        await supabase
+          .from('users')
+          .update({
+            balance: Number(currentBalance.toFixed(2)),
+            ambassador_balance: Number(currentAmbassadorBalance.toFixed(2)),
+          })
+          .eq('id', request.specialist_id)
+      } else if (status === 'rejected' && wasExtraordinary) {
+        const adminClient = createAdminClient()
+        const { data: spec } = await adminClient
+          .from('users')
+          .select('arcanas')
+          .eq('id', request.specialist_id)
+          .single()
+        if (spec) {
+          await adminClient
+            .from('users')
+            .update({ arcanas: Math.max(0, (spec.arcanas || 0) - 50) })
+            .eq('id', request.specialist_id)
+        }
+      }
       return { success: false, error: updateError.message }
     }
 
@@ -225,10 +371,46 @@ export async function processWithdrawal(
       link: '/specialist/dashboard',
     })
 
-    revalidatePath('/admin/escrow')
-    revalidatePath('/admin/dashboard')
+    try {
+      revalidatePath('/admin/escrow')
+      revalidatePath('/admin/dashboard')
+    } catch {
+      // Ignore if outside request context
+    }
 
     return { success: true }
+  } catch (error) {
+    console.error('Error in processWithdrawalWithClient:', error)
+    return { success: false, error: 'Ocurrió un error inesperado al procesar el retiro' }
+  }
+}
+
+export async function processWithdrawal(
+  requestId: string,
+  status: 'completed' | 'rejected',
+  notes: string,
+  adminId: string
+) {
+  try {
+    const supabase = await createClient()
+
+    // Verify admin authentication
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return { success: false, error: 'No autenticado' }
+    }
+
+    const { data: userData } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!userData || !['admin', 'super_admin'].includes(userData.role)) {
+      return { success: false, error: 'No autorizado' }
+    }
+
+    return await processWithdrawalWithClient(requestId, status, notes, adminId, supabase)
   } catch (error) {
     console.error('Error in processWithdrawal:', error)
     return { success: false, error: 'Ocurrió un error inesperado al procesar el retiro' }

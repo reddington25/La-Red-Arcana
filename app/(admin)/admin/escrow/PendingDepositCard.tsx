@@ -18,6 +18,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import AdminMessagesInterface from '@/components/admin-messages/AdminMessagesInterface'
 import { confirmPlatformFee } from './actions'
+import { getRelatedUserDisplayName } from '@/lib/utils/profile'
 
 interface ContractWithRelations extends Contract {
   student: User & {
@@ -152,7 +153,7 @@ export default function PendingDepositCard({
           </div>
 
           <div className="text-xs text-gray-400 space-y-1">
-            <p><strong>Especialista:</strong> {contract.specialist?.profile_details?.alias || contract.specialist?.profile_details?.real_name || 'N/A'}</p>
+            <p><strong>Especialista:</strong> {getRelatedUserDisplayName(contract.specialist, 'N/A')}</p>
             <p><strong>Email:</strong> {contract.specialist?.email || 'N/A'}</p>
           </div>
 
@@ -185,7 +186,7 @@ export default function PendingDepositCard({
           </div>
 
           <div className="text-xs text-gray-400 space-y-1">
-            <p><strong>Estudiante:</strong> {contract.student?.profile_details?.alias || contract.student?.profile_details?.real_name || 'N/A'}</p>
+            <p><strong>Estudiante:</strong> {getRelatedUserDisplayName(contract.student, 'N/A')}</p>
             <p><strong>Email:</strong> {contract.student?.email || 'N/A'}</p>
           </div>
 

@@ -4,6 +4,7 @@ import { FileText, Download, Tag, DollarSign, Clock, User } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import OfferForm from './OfferForm'
+import { getRelatedUserDisplayName } from '@/lib/utils/profile'
 
 export default async function ContractDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient()
@@ -65,7 +66,7 @@ export default async function ContractDetailPage({ params }: { params: Promise<{
     .select('id, price, message, created_at')
     .eq('contract_id', id)
     .eq('specialist_id', user.id)
-    .single()
+    .maybeSingle()
   
   return (
     <div className="max-w-4xl mx-auto">
@@ -74,7 +75,7 @@ export default async function ContractDetailPage({ params }: { params: Promise<{
         <div className="flex items-center gap-4 text-gray-400 text-sm">
           <div className="flex items-center gap-1">
             <User className="w-4 h-4" />
-            {(contract.student as any).profile_details?.[0]?.alias || 'N/A'}
+            {getRelatedUserDisplayName(contract.student, 'N/A')}
           </div>
           <div className="flex items-center gap-1">
             <Clock className="w-4 h-4" />
